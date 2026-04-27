@@ -59,11 +59,11 @@ function Step({
 /* ── Stat card ─────────────────────────────────────── */
 function Stat({ value, label, color }: { value: string; label: string; color: string }) {
   return (
-    <div className="text-center px-5 py-3" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 14 }}>
-      <p className="text-xl font-black" style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+    <div className="text-center px-3.5 py-2" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 10 }}>
+      <p className="text-lg font-black" style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         {value}
       </p>
-      <p className="text-xs text-slate-500 mt-0.5 font-medium">{label}</p>
+      <p className="text-xs text-slate-500 mt-0 font-medium">{label}</p>
     </div>
   );
 }
@@ -109,18 +109,18 @@ export default function HomePage() {
     <div className="space-y-4">
 
       {/* ── Hero ──────────────────────────────────────────── */}
-      <div className="text-center py-10 fade-up">
-        <h1 className="text-5xl font-black tracking-tight leading-none mb-3">
+      <div className="text-center py-5 fade-up">
+        <h1 className="text-4xl font-black tracking-tight leading-none mb-2">
           <span className="text-slate-800">School</span>
           <span className="grad-text">Doc</span>
           <span className="text-slate-800">Genie</span>
         </h1>
-        <p className="text-slate-500 text-lg max-w-lg mx-auto leading-relaxed font-light mb-7">
-          Upload student data, pick a document type, and download beautifully formatted PDFs instantly.
+        <p className="text-slate-500 text-sm max-w-xl mx-auto font-light mb-4">
+          Upload student data, pick a document type, download PDFs instantly.
         </p>
 
         {/* Stats bar */}
-        <div className="inline-flex gap-1 p-1.5 rounded-2xl"
+        <div className="inline-flex gap-0.5 p-1 rounded-xl"
           style={{ background:'rgba(255,255,255,0.6)', border:'1px solid rgba(199,210,254,0.5)', backdropFilter:'blur(12px)' }}>
           <Stat value="3" label="Doc Types" color="linear-gradient(135deg,#4f46e5,#7c3aed)" />
           <Stat value="6–8" label="Grades" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
