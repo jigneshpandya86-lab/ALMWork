@@ -12,6 +12,7 @@ const DOC_TYPES = [
   { id: 'marksheet' as DocType, label: 'Marksheet', icon: '📋', desc: 'Subject-wise marks & grades' },
   { id: 'leavingCert' as DocType, label: 'Leaving Certificate', icon: '🎓', desc: 'Character & conduct cert' },
   { id: 'periodicEval' as DocType, label: 'Periodic Evaluation', icon: '📊', desc: 'Term-wise performance' },
+  { id: 'attendanceRegister' as DocType, label: 'Attendance Register', icon: '📅', desc: 'Calendar-based attendance' },
 ];
 
 export default function DocTypeMenu({ selectedDocType, onSelect }: DocTypeMenuProps) {

@@ -28,7 +28,9 @@ export function formatDate(dateStr: string): string {
 export function generateFileName(student: Student, docType: string): string {
   const safeName = student.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
   const label = docType === 'marksheet' ? 'Marksheet'
-    : docType === 'leavingCert' ? 'LeavingCert' : 'PeriodicEval';
+    : docType === 'leavingCert' ? 'LeavingCert'
+    : docType === 'attendanceRegister' ? 'Attendance'
+    : 'PeriodicEval';
   return `${safeName}_Grade${student.grade}_${label}.pdf`;
 }
 

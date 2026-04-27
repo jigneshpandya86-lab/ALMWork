@@ -274,12 +274,61 @@ async function generatePeriodicEvalPDF(student: Student, text: string): Promise<
   return doc;
 }
 
+// ── Attendance Register ───────────────────────────────────────────────────────
+
+async function generateAttendanceRegisterPDF(student: Student, attendance: string): Promise<Doc> {
+  const JsPDF = await getJsPDF();
+  const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  let y = drawHeader(doc);
+
+  doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(16, 185, 129);
+  doc.text('ATTENDANCE REGISTER', pageW / 2, y + 6, { align: 'center' });
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(0);
+  y += 16;
+
+  y = sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
+  labelValue(doc, 'Name', student.name, 14, y);
+  labelValue(doc, 'Grade', student.grade, pageW / 2 + 5, y); y += 7;
+  labelValue(doc, 'Roll No', student.rollno, 14, y);
+  labelValue(doc, 'Attendance %', `${attendance}%`, pageW / 2 + 5, y);
+  y += 12;
+
+  y = sectionTitle(doc, 'MONTH CALENDAR', y, pageW);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+  doc.text('(Mark L for Leave, P for Present, A for Absent)', 14, y);
+  y += 4;
+
+  const daysInMonth = 30;
+  const cols = 6;
+  const cellW = (pageW - 28) / cols;
+  const cellH = 5;
+  const startX = 14;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const col = (day - 1) % cols;
+    const row = Math.floor((day - 1) / cols);
+    const x = startX + col * cellW;
+    const cellY = y + row * cellH;
+
+    doc.setDrawColor(200);
+    doc.rect(x, cellY, cellW, cellH);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.text(String(day), x + 1, cellY + 3.5);
+  }
+
+  drawFooter(doc, pageW);
+  return doc;
+}
+
 // ── Public API ─────────────────────────────────────────────────────────────────
 
 export async function generatePDF(student: Student, remarks: string, docType: string): Promise<Blob> {
   let doc: Doc;
   if (docType === 'marksheet') doc = await generateMarksheetPDF(student, remarks);
   else if (docType === 'leavingCert') doc = await generateLeavingCertPDF(student, remarks);
+  else if (docType === 'attendanceRegister') doc = await generateAttendanceRegisterPDF(student, remarks);
   else doc = await generatePeriodicEvalPDF(student, remarks);
   return doc.output('blob');
 }

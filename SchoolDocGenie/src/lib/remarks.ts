@@ -5,6 +5,10 @@ export function getRemark(student: Student, docType: string): string {
   const conductNote = conduct === 'Excellent' ? ' Exemplary conduct throughout.'
     : conduct === 'Good' ? ' Good conduct maintained.' : '';
 
+  if (docType === 'attendanceRegister') {
+    return `${student.attendance}`;
+  }
+
   if (docType === 'leavingCert') {
     if (percentage >= 80)
       return `${name} has been a dedicated student demonstrating exceptional academic ability with ${gradePoint} grade.${conductNote} We wish them continued success in all future endeavors.`;
