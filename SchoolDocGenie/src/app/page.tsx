@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Student, DocType, GeneratedPDF, GenerationProgress } from '@/types';
 import FileUploader from '@/components/FileUploader';
 import StudentTable from '@/components/StudentTable';
@@ -8,6 +8,7 @@ import TemplateSelector from '@/components/TemplateSelector';
 import GenerateButton from '@/components/GenerateButton';
 import ProgressBar from '@/components/ProgressBar';
 import DownloadLinks from '@/components/DownloadLinks';
+import { api } from '@/lib/firebase';
 
 /* ── Step wrapper ─────────────────────────────────────────────────── */
 function Step({
@@ -70,42 +71,42 @@ function Stat({ value, label, color }: { value: string; label: string; color: st
 
 /* ── Main page ─────────────────────────────────────── */
 export default function HomePage() {
-  const [students, setStudents]       = useState<Student[]>([]);
-  const [error, setError]             = useState<string | null>(null);
-  const [selectedDocType, setDocType] = useState<DocType | null>(null);
-  const [selectedGrade, setGrade]     = useState<string | null>(null);
-  const [progress, setProgress]       = useState<GenerationProgress>({
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDocType, setSelectedDocType] = useState<DocType | null>(null);
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
+  const [progress, setProgress] = useState<GenerationProgress>({
     current: 0, total: 0, currentStudentName: '', status: 'idle',
   });
   const [generatedPDFs, setPDFs] = useState<GeneratedPDF[]>([]);
   const [showUploadForm, setShowUploadForm] = useState(false);
 
-  const step1Done = students.length > 0;
-  const step3Done = selectedDocType !== null && selectedGrade !== null;
-
-  const mergeStudents = (existing: Student[], incoming: Student[]) => {
-    const merged = [...existing];
-
-    incoming.forEach((next) => {
-      const normalizedId = next.id?.trim();
-      const normalizedRollNo = next.rollno.trim().toLowerCase();
-      const normalizedGrade = next.grade.trim();
-      const idx = merged.findIndex((current) =>
-        (normalizedId && current.id === normalizedId)
-        || (
-          current.rollno.trim().toLowerCase() === normalizedRollNo
-          && current.grade.trim() === normalizedGrade
-        ),
-      );
-
-      if (idx >= 0) {
-        merged[idx] = { ...merged[idx], ...next, id: merged[idx].id };
-      } else {
-        merged.push(next);
+  // Fetch students from Firebase on mount
+  useEffect(() => {
+    async function fetchStudents() {
+      try {
+        setLoading(true);
+        const result = await api.getStudents();
+        const data = result.data as { success: boolean, data: Student[] };
+        if (data.success) {
+          setStudents(data.data);
+        }
+      } catch (err: any) {
+        console.error("Error fetching students:", err);
+        setError("Could not connect to backend. Please check your internet connection.");
+      } finally {
+        setLoading(false);
       }
-    });
+    }
+    fetchStudents();
+  }, []);
 
-    return merged;
+  const handleStudentsLoaded = (loaded: Student[]) => {
+    setStudents(loaded);
+    setError(null);
+    setGeneratedPDFs([]);
+    setProgress({ current: 0, total: 0, currentStudentName: '', status: 'idle' });
   };
 
   const handleStudentsLoaded = (s: Student[]) => {
@@ -182,23 +183,23 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ── Steps ─────────────────────────────────────────── */}
-      <div className="mt-4 fade-up delay-2">
-        <Step id="step-upload" n={1} title="Upload Student Data" subtitle="JSON file, paste JSON, or load the built-in sample dataset"
-          active={!step1Done} done={step1Done}>
-          {step1Done ? (
-            <div className="flex items-center gap-3 py-2">
-              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-green-700 font-medium">{students.length} students loaded</span>
-              <button
-                onClick={() => setShowUploadForm(!showUploadForm)}
-                className="ml-auto px-3 py-1 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-              >
-                {showUploadForm ? 'Hide' : 'Change'}
-              </button>
+      {/* ── Step 1: Upload ── */}
+      <div className="animate-fade-in-up animate-delay-100">
+        <StepCard step={1} title="Upload Student Data" subtitle="JSON file or try the sample dataset" active={!step1Done} done={step1Done}>
+          <FileUploader onStudentsLoaded={handleStudentsLoaded} onError={handleError} />
+        </StepCard>
+      </div>
+
+      {/* ── Step 2: Preview ── */}
+      <div className="animate-fade-in-up animate-delay-200">
+        <StepCard step={2} title="Preview Students" subtitle="Review the uploaded data before generating" active={step1Done && !step3Done} done={step3Done}>
+          {loading ? (
+            <div className="flex flex-col items-center gap-3 py-10 text-slate-300">
+               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+               <p className="text-sm">Connecting to Mumbai backend...</p>
             </div>
+          ) : students.length > 0 ? (
+            <StudentTable students={students} selectedGrade={selectedGrade ?? undefined} />
           ) : (
             <button
               onClick={() => setShowUploadForm(!showUploadForm)}
