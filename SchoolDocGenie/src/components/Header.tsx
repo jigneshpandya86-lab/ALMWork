@@ -18,9 +18,9 @@ export default function Header() {
     <header className="sticky top-0 z-50" style={{
       background: 'rgba(255,255,255,0.80)',
       backdropFilter: 'blur(16px)',
-      borderBottom: '1px solid rgba(199,210,254,0.5)',
+      borderBottom: '1px solid rgba(199,210,254,0.65)',
     }}>
-      <div className="max-w-5xl mx-auto px-5 h-12 flex items-center justify-between gap-4">
+      <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -39,7 +39,7 @@ export default function Header() {
         <nav className="hidden sm:flex items-center gap-1">
           {NAV.map(({ href, label }) => (
             <a key={href} href={href}
-              className="nav-step-link">
+              className="nav-step-link font-semibold">
               {label}
             </a>
           ))}
