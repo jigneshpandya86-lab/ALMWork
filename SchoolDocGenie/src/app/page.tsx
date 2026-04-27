@@ -146,18 +146,18 @@ export default function HomePage() {
     <div className="space-y-5">
 
       {/* ── Hero ──────────────────────────────────────────── */}
-      <div className="hero-shell px-6 py-5 md:px-8 md:py-6 fade-up">
-        <div className="flex items-center justify-between gap-6 flex-wrap">
+      <section className="hero-shell px-6 py-5 md:px-8 md:py-6 fade-up" aria-label="Product overview">
+        <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="flex-shrink-0">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none">
-            <span className="text-slate-800">School</span>
-            <span className="grad-text">Doc</span>
-            <span className="text-slate-800">Genie</span>
-          </h1>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none">
+              <span className="text-slate-800">School</span>
+              <span className="grad-text">Doc</span>
+              <span className="text-slate-800">Genie</span>
+            </h1>
           </div>
 
           <p className="text-slate-600 text-sm md:text-base font-medium flex-1 max-w-2xl">
-            Create polished school documents in minutes — upload student data, select a document type, and generate downloadable PDFs instantly.
+            Create polished school documents in minutes - upload student data, select a document type, and generate downloadable PDFs instantly.
           </p>
 
           {/* Stats bar */}
@@ -169,7 +169,7 @@ export default function HomePage() {
             <Stat value="0%" label="Data Sent" color="linear-gradient(135deg,#059669,#10b981)" />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* ── Error ─────────────────────────────────────────── */}
       {error && (
