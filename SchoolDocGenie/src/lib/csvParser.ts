@@ -1,105 +1,134 @@
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
-import { Student, ValidationResult } from '@/types';
+import { Student } from '@/types';
 import { calculatePercentage, getGradePoint } from './utils';
 
+type RowValue = string | number | null | undefined;
+type ParsedRow = Record<string, RowValue>;
+
+function normalizeKey(key: string): string {
+  return key.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+function toStringValue(value: RowValue): string {
+  return String(value ?? '').trim();
+}
+
+function readRowValue(row: ParsedRow, ...keys: string[]): string {
+  const normalizedKeys = keys.map(normalizeKey);
+  const entry = Object.entries(row).find(([key]) => normalizedKeys.includes(normalizeKey(key)));
+  return toStringValue(entry?.[1]);
+}
+
+function parseNumber(value: RowValue): number {
+  const parsed = Number.parseInt(toStringValue(value), 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function mapRowToStudent(row: ParsedRow, idx: number): Student {
+  const marks = parseMarks(row);
+  const totalMarks = Object.values(marks).reduce((a, b) => a + b, 0);
+  const percentage = calculatePercentage(marks);
+
+  return {
+    id: `${Date.now()}-${idx}`,
+    name: readRowValue(row, 'name'),
+    rollno: readRowValue(row, 'rollno', 'roll no'),
+    grade: readRowValue(row, 'grade'),
+    gender: readRowValue(row, 'gender'),
+    caste: readRowValue(row, 'caste'),
+    dateOfBirth: readRowValue(row, 'dateOfBirth', 'date of birth'),
+    fatherName: readRowValue(row, 'fatherName', 'father name'),
+    motherName: readRowValue(row, 'motherName', 'mother name'),
+    address: readRowValue(row, 'address'),
+    marks,
+    totalMarks,
+    percentage,
+    gradePoint: getGradePoint(percentage),
+    conduct: readRowValue(row, 'conduct') || 'Good',
+    attendance: parseNumber(readRowValue(row, 'attendance')),
+  };
+}
+
 export async function parseCSV(file: File): Promise<Student[]> {
-  return new Promise((resolve, reject) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        try {
-          const students = (results.data as Record<string, any>[]).map((row, idx) => ({
-            id: `${Date.now()}-${idx}`,
-            name: row.name?.trim() || '',
-            rollno: String(row.rollno || row['roll no'] || '').trim(),
-            grade: String(row.grade || '').trim(),
-            gender: String(row.gender || '').trim(),
-            caste: String(row.caste || '').trim(),
-            dateOfBirth: row.dateOfBirth || row['date of birth'] || '',
-            fatherName: row.fatherName || row['father name'] || '',
-            motherName: row.motherName || row['mother name'] || '',
-            address: row.address || '',
-            marks: parseMarks(row),
-            totalMarks: 0,
-            percentage: 0,
-            gradePoint: '',
-            conduct: row.conduct || 'Good',
-            attendance: parseInt(row.attendance || '0') || 0,
-          }));
+  try {
+    const csvText = await file.text();
+    const rows = parseCSVText(csvText);
+    const students = rows.map(mapRowToStudent);
 
-          students.forEach(s => {
-            s.totalMarks = Object.values(s.marks).reduce((a, b) => a + b, 0);
-            s.percentage = calculatePercentage(s.marks);
-            s.gradePoint = getGradePoint(s.percentage);
-          });
-
-          resolve(students);
-        } catch (err) {
-          reject(err);
-        }
-      },
-      error: reject,
-    });
-  });
+    return students;
+  } catch (error) {
+    throw new Error(`Unable to parse CSV file: ${(error as Error).message}`);
+  }
 }
 
 export async function parseExcel(file: File): Promise<Student[]> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet);
-
-        const students = rows.map((row, idx) => ({
-          id: `${Date.now()}-${idx}`,
-          name: row.name?.trim() || '',
-          rollno: String(row.rollno || row['roll no'] || '').trim(),
-          grade: String(row.grade || '').trim(),
-          gender: String(row.gender || '').trim(),
-          caste: String(row.caste || '').trim(),
-          dateOfBirth: row.dateOfBirth || row['date of birth'] || '',
-          fatherName: row.fatherName || row['father name'] || '',
-          motherName: row.motherName || row['mother name'] || '',
-          address: row.address || '',
-          marks: parseMarks(row),
-          totalMarks: 0,
-          percentage: 0,
-          gradePoint: '',
-          conduct: row.conduct || 'Good',
-          attendance: parseInt(row.attendance || '0') || 0,
-        }));
-
-        students.forEach(s => {
-          s.totalMarks = Object.values(s.marks).reduce((a, b) => a + b, 0);
-          s.percentage = calculatePercentage(s.marks);
-          s.gradePoint = getGradePoint(s.percentage);
-        });
-
-        resolve(students);
-      } catch (err) {
-        reject(err);
-      }
-    };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
+  const name = file?.name || 'file';
+  throw new Error(`Excel import is not available in this deployment (${name}). Please upload a CSV file instead.`);
 }
 
-function parseMarks(row: Record<string, any>): { [subject: string]: number } {
+function parseMarks(row: ParsedRow): { [subject: string]: number } {
   const marks: { [key: string]: number } = {};
   const subjects = ['hindi', 'english', 'mathematics', 'science', 'socialStudies'];
 
-  subjects.forEach(subj => {
-    const val = row[subj] || row[subj.toLowerCase()] || 0;
-    marks[subj] = parseInt(val) || 0;
+  subjects.forEach((subj) => {
+    marks[subj] = parseNumber(readRowValue(row, subj));
   });
 
   return marks;
+}
+
+function splitCSVLine(line: string): string[] {
+  const values: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      values.push(current.trim());
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  values.push(current.trim());
+  return values;
+}
+
+function parseCSVText(csvText: string): ParsedRow[] {
+  const lines = csvText
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .filter((line) => line.trim().length > 0);
+
+  if (lines.length < 2) {
+    return [];
+  }
+
+  const headers = splitCSVLine(lines[0]).map((header) => header.trim());
+  const rows = lines.slice(1);
+
+  return rows.map((line) => {
+    const values = splitCSVLine(line);
+    return headers.reduce<ParsedRow>((acc, header, index) => {
+      acc[header] = values[index] ?? '';
+      return acc;
+    }, {});
+  });
 }
 
 export function generateSampleCSV(): string {

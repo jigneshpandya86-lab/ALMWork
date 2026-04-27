@@ -3,7 +3,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { FileUploaderProps } from '@/types';
 import { parseJSON } from '@/lib/jsonParser';
-import { parseCSV, parseExcel, downloadSampleCSV } from '@/lib/csvParser';
+import { parseCSV, downloadSampleCSV } from '@/lib/csvParser';
 import { parseTextFormat } from '@/lib/textParser';
 
 export default function FileUploader({ onStudentsLoaded, onError }: FileUploaderProps) {
@@ -16,8 +16,8 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
 
   const processFile = useCallback(async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (!['json', 'csv', 'xlsx', 'xls'].includes(ext || '')) {
-      onError('Please upload JSON, CSV, or Excel file');
+    if (!['json', 'csv'].includes(ext || '')) {
+      onError('Please upload JSON or CSV file');
       return;
     }
 
@@ -30,8 +30,6 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
         students = await parseJSON(file);
       } else if (ext === 'csv') {
         students = await parseCSV(file);
-      } else if (['xlsx', 'xls'].includes(ext || '')) {
-        students = await parseExcel(file);
       } else {
         throw new Error('Unsupported file format');
       }
@@ -188,7 +186,7 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
               transform: isDragging ? 'scale(1.01)' : 'scale(1)',
             }}
           >
-            <input ref={inputRef} type="file" accept=".json,.csv,.xlsx,.xls" className="hidden" onChange={handleChange} />
+            <input ref={inputRef} type="file" accept=".json,.csv" className="hidden" onChange={handleChange} />
 
             {isLoading ? (
               <div className="flex flex-col items-center gap-2">
@@ -222,7 +220,7 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
                 </div>
                 <div>
                   <p className="font-bold text-slate-700 text-sm">Drop your file here</p>
-                  <p className="text-slate-400 text-xs mt-1">JSON, CSV, or Excel (.xlsx, .xls)</p>
+                  <p className="text-slate-400 text-xs mt-1">JSON or CSV</p>
                 </div>
                 {isDragging && (
                   <div className="absolute inset-0 rounded-xl flex items-center justify-center"
