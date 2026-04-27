@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Student, DocType, GeneratedPDF, GenerationProgress } from '@/types';
 import FileUploader from '@/components/FileUploader';
 import StudentTable from '@/components/StudentTable';
@@ -8,6 +8,7 @@ import TemplateSelector from '@/components/TemplateSelector';
 import GenerateButton from '@/components/GenerateButton';
 import ProgressBar from '@/components/ProgressBar';
 import DownloadLinks from '@/components/DownloadLinks';
+import { api } from '@/lib/firebase';
 
 function StepBadge({ step, active, done }: { step: number; active: boolean; done: boolean }) {
   if (done) {
@@ -61,6 +62,7 @@ const STATS = [
 
 export default function HomePage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDocType, setSelectedDocType] = useState<DocType | null>(null);
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
@@ -68,6 +70,26 @@ export default function HomePage() {
     current: 0, total: 0, currentStudentName: '', status: 'idle',
   });
   const [generatedPDFs, setGeneratedPDFs] = useState<GeneratedPDF[]>([]);
+
+  // Fetch students from Firebase on mount
+  useEffect(() => {
+    async function fetchStudents() {
+      try {
+        setLoading(true);
+        const result = await api.getStudents();
+        const data = result.data as { success: boolean, data: Student[] };
+        if (data.success) {
+          setStudents(data.data);
+        }
+      } catch (err: any) {
+        console.error("Error fetching students:", err);
+        setError("Could not connect to backend. Please check your internet connection.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStudents();
+  }, []);
 
   const handleStudentsLoaded = (loaded: Student[]) => {
     setStudents(loaded);
@@ -176,7 +198,12 @@ export default function HomePage() {
       {/* ── Step 2: Preview ── */}
       <div className="animate-fade-in-up animate-delay-200">
         <StepCard step={2} title="Preview Students" subtitle="Review the uploaded data before generating" active={step1Done && !step3Done} done={step3Done}>
-          {students.length > 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center gap-3 py-10 text-slate-300">
+               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+               <p className="text-sm">Connecting to Mumbai backend...</p>
+            </div>
+          ) : students.length > 0 ? (
             <StudentTable students={students} selectedGrade={selectedGrade ?? undefined} />
           ) : (
             <div className="flex flex-col items-center gap-3 py-10 text-slate-300">
