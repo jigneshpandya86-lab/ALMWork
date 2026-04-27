@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { firebaseFunctions } from '@/lib/firebase-client';
 import { Student } from '@/types';
 
 export function useStudents() {
@@ -13,10 +15,9 @@ export function useStudents() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/students');
-      if (!response.ok) throw new Error('Failed to fetch students');
-      const data = await response.json();
-      setStudents(data);
+      const getStudents = httpsCallable(firebaseFunctions, 'getStudents');
+      const result = await getStudents();
+      setStudents(result.data as Student[]);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -27,13 +28,9 @@ export function useStudents() {
 
   const addStudent = async (student: Omit<Student, 'id'>) => {
     try {
-      const response = await fetch('/api/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(student),
-      });
-      if (!response.ok) throw new Error('Failed to add student');
-      const newStudent = await response.json();
+      const createStudent = httpsCallable(firebaseFunctions, 'createStudent');
+      const result = await createStudent(student);
+      const newStudent = result.data as Student;
       setStudents((prev) => [...prev, newStudent]);
       return newStudent;
     } catch (err) {
@@ -45,13 +42,9 @@ export function useStudents() {
 
   const updateStudent = async (id: string, updates: Partial<Student>) => {
     try {
-      const response = await fetch(`/api/students/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      });
-      if (!response.ok) throw new Error('Failed to update student');
-      const updated = await response.json();
+      const updateStudentFn = httpsCallable(firebaseFunctions, 'updateStudent');
+      const result = await updateStudentFn({ id, updates });
+      const updated = result.data as Student;
       setStudents((prev) =>
         prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
       );
@@ -65,10 +58,8 @@ export function useStudents() {
 
   const deleteStudent = async (id: string) => {
     try {
-      const response = await fetch(`/api/students/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to delete student');
+      const deleteStudentFn = httpsCallable(firebaseFunctions, 'deleteStudent');
+      await deleteStudentFn({ id });
       setStudents((prev) => prev.filter((s) => s.id !== id));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
