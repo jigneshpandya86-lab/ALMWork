@@ -10,7 +10,7 @@
     "export": "next build && next export"
   },
   "dependencies": {
-    "@fontsource/noto-sans-gujarati": "^5.2.7",
+    "firebase": "^12.12.1",
     "jspdf": "^2.5.1",
     "jszip": "^3.10.1",
     "next": "^14.0.4",
