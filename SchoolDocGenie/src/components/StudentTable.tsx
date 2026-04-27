@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Student, StudentTableProps } from '@/types';
 
 const PAGE_SIZE = 50;
@@ -68,6 +68,16 @@ export default function StudentTable({ students, selectedGrade, onSaveStudent, o
 
   const pages = Math.ceil(filtered.length / PAGE_SIZE);
   const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    if (pages === 0 && page !== 1) {
+      setPage(1);
+      return;
+    }
+    if (pages > 0 && page > pages) {
+      setPage(pages);
+    }
+  }, [page, pages]);
 
   const byGrade = useMemo(() => {
     const m: Record<string,number> = {};

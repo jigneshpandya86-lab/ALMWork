@@ -88,9 +88,14 @@ export default function HomePage() {
 
     incoming.forEach((next) => {
       const normalizedId = next.id?.trim();
+      const normalizedRollNo = next.rollno.trim().toLowerCase();
+      const normalizedGrade = next.grade.trim();
       const idx = merged.findIndex((current) =>
         (normalizedId && current.id === normalizedId)
-        || (current.rollno === next.rollno && current.grade === next.grade),
+        || (
+          current.rollno.trim().toLowerCase() === normalizedRollNo
+          && current.grade.trim() === normalizedGrade
+        ),
       );
 
       if (idx >= 0) {
@@ -109,13 +114,8 @@ export default function HomePage() {
     setProgress({ current:0, total:0, currentStudentName:'', status:'idle' });
   };
 
-  const handleSaveStudent = (student: Student, mode: 'add' | 'edit') => {
-    setStudents((prev) => {
-      if (mode === 'add') {
-        return mergeStudents(prev, [student]);
-      }
-      return prev.map((s) => (s.id === student.id ? student : s));
-    });
+  const handleSaveStudent = (student: Student, _mode: 'add' | 'edit') => {
+    setStudents((prev) => mergeStudents(prev, [student]));
     setError(null);
   };
 
