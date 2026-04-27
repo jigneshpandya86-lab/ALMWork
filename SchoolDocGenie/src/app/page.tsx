@@ -59,8 +59,8 @@ function Step({
 /* ── Stat card ─────────────────────────────────────── */
 function Stat({ value, label, color }: { value: string; label: string; color: string }) {
   return (
-    <div className="text-center px-3.5 py-2" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 10 }}>
-      <p className="text-lg font-black" style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+    <div className="text-center px-2.5 py-1.5" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 8 }}>
+      <p className="text-sm font-black" style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         {value}
       </p>
       <p className="text-xs text-slate-500 mt-0 font-medium">{label}</p>
@@ -109,22 +109,25 @@ export default function HomePage() {
     <div className="space-y-4">
 
       {/* ── Hero ──────────────────────────────────────────── */}
-      <div className="text-center py-5 fade-up">
-        <h1 className="text-4xl font-black tracking-tight leading-none mb-2">
-          <span className="text-slate-800">School</span>
-          <span className="grad-text">Doc</span>
-          <span className="text-slate-800">Genie</span>
-        </h1>
-        <p className="text-slate-500 text-sm max-w-xl mx-auto font-light mb-4">
+      <div className="flex items-center justify-between gap-6 py-3 fade-up">
+        <div className="flex-shrink-0">
+          <h1 className="text-3xl font-black tracking-tight leading-none">
+            <span className="text-slate-800">School</span>
+            <span className="grad-text">Doc</span>
+            <span className="text-slate-800">Genie</span>
+          </h1>
+        </div>
+
+        <p className="text-slate-500 text-sm font-light flex-1">
           Upload student data, pick a document type, download PDFs instantly.
         </p>
 
         {/* Stats bar */}
-        <div className="inline-flex gap-0.5 p-1 rounded-xl"
+        <div className="inline-flex gap-0.5 p-0.5 rounded-lg flex-shrink-0"
           style={{ background:'rgba(255,255,255,0.6)', border:'1px solid rgba(199,210,254,0.5)', backdropFilter:'blur(12px)' }}>
           <Stat value="3" label="Doc Types" color="linear-gradient(135deg,#4f46e5,#7c3aed)" />
           <Stat value="6–8" label="Grades" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
-          <Stat value="PDF" label="Instant Export" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
+          <Stat value="PDF" label="Instant" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
           <Stat value="0%" label="Data Sent" color="linear-gradient(135deg,#059669,#10b981)" />
         </div>
       </div>
