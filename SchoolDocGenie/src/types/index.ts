@@ -3,6 +3,8 @@ export interface Student {
   name: string;
   rollno: string;
   grade: string;
+  gender: string;
+  caste: string;
   dateOfBirth: string;
   fatherName: string;
   motherName: string;
@@ -39,7 +41,7 @@ export interface SchoolInfo {
   maxTotalMarks?: number;
 }
 
-export type DocType = 'marksheet' | 'leavingCert' | 'periodicEval';
+export type DocType = 'marksheet' | 'leavingCert' | 'periodicEval' | 'attendanceRegister';
 
 export interface GeneratedPDF {
   studentId: string;
@@ -70,6 +72,8 @@ export interface FileUploaderProps {
 export interface StudentTableProps {
   students: Student[];
   selectedGrade?: string;
+  onSaveStudent: (student: Student, mode: 'add' | 'edit') => void;
+  onDeleteStudent: (studentId: string) => void;
 }
 
 export interface TemplateSelectorProps {
