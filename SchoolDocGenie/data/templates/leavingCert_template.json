@@ -1,0 +1,19 @@
+{
+  "docType": "leavingCert",
+  "title": "School Leaving Certificate",
+  "grades": ["6", "7", "8"],
+  "aiPrompts": {
+    "6": "Generate a formal character certificate paragraph for a Grade 6 student named {name} (Roll No: {rollno}), son/daughter of {fatherName}, who has studied at our school. The student had {attendance}% attendance, {conduct} conduct, and achieved {percentage}% marks. Write 3-4 sentences in formal English suitable for an official School Leaving Certificate. Include a positive character assessment.",
+    "7": "Generate a formal character certificate paragraph for a Grade 7 student named {name} (Roll No: {rollno}), son/daughter of {fatherName}, who has studied at our school. The student had {attendance}% attendance, {conduct} conduct, and achieved {percentage}% marks. Write 3-4 sentences in formal English suitable for an official School Leaving Certificate. Mention their overall development.",
+    "8": "Generate a formal character certificate paragraph for a Grade 8 student named {name} (Roll No: {rollno}), son/daughter of {fatherName}, who has studied at our school. The student had {attendance}% attendance, {conduct} conduct, and achieved {percentage}% marks. Write 3-4 sentences in formal English suitable for an official School Leaving Certificate. Wish them success in future endeavors."
+  },
+  "fields": ["name", "rollno", "grade", "dateOfBirth", "fatherName", "motherName", "address", "conduct", "attendance", "percentage", "gradePoint"],
+  "schoolInfo": {
+    "name": "Vidya Mandir School",
+    "address": "Education Road, Ahmedabad, Gujarat - 380001",
+    "phone": "+91-79-12345678",
+    "email": "info@vidyamandir.edu.in",
+    "academicYear": "2025-2026",
+    "affiliation": "Gujarat Secondary and Higher Secondary Education Board"
+  }
+}

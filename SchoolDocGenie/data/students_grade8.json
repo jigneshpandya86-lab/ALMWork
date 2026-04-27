@@ -1,0 +1,62 @@
+[
+  {
+    "id": "STU_011",
+    "name": "Raj Pandya",
+    "rollno": "1",
+    "grade": "8",
+    "dateOfBirth": "2010-07-20",
+    "fatherName": "Bharat Pandya",
+    "motherName": "Urmila Pandya",
+    "address": "15, Thaltej, Ahmedabad, Gujarat",
+    "marks": { "hindi": 87, "english": 91, "mathematics": 94, "science": 89, "socialStudies": 86 },
+    "totalMarks": 447, "percentage": 89.4, "gradePoint": "A", "conduct": "Excellent", "attendance": 96
+  },
+  {
+    "id": "STU_012",
+    "name": "Pooja Trivedi",
+    "rollno": "2",
+    "grade": "8",
+    "dateOfBirth": "2010-10-05",
+    "fatherName": "Niranjan Trivedi",
+    "motherName": "Pallavi Trivedi",
+    "address": "28, Naranpura, Ahmedabad, Gujarat",
+    "marks": { "hindi": 79, "english": 83, "mathematics": 77, "science": 81, "socialStudies": 80 },
+    "totalMarks": 400, "percentage": 80.0, "gradePoint": "A", "conduct": "Very Good", "attendance": 93
+  },
+  {
+    "id": "STU_013",
+    "name": "Kiran Modi",
+    "rollno": "3",
+    "grade": "8",
+    "dateOfBirth": "2010-01-15",
+    "fatherName": "Haresh Modi",
+    "motherName": "Asha Modi",
+    "address": "44, Memnagar, Ahmedabad, Gujarat",
+    "marks": { "hindi": 95, "english": 97, "mathematics": 98, "science": 96, "socialStudies": 94 },
+    "totalMarks": 480, "percentage": 96.0, "gradePoint": "A+", "conduct": "Excellent", "attendance": 100
+  },
+  {
+    "id": "STU_014",
+    "name": "Sumit Chauhan",
+    "rollno": "4",
+    "grade": "8",
+    "dateOfBirth": "2010-05-22",
+    "fatherName": "Devendra Chauhan",
+    "motherName": "Lata Chauhan",
+    "address": "63, Satellite, Ahmedabad, Gujarat",
+    "marks": { "hindi": 62, "english": 58, "mathematics": 65, "science": 60, "socialStudies": 63 },
+    "totalMarks": 308, "percentage": 61.6, "gradePoint": "C+", "conduct": "Good", "attendance": 85
+  },
+  {
+    "id": "STU_015",
+    "name": "Deepa Bhatt",
+    "rollno": "5",
+    "grade": "8",
+    "dateOfBirth": "2010-08-30",
+    "fatherName": "Kamlesh Bhatt",
+    "motherName": "Vimla Bhatt",
+    "address": "11, Vastrapur, Ahmedabad, Gujarat",
+    "marks": { "hindi": 88, "english": 90, "mathematics": 85, "science": 87, "socialStudies": 89 },
+    "totalMarks": 439, "percentage": 87.8, "gradePoint": "A", "conduct": "Excellent", "attendance": 97
+  }
+]
