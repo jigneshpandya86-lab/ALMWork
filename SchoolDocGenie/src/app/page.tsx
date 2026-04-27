@@ -82,9 +82,44 @@ export default function HomePage() {
   const step1Done = students.length > 0;
   const step3Done = selectedDocType !== null && selectedGrade !== null;
 
+  const mergeStudents = (existing: Student[], incoming: Student[]) => {
+    const merged = [...existing];
+
+    incoming.forEach((next) => {
+      const normalizedId = next.id?.trim();
+      const normalizedRollNo = next.rollno.trim().toLowerCase();
+      const normalizedGrade = next.grade.trim();
+      const idx = merged.findIndex((current) =>
+        (normalizedId && current.id === normalizedId)
+        || (
+          current.rollno.trim().toLowerCase() === normalizedRollNo
+          && current.grade.trim() === normalizedGrade
+        ),
+      );
+
+      if (idx >= 0) {
+        merged[idx] = { ...merged[idx], ...next, id: merged[idx].id };
+      } else {
+        merged.push(next);
+      }
+    });
+
+    return merged;
+  };
+
   const handleStudentsLoaded = (s: Student[]) => {
-    setStudents(s); setError(null); setPDFs([]);
+    setStudents((prev) => mergeStudents(prev, s));
+    setError(null); setPDFs([]);
     setProgress({ current:0, total:0, currentStudentName:'', status:'idle' });
+  };
+
+  const handleSaveStudent = (student: Student, _mode: 'add' | 'edit') => {
+    setStudents((prev) => mergeStudents(prev, [student]));
+    setError(null);
+  };
+
+  const handleDeleteStudent = (studentId: string) => {
+    setStudents((prev) => prev.filter((s) => s.id !== studentId));
   };
   const handleSelect = (d: DocType, g: string) => {
     setDocType(d); setGrade(g); setPDFs([]);
@@ -153,10 +188,17 @@ export default function HomePage() {
           <FileUploader onStudentsLoaded={handleStudentsLoaded} onError={handleError} />
         </Step>
 
-        <Step id="step-preview" n={2} title="Preview Students" subtitle="Review uploaded data, filter by grade"
+        <Step id="step-preview" n={2} title="Student Master" subtitle="Review, add, edit, update, and delete students"
           active={step1Done && !step3Done} done={step3Done}>
           {students.length > 0
-            ? <StudentTable students={students} selectedGrade={selectedGrade ?? undefined} />
+            ? (
+              <StudentTable
+                students={students}
+                selectedGrade={selectedGrade ?? undefined}
+                onSaveStudent={handleSaveStudent}
+                onDeleteStudent={handleDeleteStudent}
+              />
+            )
             : (
               <div className="flex flex-col items-center gap-3 py-10 text-slate-300 select-none">
                 <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">

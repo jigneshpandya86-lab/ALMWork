@@ -64,6 +64,8 @@ export function validateStudents(data: unknown[]): ValidationResult {
       name: String(row.name),
       rollno: String(row.rollno ?? idx + 1),
       grade: String(row.grade),
+      gender: String(row.gender ?? ''),
+      caste: String(row.caste ?? ''),
       dateOfBirth: String(row.dateOfBirth ?? ''),
       fatherName: String(row.fatherName ?? ''),
       motherName: String(row.motherName ?? ''),
