@@ -5,9 +5,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Set basePath if deploying to a GitHub Pages subdirectory
-  // basePath: '/SchoolDocGenie',
-  // assetPrefix: '/SchoolDocGenie/',
+  basePath: '/ALMWork',
+  assetPrefix: '/ALMWork/',
 };
 
 module.exports = nextConfig;
