@@ -1,0 +1,62 @@
+[
+  {
+    "id": "STU_006",
+    "name": "Kavya Desai",
+    "rollno": "1",
+    "grade": "7",
+    "dateOfBirth": "2011-04-18",
+    "fatherName": "Manish Desai",
+    "motherName": "Hetal Desai",
+    "address": "34, Navrangpura, Ahmedabad, Gujarat",
+    "marks": { "hindi": 91, "english": 89, "mathematics": 95, "science": 93, "socialStudies": 88 },
+    "totalMarks": 456, "percentage": 91.2, "gradePoint": "A+", "conduct": "Excellent", "attendance": 97
+  },
+  {
+    "id": "STU_007",
+    "name": "Vivek Kumar",
+    "rollno": "2",
+    "grade": "7",
+    "dateOfBirth": "2011-09-25",
+    "fatherName": "Ramesh Kumar",
+    "motherName": "Sunita Kumar",
+    "address": "89, Gota, Ahmedabad, Gujarat",
+    "marks": { "hindi": 78, "english": 76, "mathematics": 82, "science": 80, "socialStudies": 75 },
+    "totalMarks": 391, "percentage": 78.2, "gradePoint": "B+", "conduct": "Good", "attendance": 92
+  },
+  {
+    "id": "STU_008",
+    "name": "Sneha Agarwal",
+    "rollno": "3",
+    "grade": "7",
+    "dateOfBirth": "2011-12-08",
+    "fatherName": "Anil Agarwal",
+    "motherName": "Rekha Agarwal",
+    "address": "12, Paldi, Ahmedabad, Gujarat",
+    "marks": { "hindi": 96, "english": 94, "mathematics": 90, "science": 97, "socialStudies": 92 },
+    "totalMarks": 469, "percentage": 93.8, "gradePoint": "A+", "conduct": "Excellent", "attendance": 99
+  },
+  {
+    "id": "STU_009",
+    "name": "Mihir Shah",
+    "rollno": "4",
+    "grade": "7",
+    "dateOfBirth": "2011-06-14",
+    "fatherName": "Jitendra Shah",
+    "motherName": "Bhavna Shah",
+    "address": "67, Bopal, Ahmedabad, Gujarat",
+    "marks": { "hindi": 58, "english": 62, "mathematics": 55, "science": 60, "socialStudies": 57 },
+    "totalMarks": 292, "percentage": 58.4, "gradePoint": "C", "conduct": "Satisfactory", "attendance": 82
+  },
+  {
+    "id": "STU_010",
+    "name": "Nisha Verma",
+    "rollno": "5",
+    "grade": "7",
+    "dateOfBirth": "2011-02-28",
+    "fatherName": "Ashok Verma",
+    "motherName": "Meena Verma",
+    "address": "90, Chandkheda, Ahmedabad, Gujarat",
+    "marks": { "hindi": 84, "english": 87, "mathematics": 83, "science": 86, "socialStudies": 85 },
+    "totalMarks": 425, "percentage": 85.0, "gradePoint": "A", "conduct": "Very Good", "attendance": 95
+  }
+]
