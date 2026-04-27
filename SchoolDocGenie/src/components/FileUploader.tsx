@@ -35,7 +35,7 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
   const loadSample = useCallback(async () => {
     setIsLoading(true); setFileName('sample-students.json');
     try {
-      const res = await fetch('/sample-students.json');
+      const res = await fetch('/ALMWork/sample-students.json');
       if (!res.ok) throw new Error('Failed to fetch sample');
       const data = await res.json();
       const arr = Array.isArray(data) ? data : data.students ?? [];
