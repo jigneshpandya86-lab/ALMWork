@@ -10,13 +10,15 @@
     "export": "next build && next export"
   },
   "dependencies": {
+    "@fontsource/noto-sans-gujarati": "^5.2.7",
     "firebase": "^12.12.1",
     "jspdf": "^2.5.1",
     "jszip": "^3.10.1",
     "next": "^14.0.4",
     "papaparse": "^5.5.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

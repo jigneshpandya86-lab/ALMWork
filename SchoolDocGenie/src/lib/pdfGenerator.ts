@@ -1,4 +1,4 @@
-import { Student, GeneratedPDF } from '@/types';
+import { Student, GeneratedPDF, DocumentTemplate } from '@/types';
 import { formatDate, generateFileName, subjectLabel } from './utils';
 
 const SCHOOL = {
@@ -391,7 +391,7 @@ async function generateAttendanceRegisterPDF(
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
-async function generateAttendanceRegisterPDF(student: Student, attendance: string): Promise<Doc> {
+async function generateSingleAttendanceRegisterPDF(student: Student, attendance: string): Promise<Doc> {
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
@@ -443,7 +443,7 @@ export async function generatePDF(student: Student, remarks: string, docType: st
   let doc: Doc;
   if (docType === 'marksheet') doc = await generateMarksheetPDF(student, remarks);
   else if (docType === 'leavingCert') doc = await generateLeavingCertPDF(student, remarks);
-  else if (docType === 'attendanceRegister') doc = await generateAttendanceRegisterPDF(student, remarks);
+  else if (docType === 'attendanceRegister') doc = await generateSingleAttendanceRegisterPDF(student, remarks);
   else doc = await generatePeriodicEvalPDF(student, remarks);
   return doc.output('blob');
 }
@@ -479,7 +479,7 @@ export async function generateMultiplePDFs(
       }
 
       const text = documents.get(student.id) ?? '';
-      const blob = await generatePDF(student, text, docType, template);
+      const blob = await generatePDF(student, text, docType);
       const filename = generateFileName(student, docType);
 
       results.push({
