@@ -131,11 +131,11 @@ export default function HomePage() {
 
       {/* ── Hero ──────────────────────────────────────────── */}
       <div className="text-center py-12 fade-up">
-        {/* Floating decorative blobs */}
-        <div className="pointer-events-none absolute left-10 top-32 w-64 h-64 rounded-full opacity-20 float-anim"
-          style={{ background:'radial-gradient(circle,#a5b4fc,transparent 70%)', filter:'blur(40px)' }} />
-        <div className="pointer-events-none absolute right-10 top-48 w-48 h-48 rounded-full opacity-15 float-anim-slow"
-          style={{ background:'radial-gradient(circle,#c084fc,transparent 70%)', filter:'blur(32px)' }} />
+        {/* Subtle floating decorative blobs */}
+        <div className="pointer-events-none absolute left-20 top-40 w-40 h-40 rounded-full opacity-8 float-anim"
+          style={{ background:'radial-gradient(circle,#a5b4fc,transparent 70%)', filter:'blur(50px)' }} />
+        <div className="pointer-events-none absolute right-32 top-56 w-32 h-32 rounded-full opacity-6 float-anim-slow"
+          style={{ background:'radial-gradient(circle,#c084fc,transparent 70%)', filter:'blur(45px)' }} />
 
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-6 uppercase tracking-widest"
           style={{ background:'rgba(79,70,229,0.1)', color:'#4f46e5', border:'1px solid rgba(79,70,229,0.2)' }}>
