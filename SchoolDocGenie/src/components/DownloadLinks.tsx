@@ -66,7 +66,7 @@ export default function DownloadLinks({ pdfs }: DownloadLinksProps) {
 
       {/* List */}
       <div className="rounded-2xl overflow-hidden divide-y"
-        style={{ border:'1px solid rgba(199,210,254,0.4)', divideColor:'rgba(226,232,240,0.6)' }}>
+        style={{ border:'1px solid rgba(199,210,254,0.4)' }}>
         {pdfs.map((pdf, idx) => (
           <div key={pdf.studentId}
             className="flex items-center gap-3 px-4 py-3 transition-colors"
