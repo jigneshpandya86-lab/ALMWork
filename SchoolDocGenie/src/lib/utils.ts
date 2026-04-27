@@ -63,6 +63,8 @@ export function generateFileName(student: Student, docType: string): string {
       ? 'Marksheet'
       : docType === 'leavingCert'
       ? 'LeavingCert'
+      : docType === 'attendanceRegister'
+      ? 'Attendance'
       : 'PeriodicEval';
   return `${safeName}_Grade${student.grade}_${docLabel}.pdf`;
 }

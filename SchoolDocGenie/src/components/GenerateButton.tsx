@@ -3,107 +3,124 @@
 import React, { useState } from 'react';
 import { GenerateButtonProps } from '@/types';
 import { filterByGrade } from '@/lib/jsonParser';
-import { loadTemplate, generateDocumentsForBatch } from '@/lib/gemini';
+import { generateRemarksForBatch } from '@/lib/remarks';
 import { generateMultiplePDFs } from '@/lib/pdfGenerator';
+import AttendanceRegisterForm from './AttendanceRegisterForm';
 
 export default function GenerateButton({
-  students,
-  docType,
-  grade,
-  onGenerateStart,
-  onProgress,
-  onGenerateComplete,
-  onError,
+  students, docType, grade,
+  onGenerateStart, onProgress, onGenerateComplete, onError,
 }: GenerateButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showAttendanceForm, setShowAttendanceForm] = useState(false);
 
-  const filteredCount = grade
-    ? filterByGrade(students, grade).length
-    : students.length;
-
-  const canGenerate = students.length > 0 && docType !== null && grade !== null && filteredCount > 0;
+  const filteredCount = grade ? filterByGrade(students, grade).length : 0;
+  const canGenerate = students.length > 0 && !!docType && !!grade && filteredCount > 0;
 
   const handleGenerate = async () => {
     if (!canGenerate || !docType || !grade) return;
 
+    if (docType === 'attendanceRegister') {
+      setShowAttendanceForm(true);
+      return;
+    }
+
     setIsGenerating(true);
     onGenerateStart();
-
     try {
       const filtered = filterByGrade(students, grade);
-
-      if (filtered.length === 0) {
-        onError(`No students found for Grade ${grade}`);
-        return;
-      }
-
-      const template = await loadTemplate(docType);
-
-      const aiTexts = await generateDocumentsForBatch(
-        filtered,
-        template,
-        grade,
-        (current, total, name) => onProgress(current, total, name)
-      );
-
-      const pdfs = await generateMultiplePDFs(
-        filtered,
-        aiTexts,
-        docType,
-        template,
-        (current, total, name) => onProgress(current, total, name)
-      );
-
+      const remarks = generateRemarksForBatch(filtered, docType, (c, t, n) => onProgress(c, t, n));
+      const pdfs = await generateMultiplePDFs(filtered, remarks, docType, (c, t, n) => onProgress(c, t, n));
       onGenerateComplete(pdfs);
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Generation failed. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
+      onError(err instanceof Error ? err.message : 'Generation failed');
+    } finally { setIsGenerating(false); }
   };
 
-  return (
-    <div className="space-y-3">
-      <button
-        onClick={handleGenerate}
-        disabled={!canGenerate || isGenerating}
-        className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3
-          ${canGenerate && !isGenerating
-            ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl active:scale-[0.99]'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
-      >
-        {isGenerating ? (
-          <>
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-            Generating PDFs…
-          </>
-        ) : (
-          <>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Generate PDFs
-            {canGenerate && (
-              <span className="ml-1 px-2 py-0.5 bg-blue-500 rounded-full text-sm">
-                {filteredCount}
-              </span>
-            )}
-          </>
-        )}
-      </button>
+  const handleAttendanceGenerate = async (attendanceData: Map<string, { month: number; year: number; days: boolean[] }>) => {
+    if (!docType || !grade) return;
+    setShowAttendanceForm(false);
+    setIsGenerating(true);
+    onGenerateStart();
+    try {
+      const filtered = filterByGrade(students, grade);
+      const remarks = new Map<string, string>();
+      filtered.forEach(s => {
+        const data = attendanceData.get(s.id);
+        if (data) {
+          const presentDays = data.days.filter(d => d).length;
+          const percentage = Math.round((presentDays / data.days.length) * 100);
+          remarks.set(s.id, String(percentage));
+        }
+      });
 
-      {!canGenerate && (
-        <div className="text-sm text-gray-400 text-center space-y-1">
-          {students.length === 0 && <p>Upload student data to continue</p>}
-          {students.length > 0 && !docType && <p>Select a document type</p>}
-          {students.length > 0 && docType && !grade && <p>Select a grade</p>}
-          {students.length > 0 && docType && grade && filteredCount === 0 && (
-            <p>No students in Grade {grade}</p>
+      const pdfs = await generateMultiplePDFs(filtered, remarks, docType, (c, t, n) => onProgress(c, t, n), attendanceData);
+      onGenerateComplete(pdfs);
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Generation failed');
+    } finally { setIsGenerating(false); }
+  };
+
+  const docLabel = docType === 'marksheet' ? 'Marksheets'
+    : docType === 'leavingCert' ? 'Leaving Certificates'
+    : docType === 'attendanceRegister' ? 'Attendance Registers'
+    : 'Evaluation Reports';
+
+  return (
+    <>
+      <div className="space-y-4">
+        <button
+          onClick={handleGenerate}
+          disabled={!canGenerate || isGenerating}
+          className="btn-primary w-full py-4 px-6 text-base flex items-center justify-center gap-3"
+        >
+          {isGenerating ? (
+            <>
+              <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white"
+                style={{ animation:'spin .7s linear infinite' }} />
+              Generating PDFs… please wait
+            </>
+          ) : canGenerate ? (
+            <>
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              Generate {filteredCount} {docLabel}
+              <span className="ml-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/20">Grade {grade}</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              Generate PDFs
+            </>
           )}
-        </div>
+        </button>
+
+        {!canGenerate && (
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-slate-500"
+            style={{ background:'rgba(241,245,249,0.8)', border:'1px dashed #e2e8f0' }}>
+            <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {students.length === 0 ? 'Upload student data in Step 1 to continue'
+              : !docType ? 'Select a document type in Step 3'
+              : !grade ? 'Select a grade in Step 3'
+              : `No students found for Grade ${grade}`}
+          </div>
+        )}
+      </div>
+
+      {showAttendanceForm && (
+        <AttendanceRegisterForm
+          students={students}
+          grade={grade!}
+          onGenerate={handleAttendanceGenerate}
+          onClose={() => setShowAttendanceForm(false)}
+        />
       )}
-    </div>
+    </>
   );
 }

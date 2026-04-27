@@ -39,7 +39,7 @@ export interface SchoolInfo {
   maxTotalMarks?: number;
 }
 
-export type DocType = 'marksheet' | 'leavingCert' | 'periodicEval';
+export type DocType = 'marksheet' | 'leavingCert' | 'periodicEval' | 'attendanceRegister';
 
 export interface GeneratedPDF {
   studentId: string;

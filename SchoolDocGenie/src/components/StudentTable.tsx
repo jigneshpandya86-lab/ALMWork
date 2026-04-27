@@ -32,7 +32,6 @@ export default function StudentTable({ students, selectedGrade }: StudentTablePr
     C: 'bg-red-100 text-red-800',
     D: 'bg-red-200 text-red-900',
     'B-': 'bg-yellow-100 text-yellow-800',
-    'C+': 'bg-orange-100 text-orange-800',
   };
 
   return (
