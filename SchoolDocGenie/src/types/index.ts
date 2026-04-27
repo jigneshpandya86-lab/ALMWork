@@ -3,6 +3,8 @@ export interface Student {
   name: string;
   rollno: string;
   grade: string;
+  gender: string;
+  caste: string;
   dateOfBirth: string;
   fatherName: string;
   motherName: string;
@@ -70,6 +72,8 @@ export interface FileUploaderProps {
 export interface StudentTableProps {
   students: Student[];
   selectedGrade?: string;
+  onSaveStudent: (student: Student, mode: 'add' | 'edit') => void;
+  onDeleteStudent: (studentId: string) => void;
 }
 
 export interface TemplateSelectorProps {
