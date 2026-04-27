@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
+import { read, utils } from 'xlsx';
 import { Student, ValidationResult } from '@/types';
 import { calculatePercentage, getGradePoint } from './utils';
 
@@ -51,9 +51,9 @@ export async function parseExcel(file: File): Promise<Student[]> {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'array' });
+        const workbook = read(data, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet);
+        const rows = utils.sheet_to_json<Record<string, any>>(sheet);
 
         const students = rows.map((row, idx) => ({
           id: `${Date.now()}-${idx}`,
