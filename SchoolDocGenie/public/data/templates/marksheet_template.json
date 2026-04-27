@@ -1,0 +1,28 @@
+{
+  "docType": "marksheet",
+  "title": "Annual Report Card / Marksheet",
+  "grades": ["6", "7", "8"],
+  "aiPrompts": {
+    "6": "Generate a formal and encouraging teacher's remark for a Grade 6 student named {name} who scored {percentage}% ({gradePoint} grade) with {attendance}% attendance. The student's conduct is {conduct}. Keep the remark to 2-3 sentences, professional, and suitable for an official school marksheet. Focus on their academic strengths and areas to improve.",
+    "7": "Generate a formal and encouraging teacher's remark for a Grade 7 student named {name} who scored {percentage}% ({gradePoint} grade) with {attendance}% attendance. The student's conduct is {conduct}. Keep the remark to 2-3 sentences, professional, and suitable for an official school marksheet. Mention their readiness for more challenging academic work.",
+    "8": "Generate a formal and encouraging teacher's remark for a Grade 8 student named {name} who scored {percentage}% ({gradePoint} grade) with {attendance}% attendance. The student's conduct is {conduct}. Keep the remark to 2-3 sentences, professional, and suitable for an official school marksheet. Focus on preparation for secondary school."
+  },
+  "fields": ["name", "rollno", "grade", "dateOfBirth", "fatherName", "motherName", "marks", "totalMarks", "percentage", "gradePoint", "conduct", "attendance", "remarks"],
+  "remarksRules": {
+    "90-100": "Outstanding performance! The student has demonstrated exceptional academic excellence and a deep commitment to learning.",
+    "80-89": "Excellent performance! The student has shown strong dedication and consistent academic achievement.",
+    "70-79": "Good performance. The student demonstrates a satisfactory understanding of the curriculum with room for further improvement.",
+    "60-69": "Satisfactory performance. The student should focus on strengthening weak areas and maintaining regular study habits.",
+    "below-60": "The student needs to put in more effort. Regular practice, timely revision, and seeking help from teachers will lead to improvement."
+  },
+  "schoolInfo": {
+    "name": "Vidya Mandir School",
+    "address": "Education Road, Ahmedabad, Gujarat - 380001",
+    "phone": "+91-79-12345678",
+    "email": "info@vidyamandir.edu.in",
+    "academicYear": "2025-2026",
+    "maxMarksPerSubject": 100,
+    "totalSubjects": 5,
+    "maxTotalMarks": 500
+  }
+}

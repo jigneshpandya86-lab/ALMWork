@@ -1,0 +1,62 @@
+[
+  {
+    "id": "STU_001",
+    "name": "Aarav Sharma",
+    "rollno": "1",
+    "grade": "6",
+    "dateOfBirth": "2012-05-15",
+    "fatherName": "Rajesh Sharma",
+    "motherName": "Priya Sharma",
+    "address": "12, Nehru Colony, Ahmedabad, Gujarat",
+    "marks": { "hindi": 85, "english": 90, "mathematics": 88, "science": 92, "socialStudies": 87 },
+    "totalMarks": 442, "percentage": 88.4, "gradePoint": "A", "conduct": "Excellent", "attendance": 96
+  },
+  {
+    "id": "STU_002",
+    "name": "Ananya Patel",
+    "rollno": "2",
+    "grade": "6",
+    "dateOfBirth": "2012-08-22",
+    "fatherName": "Vikram Patel",
+    "motherName": "Neha Patel",
+    "address": "45, Gandhi Nagar, Surat, Gujarat",
+    "marks": { "hindi": 93, "english": 95, "mathematics": 91, "science": 94, "socialStudies": 90 },
+    "totalMarks": 463, "percentage": 92.6, "gradePoint": "A+", "conduct": "Excellent", "attendance": 98
+  },
+  {
+    "id": "STU_003",
+    "name": "Rohan Mehta",
+    "rollno": "3",
+    "grade": "6",
+    "dateOfBirth": "2012-03-10",
+    "fatherName": "Suresh Mehta",
+    "motherName": "Kavita Mehta",
+    "address": "78, Vasna Road, Vadodara, Gujarat",
+    "marks": { "hindi": 72, "english": 75, "mathematics": 80, "science": 78, "socialStudies": 70 },
+    "totalMarks": 375, "percentage": 75.0, "gradePoint": "B", "conduct": "Good", "attendance": 90
+  },
+  {
+    "id": "STU_004",
+    "name": "Priya Joshi",
+    "rollno": "4",
+    "grade": "6",
+    "dateOfBirth": "2012-11-30",
+    "fatherName": "Dinesh Joshi",
+    "motherName": "Sonal Joshi",
+    "address": "23, Maninagar, Ahmedabad, Gujarat",
+    "marks": { "hindi": 88, "english": 82, "mathematics": 79, "science": 85, "socialStudies": 83 },
+    "totalMarks": 417, "percentage": 83.4, "gradePoint": "A", "conduct": "Very Good", "attendance": 94
+  },
+  {
+    "id": "STU_005",
+    "name": "Arjun Singh",
+    "rollno": "5",
+    "grade": "6",
+    "dateOfBirth": "2012-07-04",
+    "fatherName": "Harinder Singh",
+    "motherName": "Gurpreet Singh",
+    "address": "56, Satellite Area, Ahmedabad, Gujarat",
+    "marks": { "hindi": 65, "english": 70, "mathematics": 68, "science": 72, "socialStudies": 66 },
+    "totalMarks": 341, "percentage": 68.2, "gradePoint": "B-", "conduct": "Good", "attendance": 88
+  }
+]

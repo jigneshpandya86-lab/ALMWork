@@ -1,0 +1,26 @@
+{
+  "docType": "periodicEval",
+  "title": "Periodic Evaluation Report",
+  "grades": ["6", "7", "8"],
+  "aiPrompts": {
+    "6": "Generate a detailed periodic evaluation for a Grade 6 student named {name} who scored {percentage}% with {gradePoint} grade and {attendance}% attendance. Their conduct is {conduct}. Write 4-5 sentences covering: 1) Academic strengths, 2) Areas needing improvement, 3) Behavioral and participation observations, 4) Suggestions for parents. Keep it professional, specific, and constructive.",
+    "7": "Generate a detailed periodic evaluation for a Grade 7 student named {name} who scored {percentage}% with {gradePoint} grade and {attendance}% attendance. Their conduct is {conduct}. Write 4-5 sentences covering: 1) Subject-wise performance overview, 2) Critical thinking and problem-solving skills, 3) Classroom participation, 4) Goals for next evaluation period. Keep it professional and forward-looking.",
+    "8": "Generate a detailed periodic evaluation for a Grade 8 student named {name} who scored {percentage}% with {gradePoint} grade and {attendance}% attendance. Their conduct is {conduct}. Write 4-5 sentences covering: 1) Academic readiness for high school, 2) Strengths and challenges, 3) Extra-curricular involvement, 4) Recommendations for improvement. Keep it mature and college-preparatory in tone."
+  },
+  "fields": ["name", "rollno", "grade", "marks", "totalMarks", "percentage", "gradePoint", "conduct", "attendance", "remarks"],
+  "remarksRules": {
+    "90-100": "Exceptional — Student consistently exceeds expectations.",
+    "80-89": "Excellent — Student regularly meets and often exceeds expectations.",
+    "70-79": "Good — Student meets most expectations with occasional lapses.",
+    "60-69": "Satisfactory — Student meets basic expectations but requires monitoring.",
+    "below-60": "Needs Improvement — Student is below expectations and requires additional support."
+  },
+  "evaluationPeriod": "Term 1 (April - September 2025)",
+  "schoolInfo": {
+    "name": "Vidya Mandir School",
+    "address": "Education Road, Ahmedabad, Gujarat - 380001",
+    "phone": "+91-79-12345678",
+    "email": "info@vidyamandir.edu.in",
+    "academicYear": "2025-2026"
+  }
+}
