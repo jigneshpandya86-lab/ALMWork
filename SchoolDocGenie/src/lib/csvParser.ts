@@ -1,48 +1,46 @@
-import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { Student, ValidationResult } from '@/types';
 import { calculatePercentage, getGradePoint } from './utils';
 
 export async function parseCSV(file: File): Promise<Student[]> {
-  return new Promise((resolve, reject) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        try {
-          const students = (results.data as Record<string, any>[]).map((row, idx) => ({
-            id: `${Date.now()}-${idx}`,
-            name: row.name?.trim() || '',
-            rollno: String(row.rollno || row['roll no'] || '').trim(),
-            grade: String(row.grade || '').trim(),
-            gender: String(row.gender || '').trim(),
-            caste: String(row.caste || '').trim(),
-            dateOfBirth: row.dateOfBirth || row['date of birth'] || '',
-            fatherName: row.fatherName || row['father name'] || '',
-            motherName: row.motherName || row['mother name'] || '',
-            address: row.address || '',
-            marks: parseMarks(row),
-            totalMarks: 0,
-            percentage: 0,
-            gradePoint: '',
-            conduct: row.conduct || 'Good',
-            attendance: parseInt(row.attendance || '0') || 0,
-          }));
-
-          students.forEach(s => {
-            s.totalMarks = Object.values(s.marks).reduce((a, b) => a + b, 0);
-            s.percentage = calculatePercentage(s.marks);
-            s.gradePoint = getGradePoint(s.percentage);
-          });
-
-          resolve(students);
-        } catch (err) {
-          reject(err);
-        }
-      },
-      error: reject,
+  try {
+    const csvText = await file.text();
+    const workbook = XLSX.read(csvText, { type: 'string' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, {
+      raw: false,
+      defval: '',
     });
-  });
+
+    const students = rows.map((row, idx) => ({
+      id: `${Date.now()}-${idx}`,
+      name: row.name?.trim() || '',
+      rollno: String(row.rollno || row['roll no'] || '').trim(),
+      grade: String(row.grade || '').trim(),
+      gender: String(row.gender || '').trim(),
+      caste: String(row.caste || '').trim(),
+      dateOfBirth: row.dateOfBirth || row['date of birth'] || '',
+      fatherName: row.fatherName || row['father name'] || '',
+      motherName: row.motherName || row['mother name'] || '',
+      address: row.address || '',
+      marks: parseMarks(row),
+      totalMarks: 0,
+      percentage: 0,
+      gradePoint: '',
+      conduct: row.conduct || 'Good',
+      attendance: parseInt(row.attendance || '0', 10) || 0,
+    }));
+
+    students.forEach((student) => {
+      student.totalMarks = Object.values(student.marks).reduce((a, b) => a + b, 0);
+      student.percentage = calculatePercentage(student.marks);
+      student.gradePoint = getGradePoint(student.percentage);
+    });
+
+    return students;
+  } catch (error) {
+    throw new Error(`Unable to parse CSV file: ${(error as Error).message}`);
+  }
 }
 
 export async function parseExcel(file: File): Promise<Student[]> {
