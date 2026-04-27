@@ -10,6 +10,8 @@
     "export": "next build && next export"
   },
   "dependencies": {
+    "firebase": "^12.12.1",
+    "firebase-admin": "^13.8.0",
     "jspdf": "^2.5.1",
     "jszip": "^3.10.1",
     "next": "^14.0.4",

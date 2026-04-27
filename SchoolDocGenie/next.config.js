@@ -1,12 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // Removed 'output: export' to support API routes with Firebase backend
+  // Now requires Node.js hosting (Vercel, Netlify, or Docker)
   trailingSlash: true,
   images: {
     unoptimized: true,
   },
-  basePath: '/ALMWork',
-  assetPrefix: '/ALMWork/',
 };
 
 module.exports = nextConfig;
