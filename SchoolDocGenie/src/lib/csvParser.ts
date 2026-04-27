@@ -1,5 +1,4 @@
 import Papa from 'papaparse';
-import { read, utils } from 'xlsx';
 import { Student, ValidationResult } from '@/types';
 import { calculatePercentage, getGradePoint } from './utils';
 
@@ -46,6 +45,7 @@ export async function parseCSV(file: File): Promise<Student[]> {
 }
 
 export async function parseExcel(file: File): Promise<Student[]> {
+  const { read, utils } = await import('xlsx');
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
