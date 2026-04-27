@@ -13,7 +13,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Header />
 
-        <main className="max-w-5xl mx-auto px-5 py-8">{children}</main>
+        <main className="max-w-5xl mx-auto px-5 py-8">
+          <div className="surface-panel p-4 md:p-6">
+            {children}
+          </div>
+        </main>
 
         <footer className="mt-16 border-t" style={{ borderColor: 'rgba(199,210,254,0.4)', background: 'rgba(255,255,255,0.5)' }}>
           <div className="max-w-5xl mx-auto px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
