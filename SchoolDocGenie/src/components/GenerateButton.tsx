@@ -12,8 +12,8 @@ export default function GenerateButton({
 }: GenerateButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const filteredCount = grade ? filterByGrade(students, grade).length : students.length;
-  const canGenerate = students.length > 0 && docType !== null && grade !== null && filteredCount > 0;
+  const filteredCount = grade ? filterByGrade(students, grade).length : 0;
+  const canGenerate = students.length > 0 && !!docType && !!grade && filteredCount > 0;
 
   const handleGenerate = async () => {
     if (!canGenerate || !docType || !grade) return;
@@ -21,18 +21,13 @@ export default function GenerateButton({
     onGenerateStart();
     try {
       const filtered = filterByGrade(students, grade);
-      if (filtered.length === 0) { onError(`No students found for Grade ${grade}`); return; }
       const template = await loadTemplate(docType);
-      const aiTexts = await generateDocumentsForBatch(filtered, template, grade,
-        (c, t, n) => onProgress(c, t, n));
-      const pdfs = await generateMultiplePDFs(filtered, aiTexts, docType, template,
-        (c, t, n) => onProgress(c, t, n));
+      const aiTexts = await generateDocumentsForBatch(filtered, template, grade, (c,t,n) => onProgress(c,t,n));
+      const pdfs = await generateMultiplePDFs(filtered, aiTexts, docType, template, (c,t,n) => onProgress(c,t,n));
       onGenerateComplete(pdfs);
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Generation failed. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
+      onError(err instanceof Error ? err.message : 'Generation failed');
+    } finally { setIsGenerating(false); }
   };
 
   const docLabel = docType === 'marksheet' ? 'Marksheets'
@@ -40,53 +35,53 @@ export default function GenerateButton({
     : 'Evaluation Reports';
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <button
         onClick={handleGenerate}
         disabled={!canGenerate || isGenerating}
-        className={`w-full py-4 px-6 rounded-xl font-semibold text-base transition-all duration-200
-          flex items-center justify-center gap-3
-          ${canGenerate && !isGenerating
-            ? 'gradient-btn text-white shadow-md'
-            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-          }`}
+        className="btn-primary w-full py-4 px-6 text-base flex items-center justify-center gap-3"
       >
         {isGenerating ? (
           <>
-            <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-            <span>Generating PDFs…</span>
+            <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white"
+              style={{ animation:'spin .7s linear infinite' }} />
+            Generating PDFs… please wait
+          </>
+        ) : canGenerate ? (
+          <>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Generate {filteredCount} {docLabel}
+            <span className="ml-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/20">
+              Grade {grade}
+            </span>
           </>
         ) : (
           <>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            <span>
-              {canGenerate
-                ? `Generate ${filteredCount} ${docLabel}`
-                : 'Generate PDFs'}
-            </span>
-            {canGenerate && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white/20">
-                Grade {grade}
-              </span>
-            )}
+            Generate PDFs
           </>
         )}
       </button>
 
-      {/* Contextual hints */}
       {!canGenerate && (
-        <p className="text-center text-xs text-slate-400">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-slate-500"
+          style={{ background:'rgba(241,245,249,0.8)', border:'1px dashed #e2e8f0' }}>
+          <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
           {students.length === 0
             ? 'Upload student data in Step 1 to continue'
-            : !docType
-            ? 'Select a document type in Step 3'
-            : !grade
-            ? 'Select a grade in Step 3'
+            : !docType ? 'Select a document type in Step 3'
+            : !grade ? 'Select a grade in Step 3'
             : `No students found for Grade ${grade}`}
-        </p>
+        </div>
       )}
     </div>
   );

@@ -3,101 +3,91 @@
 import React from 'react';
 import { TemplateSelectorProps, DocType } from '@/types';
 
-const DOC_TYPES: { id: DocType; label: string; description: string; icon: React.ReactNode; color: string }[] = [
+const DOCS: {
+  id: DocType; label: string; desc: string;
+  gradient: string; lightBg: string; textColor: string;
+  icon: React.ReactNode;
+}[] = [
   {
     id: 'marksheet',
     label: 'Marksheet',
-    description: 'Subject-wise marks, percentage, grade point & teacher remarks.',
-    color: 'indigo',
+    desc: 'Subject-wise marks, percentage, grade point, and teacher remarks.',
+    gradient: 'linear-gradient(135deg,#4f46e5,#6366f1)',
+    lightBg: 'rgba(99,102,241,0.08)',
+    textColor: '#4f46e5',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
       </svg>
     ),
   },
   {
     id: 'leavingCert',
     label: 'Leaving Certificate',
-    description: 'Official character certificate with student details.',
-    color: 'violet',
+    desc: 'Official character certificate with student background and serial number.',
+    gradient: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+    lightBg: 'rgba(124,58,237,0.08)',
+    textColor: '#7c3aed',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-          d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+          d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
       </svg>
     ),
   },
   {
     id: 'periodicEval',
     label: 'Periodic Evaluation',
-    description: 'Term-wise evaluation with detailed performance analysis.',
-    color: 'blue',
+    desc: 'Term-wise report with detailed performance analysis and suggestions.',
+    gradient: 'linear-gradient(135deg,#2563eb,#4f46e5)',
+    lightBg: 'rgba(37,99,235,0.08)',
+    textColor: '#2563eb',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
       </svg>
     ),
   },
 ];
-
-const colorMap: Record<string, { bg: string; icon: string; border: string; text: string }> = {
-  indigo: {
-    bg: 'bg-indigo-50',
-    icon: 'text-indigo-600',
-    border: 'border-indigo-500',
-    text: 'text-indigo-700',
-  },
-  violet: {
-    bg: 'bg-violet-50',
-    icon: 'text-violet-600',
-    border: 'border-violet-500',
-    text: 'text-violet-700',
-  },
-  blue: {
-    bg: 'bg-blue-50',
-    icon: 'text-blue-600',
-    border: 'border-blue-500',
-    text: 'text-blue-700',
-  },
-};
 
 const GRADES = ['6', '7', '8'];
 
 export default function TemplateSelector({ onSelect, selectedDocType, selectedGrade }: TemplateSelectorProps) {
   return (
     <div className="space-y-6">
-      {/* Document type */}
+      {/* Doc types */}
       <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Document Type</p>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Document Type</p>
         <div className="grid gap-3 sm:grid-cols-3">
-          {DOC_TYPES.map((dt) => {
-            const c = colorMap[dt.color];
-            const selected = selectedDocType === dt.id;
+          {DOCS.map((d) => {
+            const active = selectedDocType === d.id;
             return (
-              <button
-                key={dt.id}
-                onClick={() => onSelect(dt.id, selectedGrade ?? '6')}
-                className={`p-4 rounded-xl border-2 text-left transition-all duration-150 group
-                  ${selected
-                    ? `${c.border} ${c.bg}`
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors
-                  ${selected ? c.bg : 'bg-slate-100 group-hover:bg-slate-200'}
-                  ${selected ? c.icon : 'text-slate-500'}`}>
-                  {dt.icon}
+              <button key={d.id} onClick={() => onSelect(d.id, selectedGrade ?? '6')}
+                className="text-left rounded-2xl p-4 transition-all duration-200 group"
+                style={{
+                  border: active ? `2px solid ${d.textColor}` : '2px solid rgba(226,232,240,0.8)',
+                  background: active ? d.lightBg : 'rgba(255,255,255,0.7)',
+                  boxShadow: active ? `0 4px 20px ${d.lightBg.replace('0.08','0.25')}` : 'none',
+                  transform: active ? 'translateY(-2px)' : 'translateY(0)',
+                }}>
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all"
+                  style={{
+                    background: active ? d.gradient : 'rgba(241,245,249,0.8)',
+                    color: active ? '#fff' : '#94a3b8',
+                  }}>
+                  {d.icon}
                 </div>
-                <p className={`font-semibold text-sm mb-1 ${selected ? c.text : 'text-slate-700'}`}>
-                  {dt.label}
+                <p className="font-bold text-sm mb-1" style={{ color: active ? d.textColor : '#334155' }}>
+                  {d.label}
                 </p>
-                <p className="text-xs text-slate-400 leading-relaxed">{dt.description}</p>
-                {selected && (
-                  <div className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${c.text}`}>
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <p className="text-xs leading-relaxed" style={{ color: '#94a3b8' }}>{d.desc}</p>
+                {active && (
+                  <div className="mt-2.5 flex items-center gap-1 text-xs font-semibold" style={{ color: d.textColor }}>
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
                     Selected
                   </div>
@@ -108,28 +98,41 @@ export default function TemplateSelector({ onSelect, selectedDocType, selectedGr
         </div>
       </div>
 
-      {/* Grade selector */}
+      {/* Grade */}
       <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Grade</p>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Grade</p>
         <div className="flex gap-3">
-          {GRADES.map((g) => (
-            <button
-              key={g}
-              onClick={() => onSelect(selectedDocType ?? 'marksheet', g)}
-              className={`flex-1 py-3 rounded-xl border-2 font-bold text-lg transition-all duration-150
-                ${selectedGrade === g
-                  ? 'border-transparent text-white shadow-lg'
-                  : 'border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600 bg-white'
-                }`}
-              style={selectedGrade === g
-                ? { background: 'linear-gradient(135deg, #1e40af 0%, #4f46e5 100%)' }
-                : {}}
-            >
-              {g}
-            </button>
-          ))}
+          {GRADES.map((g) => {
+            const active = selectedGrade === g;
+            return (
+              <button key={g} onClick={() => onSelect(selectedDocType ?? 'marksheet', g)}
+                className="flex-1 py-3.5 rounded-2xl font-black text-xl transition-all duration-200"
+                style={{
+                  background: active ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : 'rgba(255,255,255,0.8)',
+                  color: active ? '#fff' : '#94a3b8',
+                  border: active ? 'none' : '1.5px solid #e2e8f0',
+                  boxShadow: active ? '0 6px 20px rgba(79,70,229,0.35)' : 'none',
+                  transform: active ? 'translateY(-2px)' : 'translateY(0)',
+                }}>
+                {g}
+              </button>
+            );
+          })}
         </div>
       </div>
+
+      {/* Summary pill */}
+      {selectedDocType && selectedGrade && (
+        <div className="flex items-center gap-2 text-sm font-medium rounded-xl px-4 py-2.5"
+          style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', color:'#059669' }}>
+          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+          </svg>
+          Ready to generate&nbsp;
+          <strong>{DOCS.find(d => d.id === selectedDocType)?.label}</strong>
+          &nbsp;for&nbsp;<strong>Grade {selectedGrade}</strong>
+        </div>
+      )}
     </div>
   );
 }
