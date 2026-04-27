@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Student, DocType, GeneratedPDF, GenerationProgress } from '@/types';
 import FileUploader from '@/components/FileUploader';
 import StudentTable from '@/components/StudentTable';
@@ -8,6 +8,7 @@ import TemplateSelector from '@/components/TemplateSelector';
 import GenerateButton from '@/components/GenerateButton';
 import ProgressBar from '@/components/ProgressBar';
 import DownloadLinks from '@/components/DownloadLinks';
+import { api } from '@/lib/firebase';
 
 /* Step wrapper */
 function Step({
@@ -70,42 +71,42 @@ function Stat({ value, label, color }: { value: string; label: string; color: st
 
 /* Main page */
 export default function HomePage() {
-  const [students, setStudents]       = useState<Student[]>([]);
-  const [error, setError]             = useState<string | null>(null);
-  const [selectedDocType, setDocType] = useState<DocType | null>(null);
-  const [selectedGrade, setGrade]     = useState<string | null>(null);
-  const [progress, setProgress]       = useState<GenerationProgress>({
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDocType, setSelectedDocType] = useState<DocType | null>(null);
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
+  const [progress, setProgress] = useState<GenerationProgress>({
     current: 0, total: 0, currentStudentName: '', status: 'idle',
   });
   const [generatedPDFs, setPDFs] = useState<GeneratedPDF[]>([]);
   const [showUploadForm, setShowUploadForm] = useState(false);
 
-  const step1Done = students.length > 0;
-  const step3Done = selectedDocType !== null && selectedGrade !== null;
-
-  const mergeStudents = (existing: Student[], incoming: Student[]) => {
-    const merged = [...existing];
-
-    incoming.forEach((next) => {
-      const normalizedId = next.id?.trim();
-      const normalizedRollNo = next.rollno.trim().toLowerCase();
-      const normalizedGrade = next.grade.trim();
-      const idx = merged.findIndex((current) =>
-        (normalizedId && current.id === normalizedId)
-        || (
-          current.rollno.trim().toLowerCase() === normalizedRollNo
-          && current.grade.trim() === normalizedGrade
-        ),
-      );
-
-      if (idx >= 0) {
-        merged[idx] = { ...merged[idx], ...next, id: merged[idx].id };
-      } else {
-        merged.push(next);
+  // Fetch students from Firebase on mount
+  useEffect(() => {
+    async function fetchStudents() {
+      try {
+        setLoading(true);
+        const result = await api.getStudents();
+        const data = result.data as { success: boolean, data: Student[] };
+        if (data.success) {
+          setStudents(data.data);
+        }
+      } catch (err: any) {
+        console.error("Error fetching students:", err);
+        setError("Could not connect to backend. Please check your internet connection.");
+      } finally {
+        setLoading(false);
       }
-    });
+    }
+    fetchStudents();
+  }, []);
 
-    return merged;
+  const handleStudentsLoaded = (loaded: Student[]) => {
+    setStudents(loaded);
+    setError(null);
+    setGeneratedPDFs([]);
+    setProgress({ current: 0, total: 0, currentStudentName: '', status: 'idle' });
   };
 
   const handleStudentsLoaded = (s: Student[]) => {
@@ -201,6 +202,8 @@ export default function HomePage() {
                 {showUploadForm ? 'Hide' : 'Change'}
               </button>
             </div>
+          ) : students.length > 0 ? (
+            <StudentTable students={students} selectedGrade={selectedGrade ?? undefined} />
           ) : (
             <button
               onClick={() => setShowUploadForm(!showUploadForm)}
