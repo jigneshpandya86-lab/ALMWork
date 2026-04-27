@@ -401,106 +401,107 @@ const MONTHS_GJ = ['જાન્યુઆરી', 'ફેબ્રુઆરી',
   'જુલાઈ', 'ઓગસ્ટ', 'સપ્ટેમ્બર', 'ઓક્ટોબર', 'નવેમ્બર', 'ડિસેમ્બર'];
 
 async function generateAttendanceRegisterPDF(
-  student: Student,
-  attendance: string,
-  monthYearData?: { month: number; year: number; days: boolean[] }
+  students: Student[],
+  attendanceData: Map<string, { month: number; year: number; days: boolean[] }>,
+  grade: string
 ): Promise<Blob> {
   const JsPDF = await getJsPDF();
-  const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+  const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
   const pageW = doc.internal.pageSize.getWidth();
-  let y = 15;
+  const pageH = doc.internal.pageSize.getHeight();
+  let y = 12;
+
+  if (students.length === 0) throw new Error('No students provided');
+  const firstStudent = students[0];
+  const monthYearData = attendanceData.get(firstStudent.id);
+  if (!monthYearData) throw new Error('No attendance data provided');
 
   // Header
-  doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(25, 82, 163);
+  doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(25, 82, 163);
   doc.text('ATTENDANCE REGISTER', pageW / 2, y, { align: 'center' });
-  y += 10;
-
-  if (monthYearData) {
-    doc.setFontSize(11); doc.setFont('courier', 'normal'); doc.setTextColor(80, 80, 80);
-    doc.text(`${MONTHS_GJ[monthYearData.month]} ${monthYearData.year}`, pageW / 2, y, { align: 'center' });
-    y += 5;
-    doc.setFontSize(9);
-    doc.text(`(${MONTHS_EN[monthYearData.month]} ${monthYearData.year})`, pageW / 2, y, { align: 'center' });
-    y += 5;
-  }
   y += 5;
 
-  // Student info section
-  doc.setFillColor(230, 238, 255);
-  doc.rect(10, y, pageW - 20, 6, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(25, 82, 163);
-  doc.text('STUDENT INFORMATION', 14, y + 4);
-  y += 8;
+  doc.setFontSize(10); doc.setFont('courier', 'normal'); doc.setTextColor(80, 80, 80);
+  doc.text(`${MONTHS_GJ[monthYearData.month]} ${monthYearData.year}`, pageW / 2, y, { align: 'center' });
+  y += 4;
 
-  doc.setTextColor(0); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-  doc.text(`Name: ${student.name}`, 14, y); y += 6;
-  doc.text(`Grade: ${student.grade}`, 14, y); doc.text(`Roll No: ${student.rollno}`, pageW / 2 + 5, y); y += 6;
-  doc.text(`Attendance: ${attendance}%`, 14, y); y += 8;
+  doc.setFontSize(8);
+  doc.text(`(${MONTHS_EN[monthYearData.month]} ${monthYearData.year}) - Grade ${grade}`, pageW / 2, y, { align: 'center' });
+  y += 6;
 
-  // Calendar section
-  if (monthYearData) {
-    doc.setFillColor(230, 238, 255);
-    doc.rect(10, y, pageW - 20, 6, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(25, 82, 163);
-    doc.text(`CALENDAR - ${MONTHS_EN[monthYearData.month].toUpperCase()}`, 14, y + 4);
-    y += 8;
+  const daysInMonth = monthYearData.days.length;
+  const dayColW = 4.5;
+  const nameColW = 35;
+  const startX = 10;
+  const rowH = 5;
 
-    const daysInMonth = monthYearData.days.length;
-    const cols = 7;
-    const cellW = (pageW - 28) / cols;
-    const cellH = 7;
-    const startX = 14;
+  // Column headers - Student names and days
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+  doc.setFillColor(25, 82, 163); doc.setTextColor(255, 255, 255);
 
-    // Days header
-    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
-    doc.setFillColor(200, 220, 240);
-    dayLabels.forEach((day, idx) => {
-      const x = startX + idx * cellW;
-      doc.rect(x, y, cellW, cellH, 'F');
-      doc.setDrawColor(150); doc.rect(x, y, cellW, cellH);
-      doc.setTextColor(25, 82, 163);
-      doc.text(day, x + cellW / 2, y + 5, { align: 'center' });
-    });
-    y += cellH;
+  // Name header
+  doc.rect(startX, y, nameColW, rowH, 'F');
+  doc.text('Student Name', startX + 1, y + 3.5);
 
-    // Calendar days
-    const firstDay = new Date(monthYearData.year, monthYearData.month, 1).getDay();
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
-
-    let dayIdx = 0;
-    for (let row = 0; row < 6; row++) {
-      for (let col = 0; col < 7; col++) {
-        const x = startX + col * cellW;
-        const cellY = y + row * cellH;
-
-        if ((row === 0 && col < firstDay) || dayIdx >= daysInMonth) {
-          doc.setDrawColor(220); doc.rect(x, cellY, cellW, cellH);
-          continue;
-        }
-
-        const isPresent = monthYearData.days[dayIdx];
-        const dayNum = dayIdx + 1;
-
-        if (isPresent) {
-          doc.setFillColor(200, 245, 230);
-          doc.setDrawColor(16, 185, 129);
-          doc.setTextColor(16, 185, 129);
-        } else {
-          doc.setFillColor(240, 240, 240);
-          doc.setDrawColor(180, 180, 180);
-          doc.setTextColor(150, 150, 150);
-        }
-        doc.rect(x, cellY, cellW, cellH, 'F');
-        doc.rect(x, cellY, cellW, cellH);
-
-        doc.setFont('helvetica', isPresent ? 'bold' : 'normal');
-        doc.text(String(dayNum), x + cellW / 2, cellY + 5, { align: 'center' });
-
-        dayIdx++;
-      }
-    }
+  // Day headers
+  for (let day = 1; day <= daysInMonth; day++) {
+    const x = startX + nameColW + (day - 1) * dayColW;
+    if (x + dayColW > pageW - 5) break;
+    doc.rect(x, y, dayColW, rowH, 'F');
+    doc.text(String(day), x + dayColW / 2, y + 3.5, { align: 'center' });
   }
+  y += rowH;
+
+  // Student rows
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(0, 0, 0);
+  students.forEach((student, idx) => {
+    const attData = attendanceData.get(student.id);
+    if (!attData) return;
+
+    // Alternate row colors
+    if (idx % 2 === 0) {
+      doc.setFillColor(240, 245, 250);
+      doc.rect(startX, y, nameColW + daysInMonth * dayColW, rowH, 'F');
+    }
+
+    // Student name
+    doc.setDrawColor(180);
+    doc.rect(startX, y, nameColW, rowH);
+    doc.text(student.name, startX + 1, y + 3.5);
+
+    // Attendance cells
+    for (let day = 0; day < daysInMonth; day++) {
+      const x = startX + nameColW + day * dayColW;
+      if (x + dayColW > pageW - 5) break;
+
+      const isPresent = attData.days[day];
+      if (isPresent) {
+        doc.setFillColor(200, 245, 230);
+        doc.setDrawColor(16, 185, 129);
+        doc.rect(x, y, dayColW, rowH, 'F');
+        doc.setTextColor(16, 185, 129);
+        doc.setFont('helvetica', 'bold');
+        doc.text('P', x + dayColW / 2, y + 3.5, { align: 'center' });
+      } else {
+        doc.setFillColor(255, 245, 245);
+        doc.setDrawColor(200, 100, 100);
+        doc.rect(x, y, dayColW, rowH, 'F');
+        doc.setTextColor(150, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        doc.text('A', x + dayColW / 2, y + 3.5, { align: 'center' });
+      }
+      doc.setDrawColor(180);
+      doc.rect(x, y, dayColW, rowH);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+    }
+
+    y += rowH;
+    if (y > pageH - 15) {
+      doc.addPage();
+      y = 15;
+    }
+  });
 
   drawFooter(doc, pageW);
   return doc.output('blob');
@@ -533,36 +534,42 @@ export async function generateMultiplePDFs(
   docType: string,
   onProgress?: (current: number, total: number, name: string) => void,
   attendanceData?: Map<string, { month: number; year: number; days: boolean[] }>,
-  template?: DocumentTemplate
+  template?: DocumentTemplate,
+  grade?: string
 ): Promise<GeneratedPDF[]> {
   const results: GeneratedPDF[] = [];
 
-  for (let i = 0; i < students.length; i++) {
-    const student = students[i];
-    onProgress?.(i + 1, students.length, student.name);
-
-    let blob: Blob;
-
-    if (docType === 'attendanceRegister' && attendanceData) {
-      const attData = attendanceData.get(student.id);
-      const attendance = documents.get(student.id) ?? '0';
-      blob = await generateAttendanceRegisterPDF(student, attendance, attData);
-    } else if (template) {
-      const text = documents.get(student.id) ?? '';
-      blob = await generatePDF(student, text, docType, template);
-    } else {
-      throw new Error('Template required for non-attendance documents');
-    }
-
-    const filename = generateFileName(student, docType);
-
+  if (docType === 'attendanceRegister' && attendanceData && grade) {
+    onProgress?.(1, 1, `Grade ${grade} Attendance Register`);
+    const blob = await generateAttendanceRegisterPDF(students, attendanceData, grade);
     results.push({
-      studentId: student.id,
-      studentName: student.name,
-      filename,
+      studentId: `Grade${grade}`,
+      studentName: `Grade ${grade} Attendance Register`,
+      filename: `Attendance_Register_Grade${grade}_${new Date().getMonth() + 1}_${new Date().getFullYear()}.pdf`,
       blob,
       size: blob.size,
     });
+  } else {
+    for (let i = 0; i < students.length; i++) {
+      const student = students[i];
+      onProgress?.(i + 1, students.length, student.name);
+
+      if (!template) {
+        throw new Error('Template required for non-attendance documents');
+      }
+
+      const text = documents.get(student.id) ?? '';
+      const blob = await generatePDF(student, text, docType, template);
+      const filename = generateFileName(student, docType);
+
+      results.push({
+        studentId: student.id,
+        studentName: student.name,
+        filename,
+        blob,
+        size: blob.size,
+      });
+    }
   }
 
   return results;

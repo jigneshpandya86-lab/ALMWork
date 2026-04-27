@@ -54,7 +54,7 @@ export default function GenerateButton({
         }
       });
 
-      const pdfs = await generateMultiplePDFs(filtered, remarks, docType, (c, t, n) => onProgress(c, t, n), attendanceData);
+      const pdfs = await generateMultiplePDFs(filtered, remarks, docType, (c, t, n) => onProgress(c, t, n), attendanceData, undefined, grade);
       onGenerateComplete(pdfs);
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Generation failed');
