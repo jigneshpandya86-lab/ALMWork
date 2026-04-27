@@ -18,6 +18,29 @@ export interface Student {
   remarks?: string;
 }
 
+export interface DocumentTemplate {
+  docType: string;
+  title: string;
+  grades: string[];
+  aiPrompts: { [grade: string]: string };
+  fields: string[];
+  remarksRules?: { [range: string]: string };
+  schoolInfo?: SchoolInfo;
+  evaluationPeriod?: string;
+}
+
+export interface SchoolInfo {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  academicYear: string;
+  affiliation?: string;
+  maxMarksPerSubject?: number;
+  totalSubjects?: number;
+  maxTotalMarks?: number;
+}
+
 export type DocType = 'marksheet' | 'leavingCert' | 'periodicEval' | 'attendanceRegister';
 
 export interface GeneratedPDF {

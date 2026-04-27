@@ -69,11 +69,16 @@ export default function StudentTable({ students, selectedGrade, onSaveStudent, o
   const pages = Math.ceil(filtered.length / PAGE_SIZE);
   const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const byGrade = useMemo(() => {
-    const m: Record<string,number> = {};
-    filtered.forEach(s => { m[s.grade] = (m[s.grade] ?? 0) + 1; });
-    return m;
-  }, [filtered]);
+  const gradeColor: Record<string, string> = {
+    'A+': 'bg-green-100 text-green-800',
+    A: 'bg-blue-100 text-blue-800',
+    'B+': 'bg-teal-100 text-teal-800',
+    B: 'bg-yellow-100 text-yellow-800',
+    'C+': 'bg-orange-100 text-orange-800',
+    C: 'bg-red-100 text-red-800',
+    D: 'bg-red-200 text-red-900',
+    'B-': 'bg-yellow-100 text-yellow-800',
+  };
 
   const openAdd = () => {
     setEditingStudent(null);
