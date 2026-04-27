@@ -11,28 +11,21 @@ import DownloadLinks from '@/components/DownloadLinks';
 
 /* ── Step wrapper ─────────────────────────────────────────────────── */
 function Step({
-  n, title, subtitle, active, done, last = false, children,
+  n, title, subtitle, active, done, last = false, children, id,
 }: {
   n: number; title: string; subtitle: string;
   active: boolean; done: boolean; last?: boolean;
-  children: React.ReactNode;
+  children: React.ReactNode; id?: string;
 }) {
   return (
-    <div className="flex gap-5">
+    <div className="flex gap-5" id={id}>
       {/* Timeline */}
       <div className="flex flex-col items-center flex-shrink-0">
         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-md transition-all duration-300
-          ${done
-            ? 'text-white'
-            : active
-            ? 'text-white ring-4 ring-indigo-100'
-            : 'bg-white text-slate-300 border border-slate-200'
-          }`}
+          ${done ? 'text-white' : active ? 'text-white ring-4 ring-indigo-100' : 'bg-white text-slate-300 border border-slate-200'}`}
           style={done
             ? { background: 'linear-gradient(135deg,#059669,#10b981)' }
-            : active
-            ? { background: 'linear-gradient(135deg,#4f46e5,#7c3aed)' }
-            : {}}>
+            : active ? { background: 'linear-gradient(135deg,#4f46e5,#7c3aed)' } : {}}>
           {done
             ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
             : n}
@@ -63,22 +56,11 @@ function Step({
   );
 }
 
-/* ── Feature pill ─────────────────────────────────── */
-function Pill({ icon, label }: { icon: string; label: string }) {
-  return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
-      style={{ background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(199,210,254,0.6)', color: '#3730a3' }}>
-      <span>{icon}</span>
-      <span>{label}</span>
-    </div>
-  );
-}
-
 /* ── Stat card ─────────────────────────────────────── */
 function Stat({ value, label, color }: { value: string; label: string; color: string }) {
   return (
-    <div className="text-center px-6 py-4" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 16 }}>
-      <p className="text-2xl font-black" style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+    <div className="text-center px-5 py-3" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 14 }}>
+      <p className="text-xl font-black" style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         {value}
       </p>
       <p className="text-xs text-slate-500 mt-0.5 font-medium">{label}</p>
@@ -88,14 +70,14 @@ function Stat({ value, label, color }: { value: string; label: string; color: st
 
 /* ── Main page ─────────────────────────────────────── */
 export default function HomePage() {
-  const [students, setStudents]         = useState<Student[]>([]);
-  const [error, setError]               = useState<string | null>(null);
-  const [selectedDocType, setDocType]   = useState<DocType | null>(null);
-  const [selectedGrade, setGrade]       = useState<string | null>(null);
-  const [progress, setProgress]         = useState<GenerationProgress>({
+  const [students, setStudents]       = useState<Student[]>([]);
+  const [error, setError]             = useState<string | null>(null);
+  const [selectedDocType, setDocType] = useState<DocType | null>(null);
+  const [selectedGrade, setGrade]     = useState<string | null>(null);
+  const [progress, setProgress]       = useState<GenerationProgress>({
     current: 0, total: 0, currentStudentName: '', status: 'idle',
   });
-  const [generatedPDFs, setPDFs]        = useState<GeneratedPDF[]>([]);
+  const [generatedPDFs, setPDFs] = useState<GeneratedPDF[]>([]);
 
   const step1Done = students.length > 0;
   const step3Done = selectedDocType !== null && selectedGrade !== null;
@@ -123,65 +105,31 @@ export default function HomePage() {
     setProgress(p => ({ ...p, status:'error', error:msg }));
   };
 
-  const noApiKey = !process.env.NEXT_PUBLIC_GEMINI_API_KEY
-    || process.env.NEXT_PUBLIC_GEMINI_API_KEY === 'your_gemini_api_key_here';
-
   return (
     <div className="space-y-4">
 
       {/* ── Hero ──────────────────────────────────────────── */}
-      <div className="text-center py-12 fade-up">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-6 uppercase tracking-widest"
-          style={{ background:'rgba(79,70,229,0.1)', color:'#4f46e5', border:'1px solid rgba(79,70,229,0.2)' }}>
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-          </svg>
-          AI-Powered Document Generator
-        </div>
-
-        <h1 className="text-6xl font-black tracking-tight leading-none mb-4">
+      <div className="text-center py-10 fade-up">
+        <h1 className="text-5xl font-black tracking-tight leading-none mb-3">
           <span className="text-slate-800">School</span>
           <span className="grad-text">Doc</span>
           <span className="text-slate-800">Genie</span>
         </h1>
-
-        <p className="text-slate-500 text-xl max-w-lg mx-auto leading-relaxed font-light mb-8">
-          Upload student data, pick a document type, and download beautifully formatted PDFs — powered by Gemini AI.
+        <p className="text-slate-500 text-lg max-w-lg mx-auto leading-relaxed font-light mb-7">
+          Upload student data, pick a document type, and download beautifully formatted PDFs instantly.
         </p>
-
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-          <Pill icon="📋" label="Marksheets" />
-          <Pill icon="🎓" label="Leaving Certificates" />
-          <Pill icon="📊" label="Periodic Evaluations" />
-        </div>
 
         {/* Stats bar */}
         <div className="inline-flex gap-1 p-1.5 rounded-2xl"
           style={{ background:'rgba(255,255,255,0.6)', border:'1px solid rgba(199,210,254,0.5)', backdropFilter:'blur(12px)' }}>
           <Stat value="3" label="Doc Types" color="linear-gradient(135deg,#4f46e5,#7c3aed)" />
           <Stat value="6–8" label="Grades" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
-          <Stat value="AI" label="Gemini-Powered" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
+          <Stat value="PDF" label="Instant Export" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
           <Stat value="0%" label="Data Sent" color="linear-gradient(135deg,#059669,#10b981)" />
         </div>
       </div>
 
-      {/* ── Notices ────────────────────────────────────────── */}
-      {noApiKey && (
-        <div className="glass fade-up delay-1 flex items-start gap-3 px-5 py-4 rounded-2xl"
-          style={{ background:'rgba(255,251,235,0.85)', border:'1px solid rgba(217,119,6,0.25)' }}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background:'rgba(217,119,6,0.12)' }}>
-            <svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="text-sm text-amber-800">
-            <strong>Gemini API key not set.</strong> PDFs will use built-in remark templates.
-            Add <code className="px-1.5 py-0.5 rounded-md text-xs font-mono" style={{ background:'rgba(217,119,6,0.12)' }}>NEXT_PUBLIC_GEMINI_API_KEY</code> to <code className="px-1.5 py-0.5 rounded-md text-xs font-mono" style={{ background:'rgba(217,119,6,0.12)' }}>.env.local</code> for AI remarks.
-          </div>
-        </div>
-      )}
-
+      {/* ── Error ─────────────────────────────────────────── */}
       {error && (
         <div className="glass fade-up flex items-start gap-3 px-5 py-4 rounded-2xl"
           style={{ background:'rgba(254,242,242,0.9)', border:'1px solid rgba(239,68,68,0.25)' }}>
@@ -197,12 +145,12 @@ export default function HomePage() {
 
       {/* ── Steps ─────────────────────────────────────────── */}
       <div className="mt-4 fade-up delay-2">
-        <Step n={1} title="Upload Student Data" subtitle="JSON file or load the built-in sample dataset"
+        <Step id="step-upload" n={1} title="Upload Student Data" subtitle="JSON file, paste JSON, or load the built-in sample dataset"
           active={!step1Done} done={step1Done}>
           <FileUploader onStudentsLoaded={handleStudentsLoaded} onError={handleError} />
         </Step>
 
-        <Step n={2} title="Preview Students" subtitle="Review uploaded data, filter by grade"
+        <Step id="step-preview" n={2} title="Preview Students" subtitle="Review uploaded data, filter by grade"
           active={step1Done && !step3Done} done={step3Done}>
           {students.length > 0
             ? <StudentTable students={students} selectedGrade={selectedGrade ?? undefined} />
@@ -217,13 +165,12 @@ export default function HomePage() {
             )}
         </Step>
 
-        <Step n={3} title="Choose Document Type & Grade" subtitle="Pick what to generate and for which grade"
+        <Step id="step-select" n={3} title="Choose Document Type & Grade" subtitle="Pick what to generate and for which grade"
           active={step1Done && !step3Done} done={step3Done}>
           <TemplateSelector onSelect={handleSelect} selectedDocType={selectedDocType} selectedGrade={selectedGrade} />
         </Step>
 
-        {/* Generate + progress */}
-        <Step n={4} title="Generate & Download" subtitle="Click to create PDFs for all students in the selected grade"
+        <Step id="step-generate" n={4} title="Generate & Download" subtitle="Click to create PDFs for all students in the selected grade"
           active={step3Done} done={generatedPDFs.length > 0} last>
           <GenerateButton
             students={students} docType={selectedDocType} grade={selectedGrade}
