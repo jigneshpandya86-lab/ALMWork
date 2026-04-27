@@ -9,202 +9,192 @@ import GenerateButton from '@/components/GenerateButton';
 import ProgressBar from '@/components/ProgressBar';
 import DownloadLinks from '@/components/DownloadLinks';
 
-function StepCard({
-  step,
-  title,
-  active,
-  done,
-  children,
+/* ── Step wrapper ─────────────────────────────────────────────────── */
+function Step({
+  n, title, subtitle, active, done, last = false, children, id,
 }: {
-  step: number;
-  title: string;
-  active: boolean;
-  done: boolean;
-  children: React.ReactNode;
+  n: number; title: string; subtitle: string;
+  active: boolean; done: boolean; last?: boolean;
+  children: React.ReactNode; id?: string;
 }) {
   return (
-    <section
-      className={`bg-white rounded-2xl border shadow-sm p-6 transition-all ${
-        active ? 'border-blue-300 shadow-blue-50' : done ? 'border-green-200' : 'border-gray-200'
-      }`}
-    >
-      <div className="flex items-center gap-3 mb-5">
-        <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-            done
-              ? 'bg-green-500 text-white'
-              : active
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-500'
-          }`}
-        >
-          {done ? (
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          ) : (
-            step
-          )}
+    <div className="flex gap-5" id={id}>
+      {/* Timeline */}
+      <div className="flex flex-col items-center flex-shrink-0">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-md transition-all duration-300
+          ${done ? 'text-white' : active ? 'text-white ring-4 ring-indigo-100' : 'bg-white text-slate-300 border border-slate-200'}`}
+          style={done
+            ? { background: 'linear-gradient(135deg,#059669,#10b981)' }
+            : active ? { background: 'linear-gradient(135deg,#4f46e5,#7c3aed)' } : {}}>
+          {done
+            ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+            : n}
         </div>
-        <h2 className={`font-semibold text-lg ${active ? 'text-blue-700' : done ? 'text-green-700' : 'text-gray-400'}`}>
-          {title}
-        </h2>
+        {!last && (
+          <div className={`w-0.5 flex-1 mt-2 rounded-full transition-all duration-500 ${done ? 'bg-emerald-200' : 'bg-slate-200'}`}
+            style={{ minHeight: 24 }} />
+        )}
       </div>
-      {children}
-    </section>
+
+      {/* Card */}
+      <div className={`flex-1 mb-5 glass transition-all duration-300
+        ${active ? 'ring-2 ring-indigo-300 ring-offset-2' : done ? 'ring-1 ring-emerald-200' : 'opacity-80'}`}
+        style={{ padding: '24px' }}>
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-1">
+            {done && <span className="badge" style={{ background:'rgba(16,185,129,0.12)', color:'#059669' }}>Complete</span>}
+            {active && <span className="badge" style={{ background:'rgba(79,70,229,0.12)', color:'#4f46e5' }}>Active</span>}
+          </div>
+          <h2 className={`font-bold text-lg leading-tight ${active ? 'text-slate-900' : done ? 'text-slate-700' : 'text-slate-400'}`}>
+            {title}
+          </h2>
+          <p className="text-sm text-slate-400 mt-0.5">{subtitle}</p>
+        </div>
+        {children}
+      </div>
+    </div>
   );
 }
 
+/* ── Stat card ─────────────────────────────────────── */
+function Stat({ value, label, color }: { value: string; label: string; color: string }) {
+  return (
+    <div className="text-center px-2.5 py-1.5" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 8 }}>
+      <p className="text-sm font-black" style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        {value}
+      </p>
+      <p className="text-xs text-slate-500 mt-0 font-medium">{label}</p>
+    </div>
+  );
+}
+
+/* ── Main page ─────────────────────────────────────── */
 export default function HomePage() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedDocType, setSelectedDocType] = useState<DocType | null>(null);
-  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
-  const [progress, setProgress] = useState<GenerationProgress>({
-    current: 0,
-    total: 0,
-    currentStudentName: '',
-    status: 'idle',
+  const [students, setStudents]       = useState<Student[]>([]);
+  const [error, setError]             = useState<string | null>(null);
+  const [selectedDocType, setDocType] = useState<DocType | null>(null);
+  const [selectedGrade, setGrade]     = useState<string | null>(null);
+  const [progress, setProgress]       = useState<GenerationProgress>({
+    current: 0, total: 0, currentStudentName: '', status: 'idle',
   });
-  const [generatedPDFs, setGeneratedPDFs] = useState<GeneratedPDF[]>([]);
-
-  const handleStudentsLoaded = (loaded: Student[]) => {
-    setStudents(loaded);
-    setError(null);
-    setGeneratedPDFs([]);
-    setProgress({ current: 0, total: 0, currentStudentName: '', status: 'idle' });
-  };
-
-  const handleSelect = (docType: DocType, grade: string) => {
-    setSelectedDocType(docType);
-    setSelectedGrade(grade);
-    setGeneratedPDFs([]);
-    setProgress({ current: 0, total: 0, currentStudentName: '', status: 'idle' });
-  };
-
-  const handleGenerateStart = () => {
-    setGeneratedPDFs([]);
-    setProgress({ current: 0, total: 0, currentStudentName: '', status: 'generating' });
-    setError(null);
-  };
-
-  const handleProgress = (current: number, total: number, name: string) => {
-    setProgress({ current, total, currentStudentName: name, status: 'generating' });
-  };
-
-  const handleComplete = (pdfs: GeneratedPDF[]) => {
-    setGeneratedPDFs(pdfs);
-    setProgress((p) => ({ ...p, status: 'complete' }));
-  };
-
-  const handleError = (msg: string) => {
-    setError(msg);
-    setProgress((p) => ({ ...p, status: 'error', error: msg }));
-  };
+  const [generatedPDFs, setPDFs] = useState<GeneratedPDF[]>([]);
 
   const step1Done = students.length > 0;
-  const step2Done = step1Done;
   const step3Done = selectedDocType !== null && selectedGrade !== null;
-  const step4Active = progress.status === 'generating' || progress.status === 'complete';
+
+  const handleStudentsLoaded = (s: Student[]) => {
+    setStudents(s); setError(null); setPDFs([]);
+    setProgress({ current:0, total:0, currentStudentName:'', status:'idle' });
+  };
+  const handleSelect = (d: DocType, g: string) => {
+    setDocType(d); setGrade(g); setPDFs([]);
+    setProgress({ current:0, total:0, currentStudentName:'', status:'idle' });
+  };
+  const handleGenerateStart = () => {
+    setPDFs([]); setError(null);
+    setProgress({ current:0, total:0, currentStudentName:'', status:'generating' });
+  };
+  const handleProgress = (c: number, t: number, n: string) =>
+    setProgress({ current:c, total:t, currentStudentName:n, status:'generating' });
+  const handleComplete = (pdfs: GeneratedPDF[]) => {
+    setPDFs(pdfs);
+    setProgress(p => ({ ...p, status:'complete' }));
+  };
+  const handleError = (msg: string) => {
+    setError(msg);
+    setProgress(p => ({ ...p, status:'error', error:msg }));
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Hero */}
-      <div className="text-center py-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">
-          School<span className="text-blue-600">Doc</span>Genie
-        </h1>
-        <p className="text-gray-500 text-lg max-w-xl mx-auto">
-          Generate professional school documents for every student in seconds, powered by Google Gemini AI.
+    <div className="space-y-4">
+
+      {/* ── Hero ──────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-6 py-3 fade-up">
+        <div className="flex-shrink-0">
+          <h1 className="text-3xl font-black tracking-tight leading-none">
+            <span className="text-slate-800">School</span>
+            <span className="grad-text">Doc</span>
+            <span className="text-slate-800">Genie</span>
+          </h1>
+        </div>
+
+        <p className="text-slate-500 text-sm font-light flex-1">
+          Upload student data, pick a document type, download PDFs instantly.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
-          {['Marksheet', 'Leaving Certificate', 'Periodic Evaluation'].map((t) => (
-            <span key={t} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100">
-              {t}
-            </span>
-          ))}
+
+        {/* Stats bar */}
+        <div className="inline-flex gap-0.5 p-0.5 rounded-lg flex-shrink-0"
+          style={{ background:'rgba(255,255,255,0.6)', border:'1px solid rgba(199,210,254,0.5)', backdropFilter:'blur(12px)' }}>
+          <Stat value="3" label="Doc Types" color="linear-gradient(135deg,#4f46e5,#7c3aed)" />
+          <Stat value="6–8" label="Grades" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
+          <Stat value="PDF" label="Instant" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
+          <Stat value="0%" label="Data Sent" color="linear-gradient(135deg,#059669,#10b981)" />
         </div>
       </div>
 
-      {/* Error banner */}
+      {/* ── Error ─────────────────────────────────────────── */}
       {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-          <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-          </svg>
-          <div>
-            <strong>Error:</strong> {error}
+        <div className="glass fade-up flex items-start gap-3 px-5 py-4 rounded-2xl"
+          style={{ background:'rgba(254,242,242,0.9)', border:'1px solid rgba(239,68,68,0.25)' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background:'rgba(239,68,68,0.1)' }}>
+            <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
           </div>
+          <p className="text-sm text-red-700"><strong>Error:</strong> {error}</p>
         </div>
       )}
 
-      {/* Gemini API key notice */}
-      {!process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY === 'your_gemini_api_key_here' ? (
-        <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
-          <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          <div>
-            <strong>Gemini API key not set.</strong> PDFs will be generated using built-in remarks templates.
-            Set <code className="px-1 py-0.5 bg-amber-100 rounded text-xs">NEXT_PUBLIC_GEMINI_API_KEY</code> in{' '}
-            <code className="px-1 py-0.5 bg-amber-100 rounded text-xs">.env.local</code> for AI-powered remarks.
-          </div>
-        </div>
-      ) : null}
+      {/* ── Steps ─────────────────────────────────────────── */}
+      <div className="mt-4 fade-up delay-2">
+        <Step id="step-upload" n={1} title="Upload Student Data" subtitle="JSON file, paste JSON, or load the built-in sample dataset"
+          active={!step1Done} done={step1Done}>
+          <FileUploader onStudentsLoaded={handleStudentsLoaded} onError={handleError} />
+        </Step>
 
-      {/* Step 1 */}
-      <StepCard step={1} title="Upload Student Data" active={!step1Done} done={step1Done}>
-        <FileUploader onStudentsLoaded={handleStudentsLoaded} onError={handleError} />
-      </StepCard>
+        <Step id="step-preview" n={2} title="Preview Students" subtitle="Review uploaded data, filter by grade"
+          active={step1Done && !step3Done} done={step3Done}>
+          {students.length > 0
+            ? <StudentTable students={students} selectedGrade={selectedGrade ?? undefined} />
+            : (
+              <div className="flex flex-col items-center gap-3 py-10 text-slate-300 select-none">
+                <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <p className="text-sm">Upload a file above to preview students here</p>
+              </div>
+            )}
+        </Step>
 
-      {/* Step 2 */}
-      <StepCard step={2} title="Preview Students" active={step1Done && !step3Done} done={step3Done}>
-        {students.length > 0 ? (
-          <StudentTable students={students} selectedGrade={selectedGrade ?? undefined} />
-        ) : (
-          <p className="text-gray-400 text-sm">Upload a JSON file to preview student data here.</p>
-        )}
-      </StepCard>
+        <Step id="step-select" n={3} title="Choose Document Type & Grade" subtitle="Pick what to generate and for which grade"
+          active={step1Done && !step3Done} done={step3Done}>
+          <TemplateSelector onSelect={handleSelect} selectedDocType={selectedDocType} selectedGrade={selectedGrade} />
+        </Step>
 
-      {/* Step 3 */}
-      <StepCard step={3} title="Select Document Type & Grade" active={step1Done && !step3Done} done={step3Done}>
-        <TemplateSelector
-          onSelect={handleSelect}
-          selectedDocType={selectedDocType}
-          selectedGrade={selectedGrade}
-        />
-      </StepCard>
-
-      {/* Generate */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-        <GenerateButton
-          students={students}
-          docType={selectedDocType}
-          grade={selectedGrade}
-          onGenerateStart={handleGenerateStart}
-          onProgress={handleProgress}
-          onGenerateComplete={handleComplete}
-          onError={handleError}
-        />
-
-        {progress.status !== 'idle' && (
-          <div className="mt-4">
-            <ProgressBar
-              current={progress.current}
-              total={progress.total}
-              currentStudentName={progress.currentStudentName}
-              status={progress.status}
-            />
-          </div>
-        )}
+        <Step id="step-generate" n={4} title="Generate & Download" subtitle="Click to create PDFs for all students in the selected grade"
+          active={step3Done} done={generatedPDFs.length > 0} last>
+          <GenerateButton
+            students={students} docType={selectedDocType} grade={selectedGrade}
+            onGenerateStart={handleGenerateStart} onProgress={handleProgress}
+            onGenerateComplete={handleComplete} onError={handleError}
+          />
+          {progress.status !== 'idle' && (
+            <div className="mt-5 pt-5" style={{ borderTop:'1px solid rgba(199,210,254,0.4)' }}>
+              <ProgressBar
+                current={progress.current} total={progress.total}
+                currentStudentName={progress.currentStudentName} status={progress.status}
+              />
+            </div>
+          )}
+          {generatedPDFs.length > 0 && (
+            <div className="mt-5 pt-5" style={{ borderTop:'1px solid rgba(199,210,254,0.4)' }}>
+              <DownloadLinks pdfs={generatedPDFs} />
+            </div>
+          )}
+        </Step>
       </div>
-
-      {/* Step 4 */}
-      {generatedPDFs.length > 0 && (
-        <StepCard step={4} title="Download Results" active={step4Active} done={false}>
-          <DownloadLinks pdfs={generatedPDFs} />
-        </StepCard>
-      )}
     </div>
   );
 }

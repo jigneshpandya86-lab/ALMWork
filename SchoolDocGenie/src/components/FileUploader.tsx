@@ -3,131 +3,293 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { FileUploaderProps } from '@/types';
 import { parseJSON } from '@/lib/jsonParser';
+import { parseCSV, parseExcel, downloadSampleCSV } from '@/lib/csvParser';
+import { parseTextFormat } from '@/lib/textParser';
 
 export default function FileUploader({ onStudentsLoaded, onError }: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [pasteValue, setPasteValue] = useState('');
+  const [activeTab, setActiveTab] = useState<'paste' | 'upload' | 'sample'>('paste');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const processFile = useCallback(
-    async (file: File) => {
-      if (!file.name.endsWith('.json')) {
-        onError('Please upload a valid JSON file (.json)');
+  const processFile = useCallback(async (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!['json', 'csv', 'xlsx', 'xls'].includes(ext || '')) {
+      onError('Please upload JSON, CSV, or Excel file');
+      return;
+    }
+
+    setIsLoading(true);
+    setFileName(file.name);
+
+    try {
+      let students;
+      if (ext === 'json') {
+        students = await parseJSON(file);
+      } else if (ext === 'csv') {
+        students = await parseCSV(file);
+      } else if (['xlsx', 'xls'].includes(ext || '')) {
+        students = await parseExcel(file);
+      } else {
+        throw new Error('Unsupported file format');
+      }
+
+      if (students.length === 0) {
+        onError('No valid students found in file');
+        setFileName(null);
         return;
       }
-      setIsLoading(true);
-      setFileName(file.name);
-      try {
-        const students = await parseJSON(file);
-        onStudentsLoaded(students);
-      } catch (err) {
-        onError(err instanceof Error ? err.message : 'Failed to parse JSON file');
-        setFileName(null);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [onStudentsLoaded, onError]
-  );
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-      const file = e.dataTransfer.files[0];
-      if (file) processFile(file);
-    },
-    [processFile]
-  );
-
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) processFile(file);
-    },
-    [processFile]
-  );
-
-  const loadSample = useCallback(async () => {
-    setIsLoading(true);
-    setFileName('sample-students.json');
-    try {
-      const res = await fetch('/sample-students.json');
-      if (!res.ok) throw new Error('Failed to load sample data');
-      const data = await res.json();
-      const arr = Array.isArray(data) ? data : data.students ?? [];
-      const { validateStudents } = await import('@/lib/jsonParser');
-      const { valid } = validateStudents(arr);
-      onStudentsLoaded(valid);
+      onStudentsLoaded(students);
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Failed to load sample data');
+      onError(err instanceof Error ? err.message : 'Failed to parse file');
       setFileName(null);
     } finally {
       setIsLoading(false);
     }
   }, [onStudentsLoaded, onError]);
 
-  return (
-    <div className="space-y-4">
-      <div
-        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer
-          ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'}`}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
-        aria-label="Upload JSON file"
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".json"
-          className="hidden"
-          onChange={handleChange}
-        />
+  const processPastedData = useCallback(async () => {
+    if (!pasteValue.trim()) { onError('Please paste student data'); return; }
+    setIsLoading(true);
+    try {
+      let students;
+      const trimmed = pasteValue.trim();
 
-        {isLoading ? (
-          <div className="flex flex-col items-center gap-2">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
-            <p className="text-blue-600 font-medium">Processing {fileName}…</p>
+      // Try JSON first
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        const data = JSON.parse(trimmed);
+        const arr = Array.isArray(data) ? data : data.students ?? [];
+        if (arr.length === 0) { onError('No students found in data'); return; }
+        const { validateStudents } = await import('@/lib/jsonParser');
+        const { valid } = validateStudents(arr);
+        students = valid;
+      } else {
+        // Try text/CSV format
+        students = parseTextFormat(trimmed);
+      }
+
+      if (students.length === 0) { onError('No valid students in the provided data'); return; }
+      onStudentsLoaded(students);
+      setPasteValue('');
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Failed to parse data. Use JSON, CSV, or tab-separated format.');
+    } finally { setIsLoading(false); }
+  }, [pasteValue, onStudentsLoaded, onError]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setIsDragging(false);
+    const f = e.dataTransfer.files[0]; if (f) processFile(f);
+  }, [processFile]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (f) processFile(f);
+  }, [processFile]);
+
+  const loadSample = useCallback(async () => {
+    setIsLoading(true); setFileName('sample-students.json');
+    try {
+      const res = await fetch('/ALMWork/sample-students.json');
+      if (!res.ok) throw new Error('Failed to fetch sample');
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data : data.students ?? [];
+      const { validateStudents } = await import('@/lib/jsonParser');
+      const { valid } = validateStudents(arr);
+      onStudentsLoaded(valid);
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Failed to load sample');
+      setFileName(null);
+    } finally { setIsLoading(false); }
+  }, [onStudentsLoaded, onError]);
+
+  return (
+    <div className="space-y-3">
+      {/* Tab buttons */}
+      <div className="flex gap-2 p-1 rounded-lg" style={{ background:'rgba(241,245,249,0.8)' }}>
+        {(['paste', 'upload', 'sample'] as const).map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className="flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+            style={activeTab === tab ? {
+              background: 'white',
+              color: '#4f46e5',
+              boxShadow: '0 1px 3px rgba(79,70,229,0.15)',
+            } : { color: '#94a3b8' }}>
+            {tab === 'paste' ? 'Paste Data' : tab === 'upload' ? 'Upload File' : 'Sample'}
+          </button>
+        ))}
+      </div>
+
+      {/* Paste form tab */}
+      {activeTab === 'paste' && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-2">Paste student data (JSON array)</label>
+            <textarea
+              value={pasteValue}
+              onChange={(e) => setPasteValue(e.target.value)}
+              placeholder='[{"name":"John","rollno":"001","grade":"6",...},...]'
+              className="w-full h-40 p-3 rounded-xl text-xs font-mono resize-none outline-none transition-all"
+              style={{
+                background:'rgba(255,255,255,0.9)',
+                border:'1.5px solid #e2e8f0',
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor='#6366f1'; e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor='#e2e8f0'; e.currentTarget.style.boxShadow='none'; }}
+            />
           </div>
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            {fileName ? (
-              <p className="text-green-600 font-medium">{fileName} loaded successfully!</p>
+
+          <button
+            onClick={processPastedData}
+            disabled={isLoading || !pasteValue.trim()}
+            className="w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: isLoading || !pasteValue.trim() ? 'rgba(241,245,249,0.6)' : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
+              color: 'white',
+              opacity: isLoading || !pasteValue.trim() ? 0.6 : 1,
+              cursor: isLoading || !pasteValue.trim() ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white" style={{ animation:'spin .6s linear infinite' }} />
+                Processing…
+              </span>
+            ) : 'Load Students'}
+          </button>
+
+          <div className="px-3 py-2 rounded-lg text-xs text-slate-500" style={{ background:'rgba(241,245,249,0.8)' }}>
+            <p className="font-semibold mb-1">Supported formats:</p>
+            <p className="text-xs mb-1"><strong>JSON:</strong> <code className="bg-white px-1 py-0.5 rounded">[{"{...}"}]</code></p>
+            <p className="text-xs"><strong>Plain text:</strong> One student per line, tab/comma-separated or in any order</p>
+          </div>
+        </div>
+      )}
+
+      {/* File upload tab */}
+      {activeTab === 'upload' && (
+        <div className="space-y-3">
+          <div
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            role="button" tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
+            className="relative rounded-xl p-8 text-center cursor-pointer select-none transition-all"
+            style={{
+              border: `2px dashed ${isDragging ? '#6366f1' : fileName ? '#10b981' : '#c7d2fe'}`,
+              background: isDragging
+                ? 'rgba(99,102,241,0.06)'
+                : fileName
+                ? 'rgba(16,185,129,0.05)'
+                : 'rgba(238,242,255,0.5)',
+              transform: isDragging ? 'scale(1.01)' : 'scale(1)',
+            }}
+          >
+            <input ref={inputRef} type="file" accept=".json,.csv,.xlsx,.xls" className="hidden" onChange={handleChange} />
+
+            {isLoading ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background:'rgba(79,70,229,0.1)' }}>
+                  <div className="w-4 h-4 rounded-full border-2 border-indigo-200 border-t-indigo-500"
+                    style={{ animation:'spin .8s linear infinite' }} />
+                </div>
+                <p className="font-semibold text-indigo-600 text-xs">Processing {fileName}…</p>
+              </div>
+            ) : fileName ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background:'linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.2))' }}>
+                  <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-bold text-emerald-700 text-sm">{fileName}</p>
+                  <p className="text-xs text-emerald-500 mt-0.5">Loaded — click to replace</p>
+                </div>
+              </div>
             ) : (
-              <>
-                <p className="text-gray-600 font-medium">Drag & drop your JSON file here</p>
-                <p className="text-gray-400 text-sm">or click to browse</p>
-                <p className="text-gray-400 text-xs">Supported format: .json</p>
-              </>
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-md"
+                  style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-700 text-sm">Drop your file here</p>
+                  <p className="text-slate-400 text-xs mt-1">JSON, CSV, or Excel (.xlsx, .xls)</p>
+                </div>
+                {isDragging && (
+                  <div className="absolute inset-0 rounded-xl flex items-center justify-center"
+                    style={{ background:'rgba(99,102,241,0.1)', backdropFilter:'blur(4px)' }}>
+                    <div className="px-5 py-2 rounded-lg font-bold text-indigo-700 text-sm"
+                      style={{ background:'rgba(255,255,255,0.9)', border:'2px solid #6366f1' }}>
+                      Release to upload
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="flex items-center gap-3">
-        <div className="flex-1 border-t border-gray-200" />
-        <span className="text-gray-400 text-sm">OR</span>
-        <div className="flex-1 border-t border-gray-200" />
-      </div>
+      {/* Sample tab */}
+      {activeTab === 'sample' && (
+        <div className="space-y-3">
+          <button
+            onClick={loadSample} disabled={isLoading}
+            className="w-full py-3 px-5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2"
+            style={{
+              background: isLoading ? 'rgba(241,245,249,0.6)' : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
+              color: 'white',
+              opacity: isLoading ? 0.6 : 1,
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white" style={{ animation:'spin .7s linear infinite' }} />
+                Loading Sample…
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                </svg>
+                Load Sample Dataset (5 students)
+              </>
+            )}
+          </button>
 
-      <button
-        onClick={loadSample}
-        disabled={isLoading}
-        className="w-full py-2.5 px-4 rounded-lg border border-blue-300 text-blue-600 font-medium
-          hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        Load Sample Data (Demo)
-      </button>
+          <button
+            onClick={downloadSampleCSV}
+            className="w-full py-2.5 px-4 rounded-xl text-sm font-medium transition-all"
+            style={{
+              background: 'white',
+              border: '1.5px solid #e2e8f0',
+              color: '#4f46e5',
+            }}
+          >
+            <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Download Sample CSV
+          </button>
+
+          <div className="px-3 py-2 rounded-lg text-xs text-slate-500" style={{ background:'rgba(241,245,249,0.8)' }}>
+            <p className="font-semibold mb-1">CSV columns:</p>
+            <p className="text-xs font-mono">name, rollno, grade, dateOfBirth, fatherName, motherName, address, hindi, english, mathematics, science, socialStudies, conduct, attendance</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

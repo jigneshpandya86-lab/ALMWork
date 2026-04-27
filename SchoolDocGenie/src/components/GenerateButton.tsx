@@ -7,6 +7,8 @@ import { generateRemarksForBatch } from '@/lib/remarks';
 import { generateMultiplePDFs } from '@/lib/pdfGenerator';
 import AttendanceRegisterForm from './AttendanceRegisterForm';
 
+type Mode = 'all' | 'single';
+
 export default function GenerateButton({
   students, docType, grade,
   onGenerateStart, onProgress, onGenerateComplete, onError,
