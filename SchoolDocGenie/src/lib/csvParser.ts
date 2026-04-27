@@ -15,6 +15,8 @@ export async function parseCSV(file: File): Promise<Student[]> {
             name: row.name?.trim() || '',
             rollno: String(row.rollno || row['roll no'] || '').trim(),
             grade: String(row.grade || '').trim(),
+            gender: String(row.gender || '').trim(),
+            caste: String(row.caste || '').trim(),
             dateOfBirth: row.dateOfBirth || row['date of birth'] || '',
             fatherName: row.fatherName || row['father name'] || '',
             motherName: row.motherName || row['mother name'] || '',
@@ -58,6 +60,8 @@ export async function parseExcel(file: File): Promise<Student[]> {
           name: row.name?.trim() || '',
           rollno: String(row.rollno || row['roll no'] || '').trim(),
           grade: String(row.grade || '').trim(),
+          gender: String(row.gender || '').trim(),
+          caste: String(row.caste || '').trim(),
           dateOfBirth: row.dateOfBirth || row['date of birth'] || '',
           fatherName: row.fatherName || row['father name'] || '',
           motherName: row.motherName || row['mother name'] || '',
@@ -99,13 +103,13 @@ function parseMarks(row: Record<string, any>): { [subject: string]: number } {
 }
 
 export function generateSampleCSV(): string {
-  const headers = ['name', 'rollno', 'grade', 'dateOfBirth', 'fatherName', 'motherName', 'address', 'hindi', 'english', 'mathematics', 'science', 'socialStudies', 'conduct', 'attendance'];
+  const headers = ['name', 'rollno', 'grade', 'gender', 'caste', 'dateOfBirth', 'fatherName', 'motherName', 'address', 'hindi', 'english', 'mathematics', 'science', 'socialStudies', 'conduct', 'attendance'];
   const sampleData = [
-    ['Aarjun Patel', '101', '6', '2012-05-15', 'Rajesh Patel', 'Priya Patel', '123 Main St', '85', '90', '88', '92', '87', 'Excellent', '95'],
-    ['Bhavna Shah', '102', '6', '2012-08-22', 'Vikram Shah', 'Neha Shah', '456 Oak Ave', '78', '82', '80', '85', '79', 'Good', '92'],
-    ['Chirag Desai', '103', '7', '2011-03-10', 'Amit Desai', 'Sneha Desai', '789 Pine Rd', '92', '95', '94', '97', '93', 'Excellent', '98'],
-    ['Diya Gupta', '104', '7', '2011-11-05', 'Arjun Gupta', 'Pooja Gupta', '321 Elm St', '88', '91', '89', '93', '90', 'Excellent', '96'],
-    ['Eshan Mehta', '105', '8', '2010-07-20', 'Suresh Mehta', 'Anjali Mehta', '654 Birch Ln', '75', '78', '76', '80', '77', 'Good', '88'],
+    ['Aarjun Patel', '101', '6', 'Male', 'OBC', '2012-05-15', 'Rajesh Patel', 'Priya Patel', '123 Main St', '85', '90', '88', '92', '87', 'Excellent', '95'],
+    ['Bhavna Shah', '102', '6', 'Female', 'General', '2012-08-22', 'Vikram Shah', 'Neha Shah', '456 Oak Ave', '78', '82', '80', '85', '79', 'Good', '92'],
+    ['Chirag Desai', '103', '7', 'Male', 'SC', '2011-03-10', 'Amit Desai', 'Sneha Desai', '789 Pine Rd', '92', '95', '94', '97', '93', 'Excellent', '98'],
+    ['Diya Gupta', '104', '7', 'Female', 'General', '2011-11-05', 'Arjun Gupta', 'Pooja Gupta', '321 Elm St', '88', '91', '89', '93', '90', 'Excellent', '96'],
+    ['Eshan Mehta', '105', '8', 'Male', 'ST', '2010-07-20', 'Suresh Mehta', 'Anjali Mehta', '654 Birch Ln', '75', '78', '76', '80', '77', 'Good', '88'],
   ];
 
   const csvContent = [
