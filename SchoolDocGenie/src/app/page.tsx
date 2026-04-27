@@ -10,7 +10,7 @@ import ProgressBar from '@/components/ProgressBar';
 import DownloadLinks from '@/components/DownloadLinks';
 import { api } from '@/lib/firebase';
 
-/* ── Step wrapper ─────────────────────────────────────────────────── */
+/* Step wrapper */
 function Step({
   n, title, subtitle, active, done, last = false, children, id,
 }: {
@@ -57,7 +57,7 @@ function Step({
   );
 }
 
-/* ── Stat card ─────────────────────────────────────── */
+/* Stat card */
 function Stat({ value, label, color }: { value: string; label: string; color: string }) {
   return (
     <div className="text-center px-3 py-2 border border-indigo-100/70" style={{ background: 'rgba(255,255,255,0.78)', borderRadius: 10 }}>
@@ -69,7 +69,7 @@ function Stat({ value, label, color }: { value: string; label: string; color: st
   );
 }
 
-/* ── Main page ─────────────────────────────────────── */
+/* Main page */
 export default function HomePage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,7 +145,7 @@ export default function HomePage() {
   return (
     <div className="space-y-5">
 
-      {/* ── Hero ──────────────────────────────────────────── */}
+      {/* Hero */}
       <section className="hero-shell px-6 py-5 md:px-8 md:py-6 fade-up" aria-label="Product overview">
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="flex-shrink-0">
@@ -164,14 +164,14 @@ export default function HomePage() {
           <div className="inline-flex gap-1 p-1 rounded-xl flex-shrink-0"
             style={{ background:'rgba(255,255,255,0.55)', border:'1px solid rgba(199,210,254,0.7)', backdropFilter:'blur(12px)' }}>
             <Stat value="3" label="Doc Types" color="linear-gradient(135deg,#4f46e5,#7c3aed)" />
-            <Stat value="6–8" label="Grades" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
+            <Stat value="6-8" label="Grades" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
             <Stat value="PDF" label="Instant" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
             <Stat value="0%" label="Data Sent" color="linear-gradient(135deg,#059669,#10b981)" />
           </div>
         </div>
       </section>
 
-      {/* ── Error ─────────────────────────────────────────── */}
+      {/* Error */}
       {error && (
         <div className="glass fade-up flex items-start gap-3 px-5 py-4 rounded-2xl"
           style={{ background:'rgba(254,242,242,0.9)', border:'1px solid rgba(239,68,68,0.25)' }}>
@@ -185,20 +185,22 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ── Step 1: Upload ── */}
-      <div className="animate-fade-in-up animate-delay-100">
-        <StepCard step={1} title="Upload Student Data" subtitle="JSON file or try the sample dataset" active={!step1Done} done={step1Done}>
-          <FileUploader onStudentsLoaded={handleStudentsLoaded} onError={handleError} />
-        </StepCard>
-      </div>
-
-      {/* ── Step 2: Preview ── */}
-      <div className="animate-fade-in-up animate-delay-200">
-        <StepCard step={2} title="Preview Students" subtitle="Review the uploaded data before generating" active={step1Done && !step3Done} done={step3Done}>
-          {loading ? (
-            <div className="flex flex-col items-center gap-3 py-10 text-slate-300">
-               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-               <p className="text-sm">Connecting to Mumbai backend...</p>
+      {/* Steps */}
+      <div className="mt-4 fade-up delay-2">
+        <Step id="step-upload" n={1} title="Upload Student Data" subtitle="JSON file, paste JSON, or load the built-in sample dataset"
+          active={!step1Done} done={step1Done}>
+          {step1Done ? (
+            <div className="flex items-center gap-3 py-2">
+              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-green-700 font-medium">{students.length} students loaded</span>
+              <button
+                onClick={() => setShowUploadForm(!showUploadForm)}
+                className="ml-auto px-3 py-1 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+              >
+                {showUploadForm ? 'Hide' : 'Change'}
+              </button>
             </div>
           ) : students.length > 0 ? (
             <StudentTable students={students} selectedGrade={selectedGrade ?? undefined} />
