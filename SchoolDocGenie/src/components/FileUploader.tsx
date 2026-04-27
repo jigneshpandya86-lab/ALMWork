@@ -4,6 +4,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { FileUploaderProps } from '@/types';
 import { parseJSON } from '@/lib/jsonParser';
 import { parseCSV, parseExcel, downloadSampleCSV } from '@/lib/csvParser';
+import { parseTextFormat } from '@/lib/textParser';
 
 export default function FileUploader({ onStudentsLoaded, onError }: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -50,20 +51,31 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
     }
   }, [onStudentsLoaded, onError]);
 
-  const processPastedJSON = useCallback(async () => {
-    if (!pasteValue.trim()) { onError('Please paste valid JSON data'); return; }
+  const processPastedData = useCallback(async () => {
+    if (!pasteValue.trim()) { onError('Please paste student data'); return; }
     setIsLoading(true);
     try {
-      const data = JSON.parse(pasteValue);
-      const arr = Array.isArray(data) ? data : data.students ?? [];
-      if (arr.length === 0) { onError('No students found in JSON'); return; }
-      const { validateStudents } = await import('@/lib/jsonParser');
-      const { valid } = validateStudents(arr);
-      if (valid.length === 0) { onError('No valid students in the provided data'); return; }
-      onStudentsLoaded(valid);
+      let students;
+      const trimmed = pasteValue.trim();
+
+      // Try JSON first
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        const data = JSON.parse(trimmed);
+        const arr = Array.isArray(data) ? data : data.students ?? [];
+        if (arr.length === 0) { onError('No students found in data'); return; }
+        const { validateStudents } = await import('@/lib/jsonParser');
+        const { valid } = validateStudents(arr);
+        students = valid;
+      } else {
+        // Try text/CSV format
+        students = parseTextFormat(trimmed);
+      }
+
+      if (students.length === 0) { onError('No valid students in the provided data'); return; }
+      onStudentsLoaded(students);
       setPasteValue('');
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Invalid JSON format');
+      onError(err instanceof Error ? err.message : 'Failed to parse data. Use JSON, CSV, or tab-separated format.');
     } finally { setIsLoading(false); }
   }, [pasteValue, onStudentsLoaded, onError]);
 
@@ -129,7 +141,7 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
           </div>
 
           <button
-            onClick={processPastedJSON}
+            onClick={processPastedData}
             disabled={isLoading || !pasteValue.trim()}
             className="w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-all"
             style={{
@@ -148,8 +160,9 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
           </button>
 
           <div className="px-3 py-2 rounded-lg text-xs text-slate-500" style={{ background:'rgba(241,245,249,0.8)' }}>
-            <p className="font-semibold mb-1">Required fields:</p>
-            <p className="text-xs">name, rollno, grade, dateOfBirth, fatherName, motherName, address, marks (object), conduct, attendance</p>
+            <p className="font-semibold mb-1">Supported formats:</p>
+            <p className="text-xs mb-1"><strong>JSON:</strong> <code className="bg-white px-1 py-0.5 rounded">[{"{...}"}]</code></p>
+            <p className="text-xs"><strong>Plain text:</strong> One student per line, tab/comma-separated or in any order</p>
           </div>
         </div>
       )}
