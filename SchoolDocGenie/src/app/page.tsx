@@ -37,7 +37,7 @@ function Step({
       </div>
 
       {/* Card */}
-      <div className={`flex-1 mb-5 glass transition-all duration-300
+      <div className={`flex-1 mb-5 glass step-card transition-all duration-300
         ${active ? 'ring-2 ring-indigo-300 ring-offset-2' : done ? 'ring-1 ring-emerald-200' : 'opacity-80'}`}
         style={{ padding: '24px' }}>
         <div className="mb-5">
@@ -59,7 +59,7 @@ function Step({
 /* ── Stat card ─────────────────────────────────────── */
 function Stat({ value, label, color }: { value: string; label: string; color: string }) {
   return (
-    <div className="text-center px-2.5 py-1.5" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 8 }}>
+    <div className="text-center px-3 py-2 border border-indigo-100/70" style={{ background: 'rgba(255,255,255,0.78)', borderRadius: 10 }}>
       <p className="text-sm font-black" style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         {value}
       </p>
@@ -142,29 +142,31 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
 
       {/* ── Hero ──────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-6 py-3 fade-up">
-        <div className="flex-shrink-0">
-          <h1 className="text-3xl font-black tracking-tight leading-none">
+      <div className="hero-shell px-6 py-5 md:px-8 md:py-6 fade-up">
+        <div className="flex items-center justify-between gap-6 flex-wrap">
+          <div className="flex-shrink-0">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none">
             <span className="text-slate-800">School</span>
             <span className="grad-text">Doc</span>
             <span className="text-slate-800">Genie</span>
           </h1>
-        </div>
+          </div>
 
-        <p className="text-slate-500 text-sm font-light flex-1">
-          Upload student data, pick a document type, download PDFs instantly.
-        </p>
+          <p className="text-slate-600 text-sm md:text-base font-medium flex-1 max-w-2xl">
+            Create polished school documents in minutes — upload student data, select a document type, and generate downloadable PDFs instantly.
+          </p>
 
-        {/* Stats bar */}
-        <div className="inline-flex gap-0.5 p-0.5 rounded-lg flex-shrink-0"
-          style={{ background:'rgba(255,255,255,0.6)', border:'1px solid rgba(199,210,254,0.5)', backdropFilter:'blur(12px)' }}>
-          <Stat value="3" label="Doc Types" color="linear-gradient(135deg,#4f46e5,#7c3aed)" />
-          <Stat value="6–8" label="Grades" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
-          <Stat value="PDF" label="Instant" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
-          <Stat value="0%" label="Data Sent" color="linear-gradient(135deg,#059669,#10b981)" />
+          {/* Stats bar */}
+          <div className="inline-flex gap-1 p-1 rounded-xl flex-shrink-0"
+            style={{ background:'rgba(255,255,255,0.55)', border:'1px solid rgba(199,210,254,0.7)', backdropFilter:'blur(12px)' }}>
+            <Stat value="3" label="Doc Types" color="linear-gradient(135deg,#4f46e5,#7c3aed)" />
+            <Stat value="6–8" label="Grades" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
+            <Stat value="PDF" label="Instant" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
+            <Stat value="0%" label="Data Sent" color="linear-gradient(135deg,#059669,#10b981)" />
+          </div>
         </div>
       </div>
 
