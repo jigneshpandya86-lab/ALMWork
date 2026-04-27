@@ -73,18 +73,18 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
 
         {isLoading ? (
           <div className="flex flex-col items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center"
               style={{ background:'rgba(79,70,229,0.1)' }}>
-              <div className="w-7 h-7 rounded-full border-[3px] border-indigo-200 border-t-indigo-500"
+              <div className="w-5 h-5 rounded-full border-[2.5px] border-indigo-200 border-t-indigo-500"
                 style={{ animation:'spin .8s linear infinite' }} />
             </div>
-            <p className="font-semibold text-indigo-600">Processing {fileName}…</p>
+            <p className="font-semibold text-indigo-600 text-sm">Processing {fileName}…</p>
           </div>
         ) : fileName ? (
           <div className="flex flex-col items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center"
               style={{ background:'linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.2))' }}>
-              <svg className="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
               </svg>
             </div>
@@ -95,10 +95,10 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
               style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}>
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
               </svg>
             </div>
