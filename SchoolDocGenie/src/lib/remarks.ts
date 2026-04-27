@@ -1,31 +1,30 @@
 import { Student } from '@/types';
 
-export function getRemark(student: Student, docType: string): string {
-  const { percentage, gradePoint, name, conduct } = student;
-  const conductNote = conduct === 'Excellent' ? ' Exemplary conduct throughout.'
-    : conduct === 'Good' ? ' Good conduct maintained.' : '';
+function getRemark(student: Student, docType: string): string {
+  const percentage = student.percentage || 0;
 
   if (docType === 'attendanceRegister') {
-    return `${student.attendance}`;
+    return String(percentage);
+  }
+
+  if (docType === 'marksheet') {
+    if (percentage >= 90) return `${student.name} has demonstrated outstanding performance with excellent grasp of concepts.`;
+    if (percentage >= 75) return `${student.name} has shown good understanding and consistent effort.`;
+    if (percentage >= 60) return `${student.name} has satisfactory performance. Focus on weak areas.`;
+    return `${student.name} requires additional support and focused practice.`;
   }
 
   if (docType === 'leavingCert') {
-    if (percentage >= 80)
-      return `${name} has been a dedicated student demonstrating exceptional academic ability with ${gradePoint} grade.${conductNote} We wish them continued success in all future endeavors.`;
-    if (percentage >= 60)
-      return `${name} has shown satisfactory performance during their tenure, achieving ${gradePoint} grade.${conductNote} We wish them well in their future studies.`;
-    return `${name} has completed the academic year at this institution.${conductNote} We wish them well in their future endeavors.`;
+    return `${student.name} is a well-disciplined student with good conduct and character.`;
   }
 
-  if (percentage >= 90)
-    return `${name} has delivered outstanding results with ${gradePoint} grade. Exceptional mastery across all subjects.${conductNote} Keep up the excellent work!`;
-  if (percentage >= 80)
-    return `${name} has shown excellent performance with ${gradePoint} grade. Strong command over all subjects with consistent effort.${conductNote} Well done!`;
-  if (percentage >= 70)
-    return `${name} has performed well with ${gradePoint} grade. Good understanding demonstrated across subjects.${conductNote} Continue the solid effort.`;
-  if (percentage >= 60)
-    return `${name} has achieved satisfactory results with ${gradePoint} grade.${conductNote} Focus on weaker areas to improve further.`;
-  return `${name} needs to strengthen their preparation. Regular revision and focused study will lead to better results in the coming term.`;
+  if (docType === 'periodicEval') {
+    if (percentage >= 80) return `${student.name} shows excellent progress and engagement in studies.`;
+    if (percentage >= 60) return `${student.name} is making good progress with consistent effort.`;
+    return `${student.name} needs additional support in key areas.`;
+  }
+
+  return '';
 }
 
 export function generateRemarksForBatch(
@@ -33,11 +32,13 @@ export function generateRemarksForBatch(
   docType: string,
   onProgress?: (current: number, total: number, name: string) => void
 ): Map<string, string> {
-  const results = new Map<string, string>();
-  for (let i = 0; i < students.length; i++) {
-    const student = students[i];
-    onProgress?.(i + 1, students.length, student.name);
-    results.set(student.id, getRemark(student, docType));
-  }
-  return results;
+  const remarks = new Map<string, string>();
+
+  students.forEach((student, index) => {
+    onProgress?.(index + 1, students.length, student.name);
+    const remark = getRemark(student, docType);
+    remarks.set(student.id, remark);
+  });
+
+  return remarks;
 }
