@@ -99,17 +99,6 @@ function Step({
   );
 }
 
-function Stat({ value, label, color }: { value: string; label: string; color: string }) {
-  return (
-    <div className="text-center px-3 py-2 border border-indigo-100/70" style={{ background: 'rgba(255,255,255,0.78)', borderRadius: 10 }}>
-      <p style={{ background: color, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} className="text-sm font-black">
-        {value}
-      </p>
-      <p className="text-xs text-slate-500 mt-0 font-medium">{label}</p>
-    </div>
-  );
-}
-
 export default function HomePage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
@@ -245,32 +234,9 @@ export default function HomePage() {
 
   return (
     <div className="space-y-5">
-      <section className="hero-shell px-6 py-5 md:px-8 md:py-6 fade-up" aria-label="Product overview">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="flex-shrink-0">
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none">
-              <span className="text-slate-800">School</span>
-              <span className="grad-text">Doc</span>
-              <span className="text-slate-800">Genie</span>
-            </h1>
-          </div>
-
-          <p className="text-slate-600 text-sm md:text-base font-medium flex-1 max-w-2xl">
-            Create polished school documents in minutes - upload student data, select a document type, and generate downloadable PDFs instantly.
-          </p>
-
-          <div className="inline-flex gap-1 p-1 rounded-xl flex-shrink-0" style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(199,210,254,0.7)', backdropFilter: 'blur(12px)' }}>
-            <Stat value={String(students.length)} label="Students" color="linear-gradient(135deg,#4f46e5,#7c3aed)" />
-            <Stat value={selectedGrade ?? 'All'} label="Grade" color="linear-gradient(135deg,#2563eb,#4f46e5)" />
-            <Stat value={selectedDocType ? 'Ready' : 'Pending'} label="Template" color="linear-gradient(135deg,#7c3aed,#c026d3)" />
-            <Stat value={`${generatedPDFs.length}`} label="Generated" color="linear-gradient(135deg,#059669,#10b981)" />
-          </div>
-        </div>
-      </section>
-
       <section className="glass px-5 py-4 rounded-2xl fade-up delay-1">
         <div className="flex flex-wrap gap-3 items-center text-sm text-slate-700">
-          <span className="badge" style={{ background: 'rgba(79,70,229,0.12)', color: '#4f46e5' }}>
+          <span className="badge" style={{ background: 'rgba(20,110,180,0.12)', color: '#146eb4' }}>
             {loading ? 'Syncing roster...' : `Roster synced: ${students.length} students`}
           </span>
           {selectedGrade && <span>Selected grade has {filteredCount} students.</span>}
@@ -310,14 +276,14 @@ export default function HomePage() {
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               <span className="text-green-700 font-medium">{students.length} students loaded</span>
-              <button onClick={() => setShowUploadForm((previous) => !previous)} className="ml-auto px-3 py-1 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+              <button onClick={() => setShowUploadForm((previous) => !previous)} className="ml-auto px-3 py-1 text-sm text-sky-700 hover:bg-sky-50 rounded-lg transition">
                 {showUploadForm ? 'Hide' : 'Add More'}
               </button>
             </div>
           ) : (
             <button
               onClick={() => setShowUploadForm((previous) => !previous)}
-              className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+              className="w-full px-4 py-3 btn-amazon text-sm font-bold rounded-lg transition flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

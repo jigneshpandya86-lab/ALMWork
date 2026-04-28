@@ -7,16 +7,16 @@
 @import '@fontsource/noto-sans-gujarati/700.css';
 
 :root {
-  --indigo: #4f46e5;
-  --indigo-dark: #3730a3;
-  --blue: #2563eb;
-  --purple: #7c3aed;
+  --indigo: #146eb4;
+  --indigo-dark: #0f4f82;
+  --blue: #007185;
+  --purple: #1f2937;
   --emerald: #059669;
-  --amber: #d97706;
+  --amber: #ff9900;
 
   --glass-bg: rgba(255,255,255,0.74);
   --glass-border: rgba(255,255,255,0.68);
-  --glass-shadow: 0 16px 40px rgba(79,70,229,0.14);
+  --glass-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 
   --card-radius: 20px;
   --card-shadow: 0 2px 8px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.04);
@@ -31,11 +31,10 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   color: #0f172a;
-  background-color: #eef1ff;
+  background-color: #f3f6fa;
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.24) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(124,58,237,0.20) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 30% at 60% 30%, rgba(37,99,235,0.14) 0%, transparent 50%);
+    radial-gradient(ellipse 75% 50% at 15% -15%, rgba(20, 110, 180, 0.12) 0%, transparent 58%),
+    radial-gradient(ellipse 45% 35% at 85% 120%, rgba(255, 153, 0, 0.11) 0%, transparent 55%);
 }
 
 body::before {
@@ -60,9 +59,9 @@ body::before {
 /* ── Glassmorphism card ───────────────────────────── */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  border: 1px solid #e5e7eb;
   border-radius: var(--card-radius);
   box-shadow: var(--glass-shadow);
   transition: box-shadow 0.25s ease, transform 0.2s ease;
@@ -70,22 +69,22 @@ body::before {
 .glass:hover { box-shadow: var(--card-shadow-hover); }
 
 .surface-panel {
-  background: linear-gradient(150deg, rgba(255,255,255,0.72), rgba(255,255,255,0.48));
-  border: 1px solid rgba(199,210,254,0.65);
+  background: linear-gradient(150deg, rgba(255,255,255,0.92), rgba(255,255,255,0.82));
+  border: 1px solid #e2e8f0;
   border-radius: 24px;
-  box-shadow: 0 24px 60px rgba(79,70,229,0.12);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
 }
 
 .hero-shell {
   position: relative;
   overflow: hidden;
   border-radius: 24px;
-  border: 1px solid rgba(167, 139, 250, 0.22);
+  border: 1px solid #dbe4ee;
   background:
-    radial-gradient(circle at 80% 20%, rgba(99,102,241,0.22), transparent 45%),
-    radial-gradient(circle at 20% 120%, rgba(124,58,237,0.18), transparent 45%),
-    linear-gradient(120deg, rgba(255,255,255,0.78), rgba(255,255,255,0.5));
-  box-shadow: 0 22px 50px rgba(76, 29, 149, 0.12);
+    radial-gradient(circle at 80% 20%, rgba(20, 110, 180, 0.15), transparent 45%),
+    radial-gradient(circle at 20% 120%, rgba(255, 153, 0, 0.12), transparent 45%),
+    linear-gradient(120deg, rgba(255,255,255,0.98), rgba(255,255,255,0.88));
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
 }
 
 .hero-shell::after {
@@ -100,7 +99,7 @@ body::before {
 
 /* ── Gradient utilities ───────────────────────────── */
 .grad-text {
-  background: linear-gradient(135deg, var(--indigo) 0%, var(--purple) 60%, #c026d3 100%);
+  background: linear-gradient(135deg, #146eb4 0%, #007185 60%, #ff9900 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -147,13 +146,13 @@ body::before {
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #64748b;
+  color: #334155;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
 }
 .nav-step-link:hover {
-  background: rgba(79,70,229,0.07);
-  color: #4f46e5;
+  background: #e5f1fa;
+  color: #146eb4;
 }
 
 /* ── Step connector ───────────────────────────────── */
@@ -218,5 +217,45 @@ body::before {
 }
 
 .step-card {
-  background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(248,250,255,0.7));
+  background: linear-gradient(145deg, rgba(255,255,255,0.96), rgba(250,251,252,0.9));
+}
+
+.btn-amazon {
+  background: linear-gradient(180deg, #ffd978, #ffb84d);
+  color: #111827;
+  border: 1px solid #e49d2e;
+  box-shadow: 0 1px 0 #ffe0a6 inset;
+}
+
+.btn-amazon:hover {
+  filter: brightness(0.98);
+}
+
+.bottom-nav-shell {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  border: 1px solid #dbe4ee;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+  padding: 6px;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  border-radius: 10px;
+  min-height: 46px;
+}
+
+.bottom-nav-item:hover {
+  background: #eff6ff;
+  color: #146eb4;
 }
