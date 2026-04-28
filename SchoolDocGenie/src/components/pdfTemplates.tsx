@@ -163,7 +163,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     'વા.પરીક્ષા પછી ગયા માસ સુધીના હાજર દિવસ',
     'ચાલુ માસ સાથે પરીક્ષા પછીના હાજર દિવસ',
   ];
-  const summaryColumnWidths = ['42px', '42px', '42px', '42px', '42px', '42px', '84px', '154px', '154px'];
+  const summaryColumnWidths = ['4%', '4%', '4%', '4%', '4%', '4%', '9%', '9.5%', '9.5%'];
   const verticalHeaderStyle: React.CSSProperties = {
     display: 'inline-block',
     transform: 'rotate(-90deg)',
@@ -172,15 +172,14 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     lineHeight: 1.05,
   };
 
-  const renderDayHeader = (day: number, isRightPage = false) => {
+  const renderDayHeader = (day: number, widthStyle: React.CSSProperties) => {
     const weekdayIndex = new Date(year, month, day).getDay();
     const weekday = weekdayLabels[weekdayIndex];
     const isSunday = weekdayIndex === 0;
-    const dayWidth = isRightPage ? '44px' : '30px';
     return (
       <th
         key={`day-${day}`}
-        style={{ width: dayWidth, minWidth: dayWidth }}
+        style={widthStyle}
         className={`border border-slate-700 px-0 py-0 align-bottom ${isSunday ? 'bg-slate-200' : ''}`}
       >
         <div className="h-[126px] flex items-center justify-center">
@@ -271,7 +270,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
                 <th className="border border-slate-700 px-2 py-1">
                   <div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div>
                 </th>
-                {leftDays.map((day) => renderDayHeader(day, false))}
+                {leftDays.map((day) => renderDayHeader(day, { width: '30px', minWidth: '30px' }))}
               </tr>
               <tr className="bg-orange-50">
                 {Array.from({ length: 6 + leftDays.length }, (_, i) => (
@@ -292,7 +291,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
           <table className="w-full border-collapse table-fixed text-[10px]">
             <thead>
               <tr>
-                {rightDays.map((day) => renderDayHeader(day, true))}
+                {rightDays.map((day) => renderDayHeader(day, { width: '4%', minWidth: '4%' }))}
                 {summaryColumns.map((column, idx) => (
                   <th
                     key={`${column}-${idx}`}
@@ -300,7 +299,17 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
                     className="border border-slate-700 px-0 py-0"
                   >
                     <div className="h-[126px] flex items-center justify-center">
-                      <div style={verticalHeaderStyle}>{column}</div>
+                      <div style={verticalHeaderStyle}>
+                        {idx >= summaryColumns.length - 2 ? (
+                          <>
+                            {column.split(' ').slice(0, Math.ceil(column.split(' ').length / 2)).join(' ')}
+                            <br />
+                            {column.split(' ').slice(Math.ceil(column.split(' ').length / 2)).join(' ')}
+                          </>
+                        ) : (
+                          column
+                        )}
+                      </div>
                     </div>
                   </th>
                 ))}
