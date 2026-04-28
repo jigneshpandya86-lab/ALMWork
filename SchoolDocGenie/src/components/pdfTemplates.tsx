@@ -248,7 +248,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
 
   return (
     <div className="w-[1123px] bg-white text-slate-900" style={{ fontFamily: "'Noto Sans Gujarati', 'Inter', sans-serif" }}>
-      <section className="w-[1123px] min-h-[794px] p-4" style={{ pageBreakAfter: 'always' }}>
+      <section data-pdf-page="true" className="w-[1123px] h-[794px] p-4 overflow-hidden">
         <div className="border-2 border-blue-700">
           {renderRegisterHeader()}
           <table className="w-full border-collapse text-[10px]">
@@ -285,7 +285,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
         </div>
       </section>
 
-      <section className="w-[1123px] min-h-[794px] p-4">
+      <section data-pdf-page="true" className="w-[1123px] h-[794px] p-4 overflow-hidden">
         <div className="border-2 border-blue-700">
           {renderRegisterHeader()}
           <table className="w-full border-collapse table-fixed text-[10px]">
