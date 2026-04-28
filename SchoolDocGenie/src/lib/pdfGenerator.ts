@@ -18,41 +18,209 @@ async function getJsPDF() {
 
 type Doc = InstanceType<Awaited<ReturnType<typeof getJsPDF>>>;
 
+type SmartTextOptions = {
+  align?: 'left' | 'center' | 'right';
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  color?: [number, number, number];
+};
+
+const GUJARATI_REGEX = /[\u0A80-\u0AFF]/;
+let sharedCanvas: HTMLCanvasElement | null = null;
+let sharedCanvasCtx: CanvasRenderingContext2D | null = null;
+
+function containsGujarati(text: string): boolean {
+  return GUJARATI_REGEX.test(text);
+}
+
+function getCanvasContext(): CanvasRenderingContext2D | null {
+  if (typeof document === 'undefined') return null;
+  if (!sharedCanvas) {
+    sharedCanvas = document.createElement('canvas');
+    sharedCanvasCtx = sharedCanvas.getContext('2d');
+  }
+  return sharedCanvasCtx;
+}
+
+function getFontStyle(options: SmartTextOptions): 'normal' | 'bold' | 'italic' | 'bolditalic' {
+  if (options.bold && options.italic) return 'bolditalic';
+  if (options.bold) return 'bold';
+  if (options.italic) return 'italic';
+  return 'normal';
+}
+
+function measureSmartTextWidthMm(doc: Doc, text: string, options: SmartTextOptions = {}): number {
+  const fontSize = options.fontSize ?? 9;
+
+  if (containsGujarati(text)) {
+    const ctx = getCanvasContext();
+    if (ctx) {
+      const fontWeight = options.bold ? '700' : '400';
+      const fontPx = Math.round(fontSize * 4);
+      ctx.font = `${fontWeight} ${fontPx}px "Noto Sans Gujarati", sans-serif`;
+      const mmPerPx = 0.264583;
+      return ctx.measureText(text).width * mmPerPx * 0.85;
+    }
+  }
+
+  doc.setFont('helvetica', getFontStyle(options));
+  doc.setFontSize(fontSize);
+  return doc.getTextWidth(text);
+}
+
+async function drawCanvasText(doc: Doc, text: string, x: number, y: number, options: SmartTextOptions = {}): Promise<void> {
+  const ctx = getCanvasContext();
+  if (!ctx || !sharedCanvas) {
+    doc.setFontSize(options.fontSize ?? 9);
+    doc.setFont('helvetica', getFontStyle(options));
+    if (options.color) doc.setTextColor(...options.color);
+    doc.text(text, x, y, { align: options.align ?? 'left' });
+    return;
+  }
+
+  const fontSize = options.fontSize ?? 9;
+  const align = options.align ?? 'left';
+  const fontWeight = options.bold ? '700' : '400';
+  ctx.font = `${fontWeight} ${Math.round(fontSize * 4)}px "Noto Sans Gujarati", sans-serif`;
+
+  const metrics = ctx.measureText(text);
+  const width = Math.max(2, Math.ceil(metrics.width + 8));
+  const height = Math.max(2, Math.ceil(fontSize * 7));
+
+  sharedCanvas.width = width;
+  sharedCanvas.height = height;
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.font = `${fontWeight} ${Math.round(fontSize * 4)}px "Noto Sans Gujarati", sans-serif`;
+  const color = options.color ?? [17, 17, 17];
+  ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 2, height / 2);
+
+  const mmPerPx = 0.264583;
+  const imageWmm = width * mmPerPx * 0.85;
+  const imageHmm = height * mmPerPx * 0.85;
+  let imageX = x;
+  if (align === 'center') imageX = x - imageWmm / 2;
+  if (align === 'right') imageX = x - imageWmm;
+
+  doc.addImage(sharedCanvas.toDataURL('image/png'), 'PNG', imageX, y - imageHmm + 1, imageWmm, imageHmm);
+}
+
+async function drawSmartText(doc: Doc, text: string, x: number, y: number, options: SmartTextOptions = {}): Promise<void> {
+  if (containsGujarati(text)) {
+    await drawCanvasText(doc, text, x, y, options);
+    return;
+  }
+
+  doc.setFontSize(options.fontSize ?? 9);
+  doc.setFont('helvetica', getFontStyle(options));
+  if (options.color) doc.setTextColor(...options.color);
+  doc.text(text, x, y, { align: options.align ?? 'left' });
+}
+
+function wrapSmartText(doc: Doc, text: string, maxWidth: number, options: SmartTextOptions = {}): string[] {
+  const paragraphs = text.split(/\r?\n/);
+  const lines: string[] = [];
+
+  const pushWrapped = (source: string) => {
+    const words = source.split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
+      lines.push('');
+      return;
+    }
+
+    let current = '';
+    for (const word of words) {
+      const testLine = current ? `${current} ${word}` : word;
+      if (measureSmartTextWidthMm(doc, testLine, options) <= maxWidth) {
+        current = testLine;
+        continue;
+      }
+
+      if (current) lines.push(current);
+
+      if (measureSmartTextWidthMm(doc, word, options) <= maxWidth) {
+        current = word;
+        continue;
+      }
+
+      let chunk = '';
+      for (const ch of Array.from(word)) {
+        const testChunk = `${chunk}${ch}`;
+        if (measureSmartTextWidthMm(doc, testChunk, options) <= maxWidth) {
+          chunk = testChunk;
+        } else {
+          if (chunk) lines.push(chunk);
+          chunk = ch;
+        }
+      }
+      current = chunk;
+    }
+
+    if (current) lines.push(current);
+  };
+
+  paragraphs.forEach((paragraph, idx) => {
+    if (!paragraph.trim()) {
+      lines.push('');
+    } else {
+      pushWrapped(paragraph.trim());
+    }
+    if (idx < paragraphs.length - 1 && paragraph.trim()) lines.push('');
+  });
+
+  return lines;
+}
+
+async function drawWrappedSmartText(
+  doc: Doc,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  options: SmartTextOptions = {}
+): Promise<{ lines: string[]; endY: number }> {
+  const lines = wrapSmartText(doc, text, maxWidth, options);
+  const lineHeight = Math.max(4, (options.fontSize ?? 9) * 0.55);
+  let currentY = y;
+
+  for (const line of lines) {
+    await drawSmartText(doc, line, x, currentY, options);
+    currentY += lineHeight;
+  }
+
+  return { lines, endY: currentY };
+}
+
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
-function drawHeader(doc: Doc): number {
+async function drawHeader(doc: Doc): Promise<number> {
   const pageW = doc.internal.pageSize.getWidth();
   doc.setFillColor(25, 82, 163);
   doc.rect(0, 0, pageW, 32, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text(SCHOOL.name, pageW / 2, 13, { align: 'center' });
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text(SCHOOL.address, pageW / 2, 20, { align: 'center' });
-  doc.text(`Phone: ${SCHOOL.phone}  |  Email: ${SCHOOL.email}`, pageW / 2, 26, { align: 'center' });
+
+  await drawSmartText(doc, SCHOOL.name, pageW / 2, 13, { align: 'center', fontSize: 18, bold: true, color: [255, 255, 255] });
+  await drawSmartText(doc, SCHOOL.address, pageW / 2, 20, { align: 'center', fontSize: 9, color: [255, 255, 255] });
+  await drawSmartText(doc, `Phone: ${SCHOOL.phone}  |  Email: ${SCHOOL.email}`, pageW / 2, 26, { align: 'center', fontSize: 9, color: [255, 255, 255] });
+
   doc.setTextColor(0, 0, 0);
   return 38;
 }
 
-function sectionTitle(doc: Doc, text: string, y: number, pageW: number): number {
+async function sectionTitle(doc: Doc, text: string, y: number, pageW: number): Promise<number> {
   doc.setFillColor(230, 238, 255);
   doc.rect(10, y, pageW - 20, 8, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(25, 82, 163);
-  doc.text(text, 14, y + 5.5);
+  await drawSmartText(doc, text, 14, y + 5.5, { fontSize: 10, bold: true, color: [25, 82, 163] });
   doc.setTextColor(0, 0, 0);
   return y + 12;
 }
 
-function labelValue(doc: Doc, label: string, value: string, x: number, y: number): void {
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(`${label}:`, x, y);
-  doc.setFont('helvetica', 'normal');
-  doc.text(value, x + 40, y);
+async function labelValue(doc: Doc, label: string, value: string, x: number, y: number): Promise<void> {
+  await drawSmartText(doc, `${label}:`, x, y, { fontSize: 9, bold: true });
+  await drawSmartText(doc, value, x + 40, y, { fontSize: 9 });
 }
 
 function drawFooter(doc: Doc, pageW: number): void {
@@ -72,75 +240,77 @@ async function generateMarksheetPDF(student: Student, remarks: string): Promise<
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
-  let y = drawHeader(doc);
+  let y = await drawHeader(doc);
 
-  doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(25, 82, 163);
-  doc.text('ANNUAL REPORT CARD', pageW / 2, y + 6, { align: 'center' });
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(80);
-  doc.text(`Academic Year: ${SCHOOL.academicYear}`, pageW / 2, y + 13, { align: 'center' });
-  doc.setTextColor(0);
+  await drawSmartText(doc, 'ANNUAL REPORT CARD', pageW / 2, y + 6, { align: 'center', fontSize: 14, bold: true, color: [25, 82, 163] });
+  await drawSmartText(doc, `Academic Year: ${SCHOOL.academicYear}`, pageW / 2, y + 13, { align: 'center', fontSize: 9, color: [80, 80, 80] });
   y += 20;
 
-  y = sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
-  labelValue(doc, 'Name', student.name, 14, y);
-  labelValue(doc, 'Roll No', student.rollno, pageW / 2 + 5, y); y += 7;
-  labelValue(doc, 'Date of Birth', formatDate(student.dateOfBirth), 14, y);
-  labelValue(doc, 'Grade', student.grade, pageW / 2 + 5, y); y += 7;
-  labelValue(doc, "Father's Name", student.fatherName, 14, y); y += 7;
-  labelValue(doc, "Mother's Name", student.motherName, 14, y); y += 7;
-  labelValue(doc, 'Address', student.address, 14, y);
+  y = await sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
+  await labelValue(doc, 'Name', student.name, 14, y);
+  await labelValue(doc, 'Roll No', student.rollno, pageW / 2 + 5, y); y += 7;
+  await labelValue(doc, 'Date of Birth', formatDate(student.dateOfBirth), 14, y);
+  await labelValue(doc, 'Grade', student.grade, pageW / 2 + 5, y); y += 7;
+  await labelValue(doc, "Father's Name", student.fatherName, 14, y); y += 7;
+  await labelValue(doc, "Mother's Name", student.motherName, 14, y); y += 7;
+  await labelValue(doc, 'Address', student.address, 14, y);
   y += 12;
 
-  y = sectionTitle(doc, 'SUBJECT-WISE MARKS', y, pageW);
+  y = await sectionTitle(doc, 'SUBJECT-WISE MARKS', y, pageW);
   const colW = [80, 40, 40, 40];
   const startX = 14; const rowH = 8;
 
   doc.setFillColor(25, 82, 163);
   doc.rect(startX, y, pageW - 28, rowH, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   let cx = startX + 2;
-  ['Subject', 'Marks Obtained', 'Maximum Marks', 'Grade'].forEach((h, i) => { doc.text(h, cx, y + 5.5); cx += colW[i]; });
-  doc.setTextColor(0); y += rowH;
+  const marksHeaders = ['Subject', 'Marks Obtained', 'Maximum Marks', 'Grade'];
+  for (let i = 0; i < marksHeaders.length; i++) {
+    await drawSmartText(doc, marksHeaders[i], cx, y + 5.5, { fontSize: 9, bold: true, color: [255, 255, 255] });
+    cx += colW[i];
+  }
+  y += rowH;
 
   const subjects = Object.entries(student.marks);
-  subjects.forEach(([subj, mark], idx) => {
+  for (let idx = 0; idx < subjects.length; idx++) {
+    const [subj, mark] = subjects[idx];
     if (idx % 2 === 0) { doc.setFillColor(245, 248, 255); doc.rect(startX, y, pageW - 28, rowH, 'F'); }
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
     cx = startX + 2;
     const g = mark >= 90 ? 'A+' : mark >= 80 ? 'A' : mark >= 70 ? 'B+' : mark >= 60 ? 'B' : mark >= 50 ? 'C' : 'D';
-    [subjectLabel(subj), String(mark), '100', g].forEach((val, i) => { doc.text(val, cx, y + 5.5); cx += colW[i]; });
+    const rowValues = [subjectLabel(subj), String(mark), '100', g];
+    for (let i = 0; i < rowValues.length; i++) {
+      await drawSmartText(doc, rowValues[i], cx, y + 5.5, { fontSize: 9 });
+      cx += colW[i];
+    }
     doc.setDrawColor(220); doc.line(startX, y + rowH, startX + (pageW - 28), y + rowH);
     y += rowH;
-  });
+  }
 
   doc.setFillColor(25, 82, 163); doc.rect(startX, y, pageW - 28, rowH, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-  doc.text('TOTAL', startX + 2, y + 5.5);
-  doc.text(String(student.totalMarks), startX + colW[0] + 2, y + 5.5);
-  doc.text(String(subjects.length * 100), startX + colW[0] + colW[1] + 2, y + 5.5);
-  doc.text(student.gradePoint, startX + colW[0] + colW[1] + colW[2] + 2, y + 5.5);
-  doc.setTextColor(0); y += rowH + 10;
+  await drawSmartText(doc, 'TOTAL', startX + 2, y + 5.5, { fontSize: 9, bold: true, color: [255, 255, 255] });
+  await drawSmartText(doc, String(student.totalMarks), startX + colW[0] + 2, y + 5.5, { fontSize: 9, bold: true, color: [255, 255, 255] });
+  await drawSmartText(doc, String(subjects.length * 100), startX + colW[0] + colW[1] + 2, y + 5.5, { fontSize: 9, bold: true, color: [255, 255, 255] });
+  await drawSmartText(doc, student.gradePoint, startX + colW[0] + colW[1] + colW[2] + 2, y + 5.5, { fontSize: 9, bold: true, color: [255, 255, 255] });
+  y += rowH + 10;
 
-  y = sectionTitle(doc, 'PERFORMANCE SUMMARY', y, pageW);
-  labelValue(doc, 'Percentage', `${student.percentage}%`, 14, y);
-  labelValue(doc, 'Grade Point', student.gradePoint, pageW / 2 + 5, y); y += 7;
-  labelValue(doc, 'Attendance', `${student.attendance}%`, 14, y);
-  labelValue(doc, 'Conduct', student.conduct, pageW / 2 + 5, y);
+  y = await sectionTitle(doc, 'PERFORMANCE SUMMARY', y, pageW);
+  await labelValue(doc, 'Percentage', `${student.percentage}%`, 14, y);
+  await labelValue(doc, 'Grade Point', student.gradePoint, pageW / 2 + 5, y); y += 7;
+  await labelValue(doc, 'Attendance', `${student.attendance}%`, 14, y);
+  await labelValue(doc, 'Conduct', student.conduct, pageW / 2 + 5, y);
   y += 12;
 
-  y = sectionTitle(doc, "TEACHER'S REMARKS", y, pageW);
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(9);
-  const lines = doc.splitTextToSize(remarks, pageW - 30);
-  doc.text(lines, 14, y); y += lines.length * 5 + 10;
+  y = await sectionTitle(doc, "TEACHER'S REMARKS", y, pageW);
+  const wrappedRemarks = await drawWrappedSmartText(doc, remarks, 14, y, pageW - 30, { fontSize: 9, italic: true });
+  y = wrappedRemarks.endY + 6;
 
   if (y < 230) {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
     doc.line(14, y + 12, 60, y + 12);
     doc.line(pageW / 2 - 23, y + 12, pageW / 2 + 23, y + 12);
     doc.line(pageW - 60, y + 12, pageW - 14, y + 12);
-    doc.text('Class Teacher', 14, y + 17);
-    doc.text('Principal', pageW / 2 - 10, y + 17);
-    doc.text("Parent's Signature", pageW - 58, y + 17);
+    await drawSmartText(doc, 'Class Teacher', 14, y + 17, { fontSize: 9 });
+    await drawSmartText(doc, 'Principal', pageW / 2 - 10, y + 17, { fontSize: 9 });
+    await drawSmartText(doc, "Parent's Signature", pageW - 58, y + 17, { fontSize: 9 });
   }
 
   drawFooter(doc, pageW);
@@ -153,21 +323,18 @@ async function generateLeavingCertPDF(student: Student, text: string): Promise<D
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
-  let y = drawHeader(doc);
+  let y = await drawHeader(doc);
 
-  doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(25, 82, 163);
-  doc.text('SCHOOL LEAVING CERTIFICATE', pageW / 2, y + 8, { align: 'center' });
-  doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(80);
-  doc.text(`Affiliation: ${SCHOOL.affiliation}`, pageW / 2, y + 16, { align: 'center' });
-  doc.setTextColor(0); y += 26;
+  await drawSmartText(doc, 'SCHOOL LEAVING CERTIFICATE', pageW / 2, y + 8, { align: 'center', fontSize: 16, bold: true, color: [25, 82, 163] });
+  await drawSmartText(doc, `Affiliation: ${SCHOOL.affiliation}`, pageW / 2, y + 16, { align: 'center', fontSize: 10, color: [80, 80, 80] });
+  y += 26;
 
   const serial = `LC/${new Date().getFullYear()}/${String(student.rollno).padStart(4, '0')}`;
-  doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-  doc.text(`Certificate No: ${serial}`, pageW - 14, y, { align: 'right' });
-  doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, pageW - 14, y + 6, { align: 'right' });
+  await drawSmartText(doc, `Certificate No: ${serial}`, pageW - 14, y, { align: 'right', fontSize: 9, bold: true });
+  await drawSmartText(doc, `Date: ${new Date().toLocaleDateString('en-IN')}`, pageW - 14, y + 6, { align: 'right', fontSize: 9, bold: true });
   y += 14;
 
-  y = sectionTitle(doc, 'STUDENT DETAILS', y, pageW);
+  y = await sectionTitle(doc, 'STUDENT DETAILS', y, pageW);
   const fields: [string, string][] = [
     ["Student's Full Name", student.name],
     ["Father's / Guardian's Name", student.fatherName],
@@ -181,28 +348,26 @@ async function generateLeavingCertPDF(student: Student, text: string): Promise<D
     ['Attendance', `${student.attendance}%`],
     ['Conduct', student.conduct],
   ];
-  fields.forEach(([label, value], idx) => {
+  for (let idx = 0; idx < fields.length; idx++) {
+    const [label, value] = fields[idx];
     if (idx % 2 === 0) { doc.setFillColor(248, 250, 255); doc.rect(14, y - 1, pageW - 28, 7, 'F'); }
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-    doc.text(`${label}:`, 16, y + 4);
-    doc.setFont('helvetica', 'normal'); doc.text(value, 80, y + 4);
+    await drawSmartText(doc, `${label}:`, 16, y + 4, { fontSize: 9, bold: true });
+    await drawSmartText(doc, value, 80, y + 4, { fontSize: 9 });
     y += 7;
-  });
+  }
   y += 6;
 
-  y = sectionTitle(doc, 'CHARACTER CERTIFICATE', y, pageW);
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(9.5);
-  const lines = doc.splitTextToSize(text, pageW - 30);
-  doc.text(lines, 14, y); y += lines.length * 5.5 + 12;
+  y = await sectionTitle(doc, 'CHARACTER CERTIFICATE', y, pageW);
+  const wrapped = await drawWrappedSmartText(doc, text, 14, y, pageW - 30, { fontSize: 9.5, italic: true });
+  y = wrapped.endY + 6;
 
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-  doc.text('This is to certify that the above information is correct as per school records.', pageW / 2, y, { align: 'center' });
+  await drawSmartText(doc, 'This is to certify that the above information is correct as per school records.', pageW / 2, y, { align: 'center', fontSize: 9 });
   y += 16;
 
   doc.line(14, y + 12, 60, y + 12);
   doc.line(pageW - 60, y + 12, pageW - 14, y + 12);
-  doc.text('Class Teacher', 14, y + 17);
-  doc.text('Principal', pageW - 58, y + 17);
+  await drawSmartText(doc, 'Class Teacher', 14, y + 17, { fontSize: 9 });
+  await drawSmartText(doc, 'Principal', pageW - 58, y + 17, { fontSize: 9 });
 
   drawFooter(doc, pageW);
   return doc;
@@ -214,61 +379,64 @@ async function generatePeriodicEvalPDF(student: Student, text: string): Promise<
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
-  let y = drawHeader(doc);
+  let y = await drawHeader(doc);
 
-  doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(25, 82, 163);
-  doc.text('PERIODIC EVALUATION REPORT', pageW / 2, y + 6, { align: 'center' });
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(80);
-  doc.text(`Period: ${SCHOOL.evaluationPeriod}  |  Academic Year: ${SCHOOL.academicYear}`, pageW / 2, y + 13, { align: 'center' });
-  doc.setTextColor(0); y += 22;
+  await drawSmartText(doc, 'PERIODIC EVALUATION REPORT', pageW / 2, y + 6, { align: 'center', fontSize: 14, bold: true, color: [25, 82, 163] });
+  await drawSmartText(doc, `Period: ${SCHOOL.evaluationPeriod}  |  Academic Year: ${SCHOOL.academicYear}`, pageW / 2, y + 13, { align: 'center', fontSize: 9, color: [80, 80, 80] });
+  y += 22;
 
-  y = sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
-  labelValue(doc, 'Name', student.name, 14, y);
-  labelValue(doc, 'Roll No', student.rollno, pageW / 2 + 5, y); y += 7;
-  labelValue(doc, 'Grade', student.grade, 14, y);
-  labelValue(doc, 'Conduct', student.conduct, pageW / 2 + 5, y); y += 7;
-  labelValue(doc, 'Attendance', `${student.attendance}%`, 14, y);
+  y = await sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
+  await labelValue(doc, 'Name', student.name, 14, y);
+  await labelValue(doc, 'Roll No', student.rollno, pageW / 2 + 5, y); y += 7;
+  await labelValue(doc, 'Grade', student.grade, 14, y);
+  await labelValue(doc, 'Conduct', student.conduct, pageW / 2 + 5, y); y += 7;
+  await labelValue(doc, 'Attendance', `${student.attendance}%`, 14, y);
   y += 12;
 
-  y = sectionTitle(doc, 'MARKS SUMMARY', y, pageW);
+  y = await sectionTitle(doc, 'MARKS SUMMARY', y, pageW);
   const startX = 14; const colW = [90, 35, 35, 35]; const rowH = 7;
 
   doc.setFillColor(25, 82, 163); doc.rect(startX, y, pageW - 28, rowH, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   let cx = startX + 2;
-  ['Subject', 'Marks', 'Max', 'Status'].forEach((h, i) => { doc.text(h, cx, y + 5); cx += colW[i]; });
-  doc.setTextColor(0); y += rowH;
+  const periodicHeaders = ['Subject', 'Marks', 'Max', 'Status'];
+  for (let i = 0; i < periodicHeaders.length; i++) {
+    await drawSmartText(doc, periodicHeaders[i], cx, y + 5, { fontSize: 9, bold: true, color: [255, 255, 255] });
+    cx += colW[i];
+  }
+  y += rowH;
 
-  Object.entries(student.marks).forEach(([subj, mark], idx) => {
+  const periodicEntries = Object.entries(student.marks);
+  for (let idx = 0; idx < periodicEntries.length; idx++) {
+    const [subj, mark] = periodicEntries[idx];
     if (idx % 2 === 0) { doc.setFillColor(245, 248, 255); doc.rect(startX, y, pageW - 28, rowH, 'F'); }
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
     cx = startX + 2;
     const status = mark >= 80 ? 'Excellent' : mark >= 60 ? 'Good' : mark >= 40 ? 'Average' : 'Below Avg';
-    [subjectLabel(subj), String(mark), '100', status].forEach((val, i) => { doc.text(val, cx, y + 5); cx += colW[i]; });
+    const rowValues = [subjectLabel(subj), String(mark), '100', status];
+    for (let i = 0; i < rowValues.length; i++) {
+      await drawSmartText(doc, rowValues[i], cx, y + 5, { fontSize: 9 });
+      cx += colW[i];
+    }
     doc.setDrawColor(220); doc.line(startX, y + rowH, startX + (pageW - 28), y + rowH);
     y += rowH;
-  });
+  }
 
   doc.setFillColor(200, 215, 245); doc.rect(startX, y, pageW - 28, rowH, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-  doc.text('Overall', startX + 2, y + 5);
-  doc.text(`${student.totalMarks}`, startX + colW[0] + 2, y + 5);
-  doc.text(`${Object.keys(student.marks).length * 100}`, startX + colW[0] + colW[1] + 2, y + 5);
-  doc.text(`${student.percentage}% (${student.gradePoint})`, startX + colW[0] + colW[1] + colW[2] + 2, y + 5);
+  await drawSmartText(doc, 'Overall', startX + 2, y + 5, { fontSize: 9, bold: true });
+  await drawSmartText(doc, `${student.totalMarks}`, startX + colW[0] + 2, y + 5, { fontSize: 9, bold: true });
+  await drawSmartText(doc, `${Object.keys(student.marks).length * 100}`, startX + colW[0] + colW[1] + 2, y + 5, { fontSize: 9, bold: true });
+  await drawSmartText(doc, `${student.percentage}% (${student.gradePoint})`, startX + colW[0] + colW[1] + colW[2] + 2, y + 5, { fontSize: 9, bold: true });
   y += rowH + 10;
 
-  y = sectionTitle(doc, 'DETAILED EVALUATION', y, pageW);
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(9.5);
-  const lines = doc.splitTextToSize(text, pageW - 30);
-  doc.text(lines, 14, y); y += lines.length * 5.5 + 12;
+  y = await sectionTitle(doc, 'DETAILED EVALUATION', y, pageW);
+  const wrapped = await drawWrappedSmartText(doc, text, 14, y, pageW - 30, { fontSize: 9.5, italic: true });
+  y = wrapped.endY + 6;
 
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
   doc.line(14, y + 12, 60, y + 12);
   doc.line(pageW / 2 - 23, y + 12, pageW / 2 + 23, y + 12);
   doc.line(pageW - 60, y + 12, pageW - 14, y + 12);
-  doc.text('Subject Teacher', 14, y + 17);
-  doc.text('Class Teacher', pageW / 2 - 12, y + 17);
-  doc.text('Principal', pageW - 40, y + 17);
+  await drawSmartText(doc, 'Subject Teacher', 14, y + 17, { fontSize: 9 });
+  await drawSmartText(doc, 'Class Teacher', pageW / 2 - 12, y + 17, { fontSize: 9 });
+  await drawSmartText(doc, 'Principal', pageW - 40, y + 17, { fontSize: 9 });
 
   drawFooter(doc, pageW);
   return doc;
@@ -304,86 +472,27 @@ async function generateAttendanceRegisterPDF(
   const dayColW = (pageW - (startX * 2) - srNoColW - nameColW) / daysInMonth;
   const rowH = 6.6;
 
-  const containsGujarati = (text: string) => /[\u0A80-\u0AFF]/.test(text);
-  const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
-  const canvasCtx = canvas?.getContext('2d') ?? null;
-
-  const drawCanvasText = async (
-    text: string,
-    x: number,
-    y: number,
-    options: { align?: 'left' | 'center' | 'right'; fontSize?: number; bold?: boolean } = {}
-  ) => {
-    if (!canvas || !canvasCtx) {
-      doc.text(text, x, y, { align: options.align ?? 'left' });
-      return;
-    }
-
-    const fontSize = options.fontSize ?? 8;
-    const align = options.align ?? 'left';
-    const fontName = options.bold ? '700' : '400';
-    canvasCtx.font = `${fontName} ${Math.round(fontSize * 4)}px "Noto Sans Gujarati", sans-serif`;
-    const metrics = canvasCtx.measureText(text);
-    const width = Math.max(2, Math.ceil(metrics.width + 8));
-    const height = Math.max(2, Math.ceil(fontSize * 7));
-
-    canvas.width = width;
-    canvas.height = height;
-    canvasCtx.clearRect(0, 0, width, height);
-    canvasCtx.font = `${fontName} ${Math.round(fontSize * 4)}px "Noto Sans Gujarati", sans-serif`;
-    canvasCtx.fillStyle = '#111111';
-    canvasCtx.textBaseline = 'middle';
-    canvasCtx.fillText(text, 2, height / 2);
-
-    const mmPerPx = 0.264583;
-    const imageWmm = width * mmPerPx * 0.85;
-    const imageHmm = height * mmPerPx * 0.85;
-    let imageX = x;
-    if (align === 'center') imageX = x - imageWmm / 2;
-    if (align === 'right') imageX = x - imageWmm;
-
-    doc.addImage(canvas.toDataURL('image/png'), 'PNG', imageX, y - imageHmm + 1, imageWmm, imageHmm);
-  };
-
-  const drawSmartText = async (
-    text: string,
-    x: number,
-    y: number,
-    options: { align?: 'left' | 'center' | 'right'; fontSize?: number; bold?: boolean } = {}
-  ) => {
-    if (containsGujarati(text)) {
-      await drawCanvasText(text, x, y, options);
-      return;
-    }
-    doc.setFontSize(options.fontSize ?? 8);
-    doc.setFont('helvetica', options.bold ? 'bold' : 'normal');
-    doc.text(text, x, y, { align: options.align ?? 'left' });
-  };
-
   const drawPageHeader = async () => {
     let y = 12;
     doc.setTextColor(20, 20, 20);
-    await drawSmartText(`જિલ્લા શિક્ષણ સમિતિ સંચાલિત શાળા  ${SCHOOL.academicYear}`, pageW / 2, y, { align: 'center', fontSize: 10, bold: true });
+    await drawSmartText(doc, `જિલ્લા શિક્ષણ સમિતિ સંચાલિત શાળા  ${SCHOOL.academicYear}`, pageW / 2, y, { align: 'center', fontSize: 10, bold: true });
     y += 7;
-    await drawSmartText(`માસિક હાજરી પત્રક  •  ધોરણ: ${grade}`, pageW / 2, y, { align: 'center', fontSize: 11, bold: true });
+    await drawSmartText(doc, `માસિક હાજરી પત્રક  •  ધોરણ: ${grade}`, pageW / 2, y, { align: 'center', fontSize: 11, bold: true });
     y += 6;
-    await drawSmartText(`${MONTHS_GJ[monthYearData.month]} - ${monthYearData.year}`, pageW / 2, y, { align: 'center', fontSize: 9, bold: true });
+    await drawSmartText(doc, `${MONTHS_GJ[monthYearData.month]} - ${monthYearData.year}`, pageW / 2, y, { align: 'center', fontSize: 9, bold: true });
     y += 6;
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.text(`${MONTHS_EN[monthYearData.month]} ${monthYearData.year}`, pageW / 2, y, { align: 'center' });
+    await drawSmartText(doc, `${MONTHS_EN[monthYearData.month]} ${monthYearData.year}`, pageW / 2, y, { align: 'center', fontSize: 8 });
     y += 4;
 
     doc.setDrawColor(90, 90, 90);
     doc.setFillColor(236, 236, 236);
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(7);
 
     doc.rect(startX, y, srNoColW, rowH * 2, 'FD');
     doc.rect(startX + srNoColW, y, nameColW, rowH * 2, 'FD');
-    await drawSmartText('ક્રમ', startX + srNoColW / 2, y + (rowH * 1.2), { align: 'center', fontSize: 7.2, bold: true });
-    await drawSmartText('વિદ્યાર્થીનું નામ', startX + srNoColW + nameColW / 2, y + (rowH * 1.2), { align: 'center', fontSize: 7.2, bold: true });
+    await drawSmartText(doc, 'ક્રમ', startX + srNoColW / 2, y + (rowH * 1.2), { align: 'center', fontSize: 7.2, bold: true });
+    await drawSmartText(doc, 'વિદ્યાર્થીનું નામ', startX + srNoColW + nameColW / 2, y + (rowH * 1.2), { align: 'center', fontSize: 7.2, bold: true });
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dayX = startX + srNoColW + nameColW + (day - 1) * dayColW;
@@ -391,8 +500,8 @@ async function generateAttendanceRegisterPDF(
       const dayAbbr = date.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 2);
       doc.rect(dayX, y, dayColW, rowH, 'FD');
       doc.rect(dayX, y + rowH, dayColW, rowH, 'FD');
-      doc.text(dayAbbr, dayX + dayColW / 2, y + 4.2, { align: 'center' });
-      doc.text(String(day), dayX + dayColW / 2, y + rowH + 4.2, { align: 'center' });
+      await drawSmartText(doc, dayAbbr, dayX + dayColW / 2, y + 4.2, { align: 'center', fontSize: 7 });
+      await drawSmartText(doc, String(day), dayX + dayColW / 2, y + rowH + 4.2, { align: 'center', fontSize: 7 });
     }
 
     return y + (rowH * 2);
@@ -401,25 +510,22 @@ async function generateAttendanceRegisterPDF(
   const isSunday = (day: number) => new Date(monthYearData.year, monthYearData.month, day).getDay() === 0;
 
   let y = await drawPageHeader();
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.8);
 
-  for (const [idx, student] of students.entries()) {
+  for (let idx = 0; idx < students.length; idx++) {
+    const student = students[idx];
     if (y + rowH > pageH - 12) {
       doc.addPage();
       y = await drawPageHeader();
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.8);
     }
 
     doc.setDrawColor(130, 130, 130);
     doc.setTextColor(0, 0, 0);
 
     doc.rect(startX, y, srNoColW, rowH);
-    doc.text(String(idx + 1), startX + srNoColW / 2, y + 4.2, { align: 'center' });
+    await drawSmartText(doc, String(idx + 1), startX + srNoColW / 2, y + 4.2, { align: 'center', fontSize: 6.8 });
 
     doc.rect(startX + srNoColW, y, nameColW, rowH);
-    await drawSmartText(student.name, startX + srNoColW + 1.3, y + 4.2, { fontSize: 7 });
+    await drawSmartText(doc, student.name, startX + srNoColW + 1.3, y + 4.2, { fontSize: 7 });
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dayX = startX + srNoColW + nameColW + (day - 1) * dayColW;
@@ -432,9 +538,7 @@ async function generateAttendanceRegisterPDF(
 
       doc.rect(dayX, y, dayColW, rowH);
       if (sunday) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('S', dayX + dayColW / 2, y + 4.2, { align: 'center' });
-        doc.setFont('helvetica', 'normal');
+        await drawSmartText(doc, 'S', dayX + dayColW / 2, y + 4.2, { align: 'center', fontSize: 6.8, bold: true });
       }
     }
 
@@ -451,23 +555,20 @@ async function generateSingleStudentAttendancePDF(student: Student, attendance: 
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
-  let y = drawHeader(doc);
+  let y = await drawHeader(doc);
 
-  doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(16, 185, 129);
-  doc.text('ATTENDANCE REGISTER', pageW / 2, y + 6, { align: 'center' });
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(0);
+  await drawSmartText(doc, 'ATTENDANCE REGISTER', pageW / 2, y + 6, { align: 'center', fontSize: 14, bold: true, color: [16, 185, 129] });
   y += 16;
 
-  y = sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
-  labelValue(doc, 'Name', student.name, 14, y);
-  labelValue(doc, 'Grade', student.grade, pageW / 2 + 5, y); y += 7;
-  labelValue(doc, 'Roll No', student.rollno, 14, y);
-  labelValue(doc, 'Attendance %', `${attendance}%`, pageW / 2 + 5, y);
+  y = await sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
+  await labelValue(doc, 'Name', student.name, 14, y);
+  await labelValue(doc, 'Grade', student.grade, pageW / 2 + 5, y); y += 7;
+  await labelValue(doc, 'Roll No', student.rollno, 14, y);
+  await labelValue(doc, 'Attendance %', `${attendance}%`, pageW / 2 + 5, y);
   y += 12;
 
-  y = sectionTitle(doc, 'MONTH CALENDAR', y, pageW);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
-  doc.text('(Mark L for Leave, P for Present, A for Absent)', 14, y);
+  y = await sectionTitle(doc, 'MONTH CALENDAR', y, pageW);
+  await drawSmartText(doc, '(Mark L for Leave, P for Present, A for Absent)', 14, y, { fontSize: 8 });
   y += 4;
 
   const daysInMonth = 30;
@@ -484,9 +585,7 @@ async function generateSingleStudentAttendancePDF(student: Student, attendance: 
 
     doc.setDrawColor(200);
     doc.rect(x, cellY, cellW, cellH);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.text(String(day), x + 1, cellY + 3.5);
+    await drawSmartText(doc, String(day), x + 1, cellY + 3.5, { fontSize: 7, bold: true });
   }
 
   drawFooter(doc, pageW);
