@@ -164,6 +164,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     'ચાલુ માસ સાથે પરીક્ષા પછીના હાજર દિવસ',
   ];
   const summaryColumnWidths = ['4%', '4%', '4%', '4%', '4%', '4%', '9%', '9.5%', '9.5%'];
+  const studentRowHeightPx = 21;
   const verticalHeaderStyle: React.CSSProperties = {
     display: 'inline-block',
     transform: 'rotate(-90deg)',
@@ -201,7 +202,10 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
   ) => {
     const info = attendanceData.get(student.id);
     return (
-      <tr key={`${student.id}-${includeStudentInfo ? 'left' : 'right'}`}>
+      <tr
+        key={`${student.id}-${includeStudentInfo ? 'left' : 'right'}`}
+        style={{ height: `${studentRowHeightPx}px`, minHeight: `${studentRowHeightPx}px`, maxHeight: `${studentRowHeightPx}px` }}
+      >
         {includeStudentInfo ? (
           <>
             <td className="border border-slate-700 px-1 py-1 text-center">{index + 1}</td>
