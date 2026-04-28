@@ -169,31 +169,39 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     'સળંગ બે દિવસ ગેરહાજર',
   ];
   const verticalHeaderStyle: React.CSSProperties = {
-    writingMode: 'vertical-rl',
-    transform: 'rotate(180deg)',
+    display: 'inline-block',
+    transform: 'rotate(-90deg)',
+    transformOrigin: 'center',
     whiteSpace: 'nowrap',
-    textAlign: 'center',
+    lineHeight: 1.05,
   };
 
   const renderDayHeader = (day: number) => {
     const weekday = weekdayLabels[new Date(year, month, day).getDay()];
     return (
-      <th key={`day-${day}`} className="border border-slate-700 px-1 py-1 align-bottom min-w-[34px]">
-        <div style={verticalHeaderStyle} className="mx-auto h-[120px] leading-tight">
-          <span className="font-semibold">{weekday.gu}</span>
-          <span className="text-[9px]">{weekday.en}</span>
-          <span>તા. {String(day).padStart(2, '0')}</span>
+      <th key={`day-${day}`} className="border border-slate-700 px-0 py-0 align-bottom w-[32px] min-w-[32px]">
+        <div className="h-[136px] flex items-center justify-center">
+          <div style={verticalHeaderStyle} className="text-center">
+            <div className="font-semibold">{weekday.gu}</div>
+            <div className="text-[9px]">{weekday.en}</div>
+            <div>તા. {String(day).padStart(2, '0')}</div>
+          </div>
         </div>
       </th>
     );
   };
 
-  const renderGridRow = (student: Student, index: number, right = false) => {
+  const renderGridRow = (
+    student: Student,
+    index: number,
+    dayRange: number[],
+    includeStudentInfo: boolean,
+    includeSummary: boolean
+  ) => {
     const info = attendanceData.get(student.id);
-    const dayRange = right ? rightDays : leftDays;
     return (
-      <tr key={`${student.id}-${right ? 'right' : 'left'}`}>
-        {!right ? (
+      <tr key={`${student.id}-${includeStudentInfo ? 'left' : 'right'}`}>
+        {includeStudentInfo ? (
           <>
             <td className="border border-slate-700 px-1 py-1 text-center">{index + 1}</td>
             <td className="border border-slate-700 px-2 py-1">{student.nameGujarati || student.name}</td>
@@ -211,7 +219,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
             </td>
           );
         })}
-        {right
+        {includeSummary
           ? summaryColumns.map((column) => (
               <td key={`${student.id}-${column}`} className="border border-slate-700 px-1 py-1 text-center"></td>
             ))
@@ -221,65 +229,79 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
   };
 
   return (
-    <div className="w-[1123px] min-h-[794px] bg-white text-slate-900 p-4" style={{ fontFamily: "'Noto Sans Gujarati', 'Inter', sans-serif" }}>
-      <div className="border-2 border-blue-700">
-        <div className="grid grid-cols-3 border-b border-slate-700 text-[22px] leading-tight">
-          <div className="px-2 py-2 italic">જિલ્લા શિક્ષણ સમિતિ વડોદરા&nbsp;&nbsp;2025-26</div>
-          <div className="px-2 py-2 text-center">ધનતેજ પ્રાથમિક શાળા તા. સાવલી</div>
-          <div className="px-2 py-2 text-center">વડોદરા નું  દરરોજનું</div>
-        </div>
-
-        <div className="grid grid-cols-2">
-          <div className="border-r-2 border-dashed border-blue-700">
-            <table className="w-full border-collapse text-[10px]">
-              <thead>
-                <tr>
-                  <th className="border border-slate-700 px-1 py-1" style={verticalHeaderStyle}>અનુક્રમ નંબર</th>
-                  <th className="border border-slate-700 px-2 py-1">વિદ્યાર્થીનું નામ</th>
-                  <th className="border border-slate-700 px-2 py-1" style={verticalHeaderStyle}>જન્મ તારીખ</th>
-                  <th className="border border-slate-700 px-2 py-1" style={verticalHeaderStyle}>જ.રજીસ્ટર નંબર</th>
-                  <th className="border border-slate-700 px-2 py-1" style={verticalHeaderStyle}>જાતિ</th>
-                  <th className="border border-slate-700 px-2 py-1" style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</th>
-                  {leftDays.map(renderDayHeader)}
-                </tr>
-                <tr className="bg-orange-50">
-                  {Array.from({ length: 6 + leftDays.length }, (_, i) => (
-                    <th key={`idx-left-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 1}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student, index) => renderGridRow(student, index))}
-              </tbody>
-            </table>
+    <div className="w-[1123px] bg-white text-slate-900" style={{ fontFamily: "'Noto Sans Gujarati', 'Inter', sans-serif" }}>
+      <section className="w-[1123px] min-h-[794px] p-4" style={{ pageBreakAfter: 'always' }}>
+        <div className="border-2 border-blue-700">
+          <div className="grid grid-cols-3 border-b border-slate-700 text-[22px] leading-tight">
+            <div className="px-2 py-2 italic">જિલ્લા શિક્ષણ સમિતિ વડોદરા&nbsp;&nbsp;2025-26</div>
+            <div className="px-2 py-2 text-center">ધનતેજ પ્રાથમિક શાળા તા. સાવલી</div>
+            <div className="px-2 py-2 text-center">વડોદરા નું  દરરોજનું</div>
           </div>
+          <table className="w-full border-collapse text-[10px]">
+            <thead>
+              <tr>
+                <th className="border border-slate-700 px-1 py-1">
+                  <div style={verticalHeaderStyle}>અનુક્રમ નંબર</div>
+                </th>
+                <th className="border border-slate-700 px-2 py-1">વિદ્યાર્થીનું નામ</th>
+                <th className="border border-slate-700 px-2 py-1">
+                  <div style={verticalHeaderStyle}>જન્મ તારીખ</div>
+                </th>
+                <th className="border border-slate-700 px-2 py-1">
+                  <div style={verticalHeaderStyle}>જ.રજીસ્ટર નંબર</div>
+                </th>
+                <th className="border border-slate-700 px-2 py-1">
+                  <div style={verticalHeaderStyle}>જાતિ</div>
+                </th>
+                <th className="border border-slate-700 px-2 py-1">
+                  <div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div>
+                </th>
+                {leftDays.map(renderDayHeader)}
+              </tr>
+              <tr className="bg-orange-50">
+                {Array.from({ length: 6 + leftDays.length }, (_, i) => (
+                  <th key={`idx-left-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 1}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student, index) => renderGridRow(student, index, leftDays, true, false))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-          <div>
+      <section className="w-[1123px] min-h-[794px] p-4">
+        <div className="border-2 border-blue-700">
+          <div className="grid grid-cols-3 border-b border-slate-700 text-[22px] leading-tight">
+            <div className="px-2 py-2 text-center">વડોદરા નું  દરરોજનું</div>
             <div className="px-2 pt-1 text-center text-[18px]">વિદ્યાર્થીઓનું હાજરી પત્રક (રજીસ્ટર)</div>
-            <div className="px-2 pb-1 text-center text-[16px]">માહે : {monthLabel} &nbsp; ધોરણ : {grade}</div>
-            <table className="w-full border-collapse text-[10px]">
-              <thead>
-                <tr>
-                  {rightDays.map(renderDayHeader)}
-                  {summaryColumns.map((column) => (
-                    <th key={column} className="border border-slate-700 px-1 py-1">
-                      <div style={verticalHeaderStyle} className="mx-auto h-[120px]">{column}</div>
-                    </th>
-                  ))}
-                </tr>
-                <tr className="bg-orange-50">
-                  {Array.from({ length: rightDays.length + summaryColumns.length }, (_, i) => (
-                    <th key={`idx-right-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 26}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student, index) => renderGridRow(student, index, true))}
-              </tbody>
-            </table>
+            <div className="px-2 pb-1 text-center text-[16px]">માહે : {monthLabel}  &nbsp;&nbsp; ધોરણ : {grade}</div>
           </div>
+          <table className="w-full border-collapse text-[10px]">
+            <thead>
+              <tr>
+                {rightDays.map(renderDayHeader)}
+                {summaryColumns.map((column) => (
+                  <th key={column} className="border border-slate-700 px-0 py-0 w-[36px] min-w-[36px]">
+                    <div className="h-[136px] flex items-center justify-center">
+                      <div style={verticalHeaderStyle}>{column}</div>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+              <tr className="bg-orange-50">
+                {Array.from({ length: rightDays.length + summaryColumns.length }, (_, i) => (
+                  <th key={`idx-right-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 26}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student, index) => renderGridRow(student, index, rightDays, false, true))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </section>
     </div>
   );
 };
