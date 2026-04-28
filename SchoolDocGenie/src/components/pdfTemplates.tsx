@@ -156,13 +156,14 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     'હાજર',
     'ગેરહાજર',
     'રજા',
-    'રોગચાળો',
+    'તહેવાર',
+    'રવિવાર',
     'કુલ',
-    'માસના ગેરહાજર',
-    'રજા',
-    'ગયા માસ સુધી એકંદર ગેરહાજર',
-    'સળંગ ત્રણ દિવસ ગેરહાજર',
+    'ચાલુ માસના હાજર દિવસ',
+    'વા.પરીક્ષા પછી ગયા માસ સુધીના હાજર દિવસ',
+    'ચાલુ માસ સાથે પરીક્ષા પછીના હાજર દિવસ',
   ];
+  const summaryColumnWidths = ['42px', '42px', '42px', '42px', '42px', '42px', '84px', '154px', '154px'];
   const verticalHeaderStyle: React.CSSProperties = {
     display: 'inline-block',
     transform: 'rotate(-90deg)',
@@ -171,12 +172,17 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     lineHeight: 1.05,
   };
 
-  const renderDayHeader = (day: number) => {
+  const renderDayHeader = (day: number, isRightPage = false) => {
     const weekdayIndex = new Date(year, month, day).getDay();
     const weekday = weekdayLabels[weekdayIndex];
     const isSunday = weekdayIndex === 0;
+    const dayWidth = isRightPage ? '44px' : '30px';
     return (
-      <th key={`day-${day}`} className={`border border-slate-700 px-0 py-0 align-bottom w-[30px] min-w-[30px] ${isSunday ? 'bg-slate-200' : ''}`}>
+      <th
+        key={`day-${day}`}
+        style={{ width: dayWidth, minWidth: dayWidth }}
+        className={`border border-slate-700 px-0 py-0 align-bottom ${isSunday ? 'bg-slate-200' : ''}`}
+      >
         <div className="h-[126px] flex items-center justify-center">
           <div style={verticalHeaderStyle} className="text-center">
             <div className="font-semibold">{weekday}</div>
@@ -265,7 +271,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
                 <th className="border border-slate-700 px-2 py-1">
                   <div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div>
                 </th>
-                {leftDays.map(renderDayHeader)}
+                {leftDays.map((day) => renderDayHeader(day, false))}
               </tr>
               <tr className="bg-orange-50">
                 {Array.from({ length: 6 + leftDays.length }, (_, i) => (
@@ -283,12 +289,16 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
       <section className="w-[1123px] min-h-[794px] p-4">
         <div className="border-2 border-blue-700">
           {renderRegisterHeader()}
-          <table className="w-full border-collapse text-[10px]">
+          <table className="w-full border-collapse table-fixed text-[10px]">
             <thead>
               <tr>
-                {rightDays.map(renderDayHeader)}
+                {rightDays.map((day) => renderDayHeader(day, true))}
                 {summaryColumns.map((column, idx) => (
-                  <th key={`${column}-${idx}`} className="border border-slate-700 px-0 py-0 w-[34px] min-w-[34px]">
+                  <th
+                    key={`${column}-${idx}`}
+                    style={{ width: summaryColumnWidths[idx], minWidth: summaryColumnWidths[idx] }}
+                    className="border border-slate-700 px-0 py-0"
+                  >
                     <div className="h-[126px] flex items-center justify-center">
                       <div style={verticalHeaderStyle}>{column}</div>
                     </div>
