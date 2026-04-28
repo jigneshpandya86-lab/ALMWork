@@ -74,6 +74,7 @@ export interface StudentTableProps {
   selectedGrade?: string;
   onSaveStudent: (student: Student, mode: 'add' | 'edit') => void;
   onDeleteStudent: (studentId: string) => void;
+  onBulkDeleteStudents: (studentIds: string[]) => void;
 }
 
 export interface TemplateSelectorProps {

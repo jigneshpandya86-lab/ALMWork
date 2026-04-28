@@ -45,12 +45,19 @@ const EMPTY_DRAFT: StudentDraft = {
   conduct: 'Good',
 };
 
-export default function StudentTable({ students, selectedGrade, onSaveStudent, onDeleteStudent }: StudentTableProps) {
+export default function StudentTable({
+  students,
+  selectedGrade,
+  onSaveStudent,
+  onDeleteStudent,
+  onBulkDeleteStudents,
+}: StudentTableProps) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [draft, setDraft] = useState<StudentDraft>(EMPTY_DRAFT);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
     let list = selectedGrade ? students.filter(s => s.grade === selectedGrade) : students;
@@ -79,11 +86,47 @@ export default function StudentTable({ students, selectedGrade, onSaveStudent, o
     }
   }, [page, pages]);
 
+  useEffect(() => {
+    const existingIds = new Set(filtered.map((student) => student.id));
+    setSelectedIds((previous) => previous.filter((id) => existingIds.has(id)));
+  }, [filtered]);
+
   const byGrade = useMemo(() => {
     const m: Record<string,number> = {};
     filtered.forEach(s => { m[s.grade] = (m[s.grade] ?? 0) + 1; });
     return m;
   }, [filtered]);
+
+  const allVisibleSelected = rows.length > 0 && rows.every((student) => selectedIds.includes(student.id));
+  const selectedCount = selectedIds.length;
+
+  const toggleSelect = (studentId: string, checked: boolean) => {
+    setSelectedIds((previous) => {
+      if (checked) {
+        if (previous.includes(studentId)) return previous;
+        return [...previous, studentId];
+      }
+      return previous.filter((id) => id !== studentId);
+    });
+  };
+
+  const toggleSelectVisible = (checked: boolean) => {
+    if (checked) {
+      const additions = rows
+        .map((student) => student.id)
+        .filter((id) => !selectedIds.includes(id));
+      setSelectedIds((previous) => [...previous, ...additions]);
+      return;
+    }
+    const visibleIds = new Set(rows.map((student) => student.id));
+    setSelectedIds((previous) => previous.filter((id) => !visibleIds.has(id)));
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    onBulkDeleteStudents(selectedIds);
+    setSelectedIds([]);
+  };
 
   const openAdd = () => {
     setEditingStudent(null);
@@ -190,13 +233,24 @@ export default function StudentTable({ students, selectedGrade, onSaveStudent, o
             />
           </div>
 
-          <button
-            onClick={openAdd}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}
-          >
-            + Add Student
-          </button>
+          <div className="flex items-center gap-2">
+            {selectedCount > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="px-3 py-2 rounded-xl text-sm font-semibold"
+                style={{ background:'rgba(239,68,68,0.12)', color:'#b91c1c', border:'1px solid rgba(239,68,68,0.3)' }}
+              >
+                Delete Selected ({selectedCount})
+              </button>
+            )}
+            <button
+              onClick={openAdd}
+              className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
+              style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}
+            >
+              + Add Student
+            </button>
+          </div>
         </div>
       </div>
 
@@ -204,21 +258,36 @@ export default function StudentTable({ students, selectedGrade, onSaveStudent, o
         <table className="min-w-full text-sm">
           <thead>
             <tr style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}>
-              {['#', 'Name', 'Roll', 'Grade', 'Gender', 'Caste', '%', 'Attend.', 'Actions'].map(h => (
+              {['', '#', 'Name', 'Roll', 'Grade', 'Gender', 'Caste', '%', 'Attend.', 'Actions'].map((h, idx) => (
                 <th key={h} className="py-3.5 px-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider whitespace-nowrap">
-                  {h}
+                  {idx === 0 ? (
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={(event) => toggleSelectVisible(event.target.checked)}
+                      aria-label="Select all visible students"
+                    />
+                  ) : h}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <tr><td colSpan={9} className="py-12 text-center text-slate-300 text-sm">No students found</td></tr>
+              <tr><td colSpan={10} className="py-12 text-center text-slate-300 text-sm">No students found</td></tr>
             ) : rows.map((s, i) => {
               const gp = GP_STYLE[s.gradePoint] ?? { bg:'rgba(148,163,184,0.12)', color:'#475569' };
               return (
                 <tr key={s.id} className="table-row transition-colors"
                   style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(248,250,252,0.8)' }}>
+                  <td className="py-3 px-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(s.id)}
+                      onChange={(event) => toggleSelect(s.id, event.target.checked)}
+                      aria-label={`Select ${s.name}`}
+                    />
+                  </td>
                   <td className="py-3 px-4 text-slate-400 text-xs tabular-nums">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   <td className="py-3 px-4 font-semibold text-slate-800">{s.name}</td>
                   <td className="py-3 px-4 text-slate-500 tabular-nums">{s.rollno}</td>
@@ -241,7 +310,10 @@ export default function StudentTable({ students, selectedGrade, onSaveStudent, o
                         Edit
                       </button>
                       <button
-                        onClick={() => onDeleteStudent(s.id)}
+                        onClick={() => {
+                          onDeleteStudent(s.id);
+                          setSelectedIds((previous) => previous.filter((id) => id !== s.id));
+                        }}
                         className="px-2 py-1 rounded-lg text-xs font-medium"
                         style={{ background:'rgba(239,68,68,0.1)', color:'#b91c1c' }}
                       >

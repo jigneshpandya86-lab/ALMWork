@@ -1,5 +1,6 @@
 import { Student } from '@/types';
 import { calculatePercentage, getGradePoint } from './utils';
+import * as XLSX from 'xlsx';
 
 type RowValue = string | number | null | undefined;
 type ParsedRow = Record<string, RowValue>;
@@ -61,8 +62,20 @@ export async function parseCSV(file: File): Promise<Student[]> {
 }
 
 export async function parseExcel(file: File): Promise<Student[]> {
-  const name = file?.name || 'file';
-  throw new Error(`Excel import is not available in this deployment (${name}). Please upload a CSV file instead.`);
+  try {
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    if (!firstSheetName) {
+      return [];
+    }
+
+    const sheet = workbook.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json<ParsedRow>(sheet, { defval: '' });
+    return rows.map(mapRowToStudent);
+  } catch (error) {
+    throw new Error(`Unable to parse Excel file: ${(error as Error).message}`);
+  }
 }
 
 function parseMarks(row: ParsedRow): { [subject: string]: number } {
