@@ -1,14 +1,18 @@
 export interface Student {
   id: string;
   name: string;
+  nameGujarati?: string;
   rollno: string;
   grade: string;
   gender: string;
   caste: string;
   dateOfBirth: string;
   fatherName: string;
+  fatherNameGujarati?: string;
   motherName: string;
+  motherNameGujarati?: string;
   address: string;
+  addressGujarati?: string;
   marks: { [subject: string]: number };
   totalMarks: number;
   percentage: number;

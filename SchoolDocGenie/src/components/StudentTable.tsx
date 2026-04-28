@@ -19,28 +19,36 @@ const GP_STYLE: Record<string, { bg: string; color: string }> = {
 
 type StudentDraft = {
   name: string;
+  nameGujarati: string;
   rollno: string;
   grade: string;
   gender: string;
   caste: string;
   dateOfBirth: string;
   fatherName: string;
+  fatherNameGujarati: string;
   motherName: string;
+  motherNameGujarati: string;
   address: string;
+  addressGujarati: string;
   attendance: string;
   conduct: string;
 };
 
 const EMPTY_DRAFT: StudentDraft = {
   name: '',
+  nameGujarati: '',
   rollno: '',
   grade: '6',
   gender: '',
   caste: '',
   dateOfBirth: '',
   fatherName: '',
+  fatherNameGujarati: '',
   motherName: '',
+  motherNameGujarati: '',
   address: '',
+  addressGujarati: '',
   attendance: '0',
   conduct: 'Good',
 };
@@ -138,14 +146,18 @@ export default function StudentTable({
     setEditingStudent(student);
     setDraft({
       name: student.name,
+      nameGujarati: student.nameGujarati || '',
       rollno: student.rollno,
       grade: student.grade,
       gender: student.gender,
       caste: student.caste,
       dateOfBirth: student.dateOfBirth,
       fatherName: student.fatherName,
+      fatherNameGujarati: student.fatherNameGujarati || '',
       motherName: student.motherName,
+      motherNameGujarati: student.motherNameGujarati || '',
       address: student.address,
+      addressGujarati: student.addressGujarati || '',
       attendance: String(student.attendance),
       conduct: student.conduct,
     });
@@ -187,14 +199,18 @@ export default function StudentTable({
       {
         ...base,
         name: draft.name.trim(),
+        nameGujarati: draft.nameGujarati.trim(),
         rollno: draft.rollno.trim(),
         grade: draft.grade,
         gender: draft.gender.trim(),
         caste: draft.caste.trim(),
         dateOfBirth: draft.dateOfBirth,
         fatherName: draft.fatherName.trim(),
+        fatherNameGujarati: draft.fatherNameGujarati.trim(),
         motherName: draft.motherName.trim(),
+        motherNameGujarati: draft.motherNameGujarati.trim(),
         address: draft.address.trim(),
+        addressGujarati: draft.addressGujarati.trim(),
         attendance: Number.parseInt(draft.attendance, 10) || 0,
         conduct: draft.conduct.trim() || 'Good',
       },
@@ -360,13 +376,16 @@ export default function StudentTable({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {[
                 { key:'name', label:'Name *' },
+                { key:'nameGujarati', label:'Name (Gujarati)' },
                 { key:'rollno', label:'Roll No *' },
                 { key:'grade', label:'Grade *' },
                 { key:'gender', label:'Gender' },
                 { key:'caste', label:'Caste' },
                 { key:'dateOfBirth', label:'Date of Birth' },
                 { key:'fatherName', label:'Father Name' },
+                { key:'fatherNameGujarati', label:'Father Name (Gujarati)' },
                 { key:'motherName', label:'Mother Name' },
+                { key:'motherNameGujarati', label:'Mother Name (Gujarati)' },
                 { key:'attendance', label:'Attendance %' },
                 { key:'conduct', label:'Conduct' },
               ].map(field => (
@@ -386,7 +405,16 @@ export default function StudentTable({
                   value={draft.address}
                   onChange={(e) => setDraft((prev) => ({ ...prev, address: e.target.value }))}
                   className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-200 text-sm"
-                  rows={2}
+                  rows={1}
+                />
+              </label>
+              <label className="text-xs text-slate-600 md:col-span-3">
+                Address (Gujarati)
+                <textarea
+                  value={draft.addressGujarati}
+                  onChange={(e) => setDraft((prev) => ({ ...prev, addressGujarati: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                  rows={1}
                 />
               </label>
             </div>

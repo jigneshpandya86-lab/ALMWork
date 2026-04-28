@@ -1,5 +1,6 @@
 import { Student, GeneratedPDF } from '@/types';
 import { formatDate, generateFileName, subjectLabel } from './utils';
+import { t } from './gujaratiMapping';
 
 const SCHOOL = {
   name: 'Vidya Mandir School',
@@ -19,6 +20,25 @@ async function getJsPDF() {
 type Doc = InstanceType<Awaited<ReturnType<typeof getJsPDF>>>;
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
+
+async function configureGujaratiFont(doc: Doc) {
+  // We'll use a standard font that supports Unicode if possible, 
+  // but for jsPDF we usually need to add the font.
+  // Since we have @fontsource/noto-sans-gujarati installed, 
+  // in a real browser environment we'd load the .ttf.
+  // For now, we'll assume the environment has it or we use a fallback strategy.
+  // jsPDF supports adding fonts via base64.
+  
+  try {
+    // Attempt to load Noto Sans Gujarati from a known CDN for base64 if not bundled
+    // Or just use the built-in identity mapping if the font is available in the system
+    doc.addFont('https://fonts.gstatic.com/s/notosansgujarati/v25/0yb9IEw8eXWp4W6H9vC4CzS3r-E_U2C3.ttf', 'NotoSansGujarati', 'normal');
+    doc.setFont('NotoSansGujarati');
+  } catch (e) {
+    console.warn('Could not load Gujarati font, falling back to Helvetica');
+    doc.setFont('helvetica');
+  }
+}
 
 function drawHeader(doc: Doc): number {
   const pageW = doc.internal.pageSize.getWidth();
@@ -42,7 +62,7 @@ function sectionTitle(doc: Doc, text: string, y: number, pageW: number): number 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(25, 82, 163);
-  doc.text(text, 14, y + 5.5);
+  doc.text(t(text), 14, y + 5.5);
   doc.setTextColor(0, 0, 0);
   return y + 12;
 }
@@ -50,7 +70,7 @@ function sectionTitle(doc: Doc, text: string, y: number, pageW: number): number 
 function labelValue(doc: Doc, label: string, value: string, x: number, y: number): void {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
-  doc.text(`${label}:`, x, y);
+  doc.text(`${t(label)}:`, x, y);
   doc.setFont('helvetica', 'normal');
   doc.text(value, x + 40, y);
 }
@@ -61,8 +81,8 @@ function drawFooter(doc: Doc, pageW: number): void {
   doc.line(10, pageH - 20, pageW - 10, pageH - 20);
   doc.setFontSize(8);
   doc.setTextColor(120);
-  doc.text('This is a computer-generated document.', pageW / 2, pageH - 14, { align: 'center' });
-  doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, pageW / 2, pageH - 9, { align: 'center' });
+  doc.text(t('This is a computer-generated document.'), pageW / 2, pageH - 14, { align: 'center' });
+  doc.text(`${t('Generated on')}: ${new Date().toLocaleDateString('en-IN')}`, pageW / 2, pageH - 9, { align: 'center' });
   doc.setTextColor(0);
 }
 
@@ -71,24 +91,25 @@ function drawFooter(doc: Doc, pageW: number): void {
 async function generateMarksheetPDF(student: Student, remarks: string): Promise<Doc> {
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+  await configureGujaratiFont(doc);
   const pageW = doc.internal.pageSize.getWidth();
   let y = drawHeader(doc);
 
   doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(25, 82, 163);
-  doc.text('ANNUAL REPORT CARD', pageW / 2, y + 6, { align: 'center' });
+  doc.text(t('Marksheet').toUpperCase(), pageW / 2, y + 6, { align: 'center' });
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(80);
-  doc.text(`Academic Year: ${SCHOOL.academicYear}`, pageW / 2, y + 13, { align: 'center' });
+  doc.text(`${t('Academic Year')}: ${SCHOOL.academicYear}`, pageW / 2, y + 13, { align: 'center' });
   doc.setTextColor(0);
   y += 20;
 
   y = sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
-  labelValue(doc, 'Name', student.name, 14, y);
+  labelValue(doc, 'Name', student.nameGujarati || student.name, 14, y);
   labelValue(doc, 'Roll No', student.rollno, pageW / 2 + 5, y); y += 7;
   labelValue(doc, 'Date of Birth', formatDate(student.dateOfBirth), 14, y);
   labelValue(doc, 'Grade', student.grade, pageW / 2 + 5, y); y += 7;
-  labelValue(doc, "Father's Name", student.fatherName, 14, y); y += 7;
-  labelValue(doc, "Mother's Name", student.motherName, 14, y); y += 7;
-  labelValue(doc, 'Address', student.address, 14, y);
+  labelValue(doc, "Father's Name", student.fatherNameGujarati || student.fatherName, 14, y); y += 7;
+  labelValue(doc, "Mother's Name", student.motherNameGujarati || student.motherName, 14, y); y += 7;
+  labelValue(doc, 'Address', student.addressGujarati || student.address, 14, y);
   y += 12;
 
   y = sectionTitle(doc, 'SUBJECT-WISE MARKS', y, pageW);
@@ -99,7 +120,7 @@ async function generateMarksheetPDF(student: Student, remarks: string): Promise<
   doc.rect(startX, y, pageW - 28, rowH, 'F');
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   let cx = startX + 2;
-  ['Subject', 'Marks Obtained', 'Maximum Marks', 'Grade'].forEach((h, i) => { doc.text(h, cx, y + 5.5); cx += colW[i]; });
+  [t('Subject'), t('Marks Obtained'), t('Maximum Marks'), t('Grade Point')].forEach((h, i) => { doc.text(h, cx, y + 5.5); cx += colW[i]; });
   doc.setTextColor(0); y += rowH;
 
   const subjects = Object.entries(student.marks);
@@ -108,14 +129,14 @@ async function generateMarksheetPDF(student: Student, remarks: string): Promise<
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
     cx = startX + 2;
     const g = mark >= 90 ? 'A+' : mark >= 80 ? 'A' : mark >= 70 ? 'B+' : mark >= 60 ? 'B' : mark >= 50 ? 'C' : 'D';
-    [subjectLabel(subj), String(mark), '100', g].forEach((val, i) => { doc.text(val, cx, y + 5.5); cx += colW[i]; });
+    [t(subjectLabel(subj)), String(mark), '100', g].forEach((val, i) => { doc.text(val, cx, y + 5.5); cx += colW[i]; });
     doc.setDrawColor(220); doc.line(startX, y + rowH, startX + (pageW - 28), y + rowH);
     y += rowH;
   });
 
   doc.setFillColor(25, 82, 163); doc.rect(startX, y, pageW - 28, rowH, 'F');
   doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-  doc.text('TOTAL', startX + 2, y + 5.5);
+  doc.text(t('Total'), startX + 2, y + 5.5);
   doc.text(String(student.totalMarks), startX + colW[0] + 2, y + 5.5);
   doc.text(String(subjects.length * 100), startX + colW[0] + colW[1] + 2, y + 5.5);
   doc.text(student.gradePoint, startX + colW[0] + colW[1] + colW[2] + 2, y + 5.5);
@@ -125,7 +146,7 @@ async function generateMarksheetPDF(student: Student, remarks: string): Promise<
   labelValue(doc, 'Percentage', `${student.percentage}%`, 14, y);
   labelValue(doc, 'Grade Point', student.gradePoint, pageW / 2 + 5, y); y += 7;
   labelValue(doc, 'Attendance', `${student.attendance}%`, 14, y);
-  labelValue(doc, 'Conduct', student.conduct, pageW / 2 + 5, y);
+  labelValue(doc, 'Conduct', t(student.conduct), pageW / 2 + 5, y);
   y += 12;
 
   y = sectionTitle(doc, "TEACHER'S REMARKS", y, pageW);
@@ -138,9 +159,9 @@ async function generateMarksheetPDF(student: Student, remarks: string): Promise<
     doc.line(14, y + 12, 60, y + 12);
     doc.line(pageW / 2 - 23, y + 12, pageW / 2 + 23, y + 12);
     doc.line(pageW - 60, y + 12, pageW - 14, y + 12);
-    doc.text('Class Teacher', 14, y + 17);
-    doc.text('Principal', pageW / 2 - 10, y + 17);
-    doc.text("Parent's Signature", pageW - 58, y + 17);
+    doc.text(t('Class Teacher'), 14, y + 17);
+    doc.text(t('Principal'), pageW / 2 - 10, y + 17);
+    doc.text(t("Parent's Signature"), pageW - 58, y + 17);
   }
 
   drawFooter(doc, pageW);
@@ -152,34 +173,35 @@ async function generateMarksheetPDF(student: Student, remarks: string): Promise<
 async function generateLeavingCertPDF(student: Student, text: string): Promise<Doc> {
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+  await configureGujaratiFont(doc);
   const pageW = doc.internal.pageSize.getWidth();
   let y = drawHeader(doc);
 
   doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(25, 82, 163);
-  doc.text('SCHOOL LEAVING CERTIFICATE', pageW / 2, y + 8, { align: 'center' });
+  doc.text(t('Leaving Certificate').toUpperCase(), pageW / 2, y + 8, { align: 'center' });
   doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(80);
-  doc.text(`Affiliation: ${SCHOOL.affiliation}`, pageW / 2, y + 16, { align: 'center' });
+  doc.text(`${t('Academic Year')}: ${SCHOOL.academicYear}`, pageW / 2, y + 16, { align: 'center' });
   doc.setTextColor(0); y += 26;
 
   const serial = `LC/${new Date().getFullYear()}/${String(student.rollno).padStart(4, '0')}`;
   doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-  doc.text(`Certificate No: ${serial}`, pageW - 14, y, { align: 'right' });
-  doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, pageW - 14, y + 6, { align: 'right' });
+  doc.text(`${t('Certificate No')}: ${serial}`, pageW - 14, y, { align: 'right' });
+  doc.text(`${t('Date')}: ${new Date().toLocaleDateString('en-IN')}`, pageW - 14, y + 6, { align: 'right' });
   y += 14;
 
   y = sectionTitle(doc, 'STUDENT DETAILS', y, pageW);
   const fields: [string, string][] = [
-    ["Student's Full Name", student.name],
-    ["Father's / Guardian's Name", student.fatherName],
-    ["Mother's Name", student.motherName],
-    ['Date of Birth', formatDate(student.dateOfBirth)],
-    ['Address', student.address],
-    ['Admission / Roll No.', student.rollno],
-    ['Grade Last Studied', `Grade ${student.grade}`],
-    ['Academic Year', SCHOOL.academicYear],
-    ['Percentage Obtained', `${student.percentage}% (${student.gradePoint})`],
-    ['Attendance', `${student.attendance}%`],
-    ['Conduct', student.conduct],
+    [t("Name"), student.nameGujarati || student.name],
+    [t("Father's Name"), student.fatherNameGujarati || student.fatherName],
+    [t("Mother's Name"), student.motherNameGujarati || student.motherName],
+    [t('Date of Birth'), formatDate(student.dateOfBirth)],
+    [t('Address'), student.addressGujarati || student.address],
+    [t('Roll No'), student.rollno],
+    [t('Grade'), student.grade],
+    [t('Academic Year'), SCHOOL.academicYear],
+    [t('Percentage'), `${student.percentage}% (${student.gradePoint})`],
+    [t('Attendance'), `${student.attendance}%`],
+    [t('Conduct'), t(student.conduct)],
   ];
   fields.forEach(([label, value], idx) => {
     if (idx % 2 === 0) { doc.setFillColor(248, 250, 255); doc.rect(14, y - 1, pageW - 28, 7, 'F'); }
@@ -201,8 +223,8 @@ async function generateLeavingCertPDF(student: Student, text: string): Promise<D
 
   doc.line(14, y + 12, 60, y + 12);
   doc.line(pageW - 60, y + 12, pageW - 14, y + 12);
-  doc.text('Class Teacher', 14, y + 17);
-  doc.text('Principal', pageW - 58, y + 17);
+  doc.text(t('Class Teacher'), 14, y + 17);
+  doc.text(t('Principal'), pageW - 58, y + 17);
 
   drawFooter(doc, pageW);
   return doc;
@@ -213,20 +235,21 @@ async function generateLeavingCertPDF(student: Student, text: string): Promise<D
 async function generatePeriodicEvalPDF(student: Student, text: string): Promise<Doc> {
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+  await configureGujaratiFont(doc);
   const pageW = doc.internal.pageSize.getWidth();
   let y = drawHeader(doc);
 
   doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(25, 82, 163);
-  doc.text('PERIODIC EVALUATION REPORT', pageW / 2, y + 6, { align: 'center' });
+  doc.text(t('Periodic Evaluation Report').toUpperCase(), pageW / 2, y + 6, { align: 'center' });
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(80);
-  doc.text(`Period: ${SCHOOL.evaluationPeriod}  |  Academic Year: ${SCHOOL.academicYear}`, pageW / 2, y + 13, { align: 'center' });
+  doc.text(`Period: ${SCHOOL.evaluationPeriod}  |  ${t('Academic Year')}: ${SCHOOL.academicYear}`, pageW / 2, y + 13, { align: 'center' });
   doc.setTextColor(0); y += 22;
 
   y = sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
-  labelValue(doc, 'Name', student.name, 14, y);
+  labelValue(doc, 'Name', student.nameGujarati || student.name, 14, y);
   labelValue(doc, 'Roll No', student.rollno, pageW / 2 + 5, y); y += 7;
   labelValue(doc, 'Grade', student.grade, 14, y);
-  labelValue(doc, 'Conduct', student.conduct, pageW / 2 + 5, y); y += 7;
+  labelValue(doc, 'Conduct', t(student.conduct), pageW / 2 + 5, y); y += 7;
   labelValue(doc, 'Attendance', `${student.attendance}%`, 14, y);
   y += 12;
 
@@ -236,7 +259,7 @@ async function generatePeriodicEvalPDF(student: Student, text: string): Promise<
   doc.setFillColor(25, 82, 163); doc.rect(startX, y, pageW - 28, rowH, 'F');
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   let cx = startX + 2;
-  ['Subject', 'Marks', 'Max', 'Status'].forEach((h, i) => { doc.text(h, cx, y + 5); cx += colW[i]; });
+  [t('Subject'), t('Marks'), t('Total'), t('Status')].forEach((h, i) => { doc.text(h, cx, y + 5); cx += colW[i]; });
   doc.setTextColor(0); y += rowH;
 
   Object.entries(student.marks).forEach(([subj, mark], idx) => {
@@ -244,14 +267,14 @@ async function generatePeriodicEvalPDF(student: Student, text: string): Promise<
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
     cx = startX + 2;
     const status = mark >= 80 ? 'Excellent' : mark >= 60 ? 'Good' : mark >= 40 ? 'Average' : 'Below Avg';
-    [subjectLabel(subj), String(mark), '100', status].forEach((val, i) => { doc.text(val, cx, y + 5); cx += colW[i]; });
+    [t(subjectLabel(subj)), String(mark), '100', t(status)].forEach((val, i) => { doc.text(val, cx, y + 5); cx += colW[i]; });
     doc.setDrawColor(220); doc.line(startX, y + rowH, startX + (pageW - 28), y + rowH);
     y += rowH;
   });
 
   doc.setFillColor(200, 215, 245); doc.rect(startX, y, pageW - 28, rowH, 'F');
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-  doc.text('Overall', startX + 2, y + 5);
+  doc.text(t('Overall'), startX + 2, y + 5);
   doc.text(`${student.totalMarks}`, startX + colW[0] + 2, y + 5);
   doc.text(`${Object.keys(student.marks).length * 100}`, startX + colW[0] + colW[1] + 2, y + 5);
   doc.text(`${student.percentage}% (${student.gradePoint})`, startX + colW[0] + colW[1] + colW[2] + 2, y + 5);
@@ -266,9 +289,9 @@ async function generatePeriodicEvalPDF(student: Student, text: string): Promise<
   doc.line(14, y + 12, 60, y + 12);
   doc.line(pageW / 2 - 23, y + 12, pageW / 2 + 23, y + 12);
   doc.line(pageW - 60, y + 12, pageW - 14, y + 12);
-  doc.text('Subject Teacher', 14, y + 17);
-  doc.text('Class Teacher', pageW / 2 - 12, y + 17);
-  doc.text('Principal', pageW - 40, y + 17);
+  doc.text(t('Subject Teacher'), 14, y + 17);
+  doc.text(t('Class Teacher'), pageW / 2 - 12, y + 17);
+  doc.text(t('Principal'), pageW - 40, y + 17);
 
   drawFooter(doc, pageW);
   return doc;
@@ -289,6 +312,7 @@ async function generateAttendanceRegisterPDF(
 ): Promise<Blob> {
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+  await configureGujaratiFont(doc);
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
@@ -309,13 +333,13 @@ async function generateAttendanceRegisterPDF(
     doc.setTextColor(25, 82, 163);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
-    doc.text('ATTENDANCE REGISTER', pageW / 2, y, { align: 'center' });
+    doc.text(t('Attendance Register').toUpperCase(), pageW / 2, y, { align: 'center' });
     y += 5;
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(50, 50, 50);
-    doc.text(`${MONTHS_GJ[monthYearData.month]} ${monthYearData.year}  |  ધોરણ: ${grade}`, pageW / 2, y, { align: 'center' });
+    doc.text(`${MONTHS_GJ[monthYearData.month]} ${monthYearData.year}  |  ${t('Standard')}: ${grade}`, pageW / 2, y, { align: 'center' });
     y += 4;
 
     doc.setFontSize(8);
@@ -332,7 +356,7 @@ async function generateAttendanceRegisterPDF(
     doc.text('No', startX + srNoColW / 2, y + 4.1, { align: 'center' });
 
     doc.rect(startX + srNoColW, y, nameColW, rowH, 'FD');
-    doc.text('Student Name', startX + srNoColW + 1.5, y + 4.1);
+    doc.text(t('Name'), startX + srNoColW + 1.5, y + 4.1);
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dayX = startX + srNoColW + nameColW + (day - 1) * dayColW;
@@ -364,7 +388,7 @@ async function generateAttendanceRegisterPDF(
     doc.text(String(idx + 1), startX + srNoColW / 2, y + 4, { align: 'center' });
 
     doc.rect(startX + srNoColW, y, nameColW, rowH);
-    doc.text(student.name, startX + srNoColW + 1.5, y + 4);
+    doc.text(student.nameGujarati || student.name, startX + srNoColW + 1.5, y + 4);
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dayX = startX + srNoColW + nameColW + (day - 1) * dayColW;
@@ -395,19 +419,20 @@ async function generateAttendanceRegisterPDF(
 async function generateSingleStudentAttendancePDF(student: Student, attendance: string): Promise<Doc> {
   const JsPDF = await getJsPDF();
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+  await configureGujaratiFont(doc);
   const pageW = doc.internal.pageSize.getWidth();
   let y = drawHeader(doc);
 
   doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(16, 185, 129);
-  doc.text('ATTENDANCE REGISTER', pageW / 2, y + 6, { align: 'center' });
+  doc.text(t('Attendance Register').toUpperCase(), pageW / 2, y + 6, { align: 'center' });
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(0);
   y += 16;
 
   y = sectionTitle(doc, 'STUDENT INFORMATION', y, pageW);
-  labelValue(doc, 'Name', student.name, 14, y);
+  labelValue(doc, 'Name', student.nameGujarati || student.name, 14, y);
   labelValue(doc, 'Grade', student.grade, pageW / 2 + 5, y); y += 7;
   labelValue(doc, 'Roll No', student.rollno, 14, y);
-  labelValue(doc, 'Attendance %', `${attendance}%`, pageW / 2 + 5, y);
+  labelValue(doc, 'Attendance', `${attendance}%`, pageW / 2 + 5, y);
   y += 12;
 
   y = sectionTitle(doc, 'MONTH CALENDAR', y, pageW);
@@ -477,10 +502,6 @@ export async function generateMultiplePDFs(
     for (let i = 0; i < students.length; i++) {
       const student = students[i];
       onProgress?.(i + 1, students.length, student.name);
-
-      if (!template) {
-        throw new Error('Template required for non-attendance documents');
-      }
 
       const text = documents.get(student.id) ?? '';
       const blob = await generatePDF(student, text, docType);
