@@ -151,8 +151,12 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
         <table className="w-full border-collapse text-[10px]">
           <thead>
             <tr className="bg-indigo-700 text-white">
-              <th className="border border-indigo-800 px-1 py-1">No</th>
-              <th className="border border-indigo-800 px-2 py-1 text-left">Name</th>
+              <th className="border border-indigo-800 px-1 py-1">અનુક્રમ નંબર</th>
+              <th className="border border-indigo-800 px-2 py-1 text-left">વિદ્યાર્થીનું નામ</th>
+              <th className="border border-indigo-800 px-2 py-1 text-left">જન્મ તારીખ</th>
+              <th className="border border-indigo-800 px-2 py-1 text-left">જ.રજીસ્ટર નંબર</th>
+              <th className="border border-indigo-800 px-2 py-1 text-left">જાતિ</th>
+              <th className="border border-indigo-800 px-2 py-1 text-left">ધોરણમાં દાખલ તારીખ</th>
               {Array.from({ length: daysInMonth }, (_, idx) => (
                 <th key={idx} className="border border-indigo-800 px-1 py-1">{idx + 1}</th>
               ))}
@@ -163,6 +167,10 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
               <tr key={student.id}>
                 <td className="border border-slate-300 px-1 py-1 text-center">{index + 1}</td>
                 <td className="border border-slate-300 px-2 py-1">{student.nameGujarati || student.name}</td>
+                <td className="border border-slate-300 px-2 py-1">{formatDate(student.dateOfBirth)}</td>
+                <td className="border border-slate-300 px-2 py-1">{student.rollno}</td>
+                <td className="border border-slate-300 px-2 py-1">{student.caste}</td>
+                <td className="border border-slate-300 px-2 py-1"></td>
                 {Array.from({ length: daysInMonth }, (_, dayIndex) => {
                   const info = attendanceData.get(student.id);
                   const present = info?.days[dayIndex];
