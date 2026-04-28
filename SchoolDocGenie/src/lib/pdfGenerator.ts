@@ -50,16 +50,6 @@ async function renderElementToPDFBlob(element: React.ReactElement, orientation: 
     const target = container.firstElementChild as HTMLElement | null;
     if (!target) throw new Error('Failed to render template for PDF generation.');
 
-    const canvas = await html2canvas(target, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: target.scrollWidth,
-      windowHeight: target.scrollHeight,
-    });
-
-    const imageData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
       orientation,
       unit: 'mm',
@@ -69,18 +59,49 @@ async function renderElementToPDFBlob(element: React.ReactElement, orientation: 
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const renderedHeight = (canvas.height * pageWidth) / canvas.width;
 
-    pdf.addImage(imageData, 'PNG', 0, 0, pageWidth, renderedHeight, undefined, 'FAST');
+    const pageSections = Array.from(target.querySelectorAll<HTMLElement>('[data-pdf-page="true"]'));
+    if (pageSections.length > 0) {
+      for (let index = 0; index < pageSections.length; index++) {
+        const section = pageSections[index];
+        const sectionCanvas = await html2canvas(section, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: section.scrollWidth,
+          windowHeight: section.scrollHeight,
+        });
+        const sectionImage = sectionCanvas.toDataURL('image/png');
+        const sectionHeight = (sectionCanvas.height * pageWidth) / sectionCanvas.width;
 
-    if (renderedHeight > pageHeight) {
-      let remainingHeight = renderedHeight - pageHeight;
-      let position = -pageHeight;
-      while (remainingHeight > 0) {
-        pdf.addPage();
-        pdf.addImage(imageData, 'PNG', 0, position, pageWidth, renderedHeight, undefined, 'FAST');
-        remainingHeight -= pageHeight;
-        position -= pageHeight;
+        if (index > 0) pdf.addPage();
+        pdf.addImage(sectionImage, 'PNG', 0, 0, pageWidth, sectionHeight, undefined, 'FAST');
+      }
+    } else {
+      const canvas = await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        windowWidth: target.scrollWidth,
+        windowHeight: target.scrollHeight,
+      });
+
+      const imageData = canvas.toDataURL('image/png');
+      const renderedHeight = (canvas.height * pageWidth) / canvas.width;
+
+      pdf.addImage(imageData, 'PNG', 0, 0, pageWidth, renderedHeight, undefined, 'FAST');
+
+      if (renderedHeight > pageHeight) {
+        let remainingHeight = renderedHeight - pageHeight;
+        let position = -pageHeight;
+        while (remainingHeight > 0) {
+          pdf.addPage();
+          pdf.addImage(imageData, 'PNG', 0, position, pageWidth, renderedHeight, undefined, 'FAST');
+          remainingHeight -= pageHeight;
+          position -= pageHeight;
+        }
       }
     }
 
