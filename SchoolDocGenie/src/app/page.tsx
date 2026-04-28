@@ -198,6 +198,23 @@ export default function HomePage() {
     }
   };
 
+  const handleBulkDeleteStudents = async (studentIds: string[]) => {
+    try {
+      setLoading(true);
+      const result = await api.bulkDeleteStudents({ ids: studentIds });
+      const data = result.data as { success: boolean };
+      if (data.success) {
+        setStudents((prev) => prev.filter((student) => !studentIds.includes(student.id)));
+      }
+      setError(null);
+    } catch (err: unknown) {
+      console.error('Error bulk deleting students:', err);
+      setError('Failed to delete selected students from the database.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSelect = (docType: DocType, grade: string) => {
     setSelectedDocType(docType);
     setSelectedGrade(grade);
@@ -305,6 +322,7 @@ export default function HomePage() {
               selectedGrade={selectedGrade ?? undefined}
               onSaveStudent={handleSaveStudent}
               onDeleteStudent={handleDeleteStudent}
+              onBulkDeleteStudents={handleBulkDeleteStudents}
             />
           ) : (
             <div className="flex flex-col items-center gap-3 py-10 text-slate-300 select-none">
