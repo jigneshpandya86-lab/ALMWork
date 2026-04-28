@@ -74,38 +74,36 @@ export default function TemplateSelector({ onSelect, selectedDocType, selectedGr
       {/* Doc types */}
       <div>
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Document Type</p>
-        <div className="grid gap-2.5 sm:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {DOCS.map((d) => {
             const active = selectedDocType === d.id;
             return (
               <button key={d.id} onClick={() => onSelect(d.id, selectedGrade ?? '6')}
-                className="text-left rounded-xl p-3 transition-all duration-200 group min-h-[170px]"
+                className="text-left rounded-xl px-3 py-2.5 transition-all duration-200 group"
                 style={{
                   border: active ? `2px solid ${d.textColor}` : '2px solid rgba(226,232,240,0.8)',
                   background: active ? d.lightBg : 'rgba(255,255,255,0.7)',
                   boxShadow: active ? `0 3px 16px ${d.lightBg.replace('0.08','0.22')}` : 'none',
                   transform: active ? 'translateY(-1px)' : 'translateY(0)',
                 }}>
-                {/* Icon */}
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-2.5 transition-all"
+                <div className="flex items-center gap-2.5">
+                  {/* Icon */}
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center transition-all"
                   style={{
                     background: active ? d.gradient : 'rgba(241,245,249,0.8)',
                     color: active ? '#fff' : '#94a3b8',
                   }}>
-                  {d.icon}
-                </div>
-                <p className="font-bold text-[1.06rem] mb-0.5 leading-tight" style={{ color: active ? d.textColor : '#334155' }}>
-                  {d.label}
-                </p>
-                <p className="text-xs leading-6" style={{ color: '#94a3b8' }}>{d.desc}</p>
-                {active && (
-                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold" style={{ color: d.textColor }}>
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    {d.icon}
+                  </div>
+                  <p className="font-bold text-sm leading-tight flex-1" style={{ color: active ? d.textColor : '#334155' }}>
+                    {d.label}
+                  </p>
+                  {active && (
+                    <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" style={{ color: d.textColor }}>
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                     </svg>
-                    Selected
-                  </div>
-                )}
+                  )}
+                </div>
               </button>
             );
           })}
