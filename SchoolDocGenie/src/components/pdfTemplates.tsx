@@ -143,7 +143,10 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
   const daysInMonth = sample?.days.length ?? 31;
   const month = sample?.month ?? new Date().getMonth();
   const year = sample?.year ?? new Date().getFullYear();
-  const monthLabel = new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthDisplay = `${new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long' })} - ${year}`;
+  const academicYear = month <= 4
+    ? `${year - 1}-${String(year).slice(-2)}`
+    : `${year}-${String(year + 1).slice(-2)}`;
 
   const weekdayLabels = ['રવિવાર', 'સોમવાર', 'મંગળવાર', 'બુધવાર', 'ગુરુવાર', 'શુક્રવાર', 'શનિવાર'] as const;
 
@@ -223,15 +226,26 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     );
   };
 
+  const renderRegisterHeader = () => (
+    <div className="border-b border-slate-700">
+      <div className="grid grid-cols-[1.3fr_1.3fr_1.7fr_1fr] text-[16px] leading-tight">
+        <div className="px-2 py-2">જીલ્લા શિક્ષણ સમિતિ વડોદરા&nbsp;&nbsp;{academicYear}</div>
+        <div className="px-2 py-2 text-center">ધનતેજ પ્રાથમિક શાળા તા.સાવલી</div>
+        <div className="px-2 py-2 text-center">વડોદરાનું વિદ્યાર્થીઓનું હાજરી પત્રક (કેટલોગ)</div>
+        <div className="px-2 py-2 text-center">માહે : {monthDisplay}</div>
+      </div>
+      <div className="grid grid-cols-2 text-[16px] leading-tight">
+        <div className="px-2 py-1 text-center">દરરોજનું હાજરી પત્રક</div>
+        <div className="px-2 py-1 text-center">ધોરણ : {grade}</div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-[1123px] bg-white text-slate-900" style={{ fontFamily: "'Noto Sans Gujarati', 'Inter', sans-serif" }}>
       <section className="w-[1123px] min-h-[794px] p-4" style={{ pageBreakAfter: 'always' }}>
         <div className="border-2 border-blue-700">
-          <div className="grid grid-cols-3 border-b border-slate-700 text-[22px] leading-tight">
-            <div className="px-2 py-2 italic">જિલ્લા શિક્ષણ સમિતિ વડોદરા&nbsp;&nbsp;2025-26</div>
-            <div className="px-2 py-2 text-center">ધનતેજ પ્રાથમિક શાળા તા. સાવલી</div>
-            <div className="px-2 py-2 text-center">વડોદરા નું  દરરોજનું</div>
-          </div>
+          {renderRegisterHeader()}
           <table className="w-full border-collapse text-[10px]">
             <thead>
               <tr>
@@ -268,11 +282,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
 
       <section className="w-[1123px] min-h-[794px] p-4">
         <div className="border-2 border-blue-700">
-          <div className="grid grid-cols-3 border-b border-slate-700 text-[22px] leading-tight">
-            <div className="px-2 py-2 text-center">વડોદરા નું  દરરોજનું</div>
-            <div className="px-2 pt-1 text-center text-[18px]">વિદ્યાર્થીઓનું હાજરી પત્રક (રજીસ્ટર)</div>
-            <div className="px-2 pb-1 text-center text-[16px]">માહે : {monthLabel}  &nbsp;&nbsp; ધોરણ : {grade}</div>
-          </div>
+          {renderRegisterHeader()}
           <table className="w-full border-collapse text-[10px]">
             <thead>
               <tr>
