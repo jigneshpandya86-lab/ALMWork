@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import { Student } from '@/types';
 import { calculatePercentage, getGradePoint } from './utils';
 
@@ -52,12 +51,7 @@ function mapRowToStudent(row: ParsedRow, idx: number): Student {
 export async function parseCSV(file: File): Promise<Student[]> {
   try {
     const csvText = await file.text();
-    const workbook = XLSX.read(csvText, { type: 'string' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<ParsedRow>(sheet, {
-      raw: false,
-      defval: '',
-    });
+    const rows = parseCSVText(csvText);
     const students = rows.map(mapRowToStudent);
 
     return students;
@@ -67,24 +61,8 @@ export async function parseCSV(file: File): Promise<Student[]> {
 }
 
 export async function parseExcel(file: File): Promise<Student[]> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<ParsedRow>(sheet, { defval: '' });
-        const students = rows.map(mapRowToStudent);
-
-        resolve(students);
-      } catch (err) {
-        reject(err);
-      }
-    };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
+  const name = file?.name || 'file';
+  throw new Error(`Excel import is not available in this deployment (${name}). Please upload a CSV file instead.`);
 }
 
 function parseMarks(row: ParsedRow): { [subject: string]: number } {
@@ -96,6 +74,61 @@ function parseMarks(row: ParsedRow): { [subject: string]: number } {
   });
 
   return marks;
+}
+
+function splitCSVLine(line: string): string[] {
+  const values: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      values.push(current.trim());
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  values.push(current.trim());
+  return values;
+}
+
+function parseCSVText(csvText: string): ParsedRow[] {
+  const lines = csvText
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .filter((line) => line.trim().length > 0);
+
+  if (lines.length < 2) {
+    return [];
+  }
+
+  const headers = splitCSVLine(lines[0]).map((header) => header.trim());
+  const rows = lines.slice(1);
+
+  return rows.map((line) => {
+    const values = splitCSVLine(line);
+    return headers.reduce<ParsedRow>((acc, header, index) => {
+      acc[header] = values[index] ?? '';
+      return acc;
+    }, {});
+  });
 }
 
 export function generateSampleCSV(): string {
