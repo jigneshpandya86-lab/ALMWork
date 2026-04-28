@@ -140,41 +140,183 @@ type AttendanceTemplateProps = {
 export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students, attendanceData, grade, school }) => {
   const first = students[0];
   const sample = first ? attendanceData.get(first.id) : undefined;
-  const daysInMonth = sample?.days.length ?? 30;
+  const daysInMonth = sample?.days.length ?? 31;
+  const month = sample?.month ?? new Date().getMonth();
+  const year = sample?.year ?? new Date().getFullYear();
+  const monthDisplay = `${new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long' })} - ${year}`;
+  const academicYear = month <= 4
+    ? `${year - 1}-${String(year).slice(-2)}`
+    : `${year}-${String(year + 1).slice(-2)}`;
+
+  const weekdayLabels = ['રવિવાર', 'સોમવાર', 'મંગળવાર', 'બુધવાર', 'ગુરુવાર', 'શુક્રવાર', 'શનિવાર'] as const;
+
+  const leftDays = Array.from({ length: Math.min(daysInMonth, 19) }, (_, idx) => idx + 1);
+  const rightDays = Array.from({ length: Math.max(daysInMonth - 19, 0) }, (_, idx) => idx + 20);
+  const summaryColumns = [
+    'હાજર',
+    'ગેરહાજર',
+    'રજા',
+    'તહેવાર',
+    'રવિવાર',
+    'કુલ',
+    'ચાલુ માસના હાજર દિવસ',
+    'વા.પરીક્ષા પછી ગયા માસ સુધીના હાજર દિવસ',
+    'ચાલુ માસ સાથે પરીક્ષા પછીના હાજર દિવસ',
+  ];
+  const summaryColumnWidths = ['42px', '42px', '42px', '42px', '42px', '42px', '84px', '154px', '154px'];
+  const verticalHeaderStyle: React.CSSProperties = {
+    display: 'inline-block',
+    transform: 'rotate(-90deg)',
+    transformOrigin: 'center',
+    whiteSpace: 'nowrap',
+    lineHeight: 1.05,
+  };
+
+  const renderDayHeader = (day: number, isRightPage = false) => {
+    const weekdayIndex = new Date(year, month, day).getDay();
+    const weekday = weekdayLabels[weekdayIndex];
+    const isSunday = weekdayIndex === 0;
+    const dayWidth = isRightPage ? '44px' : '30px';
+    return (
+      <th
+        key={`day-${day}`}
+        style={{ width: dayWidth, minWidth: dayWidth }}
+        className={`border border-slate-700 px-0 py-0 align-bottom ${isSunday ? 'bg-slate-200' : ''}`}
+      >
+        <div className="h-[126px] flex items-center justify-center">
+          <div style={verticalHeaderStyle} className="text-center">
+            <div className="font-semibold">{weekday}</div>
+            <div>તા. {String(day).padStart(2, '0')}</div>
+          </div>
+        </div>
+      </th>
+    );
+  };
+
+  const renderGridRow = (
+    student: Student,
+    index: number,
+    dayRange: number[],
+    includeStudentInfo: boolean,
+    includeSummary: boolean
+  ) => {
+    const info = attendanceData.get(student.id);
+    return (
+      <tr key={`${student.id}-${includeStudentInfo ? 'left' : 'right'}`}>
+        {includeStudentInfo ? (
+          <>
+            <td className="border border-slate-700 px-1 py-1 text-center">{index + 1}</td>
+            <td className="border border-slate-700 px-2 py-1 whitespace-nowrap text-[9px]">{student.nameGujarati || student.name}</td>
+            <td className="border border-slate-700 px-2 py-1 text-center">{formatDate(student.dateOfBirth)}</td>
+            <td className="border border-slate-700 px-2 py-1 text-center">{student.rollno}</td>
+            <td className="border border-slate-700 px-2 py-1 text-center">{student.caste}</td>
+            <td className="border border-slate-700 px-2 py-1"></td>
+          </>
+        ) : null}
+        {dayRange.map((day) => {
+          const dayIndex = new Date(year, month, day).getDay();
+          const isSunday = dayIndex === 0;
+          const present = info?.days[day - 1];
+          return (
+            <td key={`${student.id}-${day}`} className={`border border-slate-700 px-1 py-1 text-center ${isSunday ? 'bg-slate-200' : ''}`}>
+              {!isSunday && present ? 'P' : ''}
+            </td>
+          );
+        })}
+        {includeSummary
+          ? summaryColumns.map((column) => (
+              <td key={`${student.id}-${column}`} className="border border-slate-700 px-1 py-1 text-center"></td>
+            ))
+          : null}
+      </tr>
+    );
+  };
+
+  const renderRegisterHeader = () => (
+    <div className="border-b border-slate-700">
+      <div className="grid grid-cols-[1.3fr_1.3fr_1.7fr_1fr] text-[16px] leading-tight">
+        <div className="px-2 py-2">જીલ્લા શિક્ષણ સમિતિ વડોદરા&nbsp;&nbsp;{academicYear}</div>
+        <div className="px-2 py-2 text-center">ધનતેજ પ્રાથમિક શાળા તા.સાવલી</div>
+        <div className="px-2 py-2 text-center">વડોદરાનું વિદ્યાર્થીઓનું હાજરી પત્રક (કેટલોગ)</div>
+        <div className="px-2 py-2 text-center">માહે : {monthDisplay}</div>
+      </div>
+      <div className="grid grid-cols-2 text-[16px] leading-tight">
+        <div className="px-2 py-1 text-center">દરરોજનું હાજરી પત્રક</div>
+        <div className="px-2 py-1 text-center">ધોરણ : {grade}</div>
+      </div>
+    </div>
+  );
 
   return (
-    <PageShell
-      title="Attendance Register"
-      subtitle={`${school.name} • Grade ${grade} • ${(sample?.month ?? 0) + 1}/${sample?.year ?? new Date().getFullYear()}`}
-    >
-      <div className="overflow-hidden border border-slate-300 rounded">
-        <table className="w-full border-collapse text-[10px]">
-          <thead>
-            <tr className="bg-indigo-700 text-white">
-              <th className="border border-indigo-800 px-1 py-1">No</th>
-              <th className="border border-indigo-800 px-2 py-1 text-left">Name</th>
-              {Array.from({ length: daysInMonth }, (_, idx) => (
-                <th key={idx} className="border border-indigo-800 px-1 py-1">{idx + 1}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student, index) => (
-              <tr key={student.id}>
-                <td className="border border-slate-300 px-1 py-1 text-center">{index + 1}</td>
-                <td className="border border-slate-300 px-2 py-1">{student.nameGujarati || student.name}</td>
-                {Array.from({ length: daysInMonth }, (_, dayIndex) => {
-                  const info = attendanceData.get(student.id);
-                  const present = info?.days[dayIndex];
-                  return (
-                    <td key={dayIndex} className="border border-slate-300 px-1 py-1 text-center">{present ? 'P' : ''}</td>
-                  );
-                })}
+    <div className="w-[1123px] bg-white text-slate-900" style={{ fontFamily: "'Noto Sans Gujarati', 'Inter', sans-serif" }}>
+      <section className="w-[1123px] min-h-[794px] p-4" style={{ pageBreakAfter: 'always' }}>
+        <div className="border-2 border-blue-700">
+          {renderRegisterHeader()}
+          <table className="w-full border-collapse text-[10px]">
+            <thead>
+              <tr>
+                <th className="border border-slate-700 px-1 py-1">
+                  <div style={verticalHeaderStyle}>અનુક્રમ નંબર</div>
+                </th>
+                <th className="border border-slate-700 px-2 py-1 whitespace-nowrap">વિદ્યાર્થીનું નામ</th>
+                <th className="border border-slate-700 px-2 py-1">
+                  <div style={verticalHeaderStyle}>જન્મ તારીખ</div>
+                </th>
+                <th className="border border-slate-700 px-2 py-1">
+                  <div style={verticalHeaderStyle}>જ.રજીસ્ટર નંબર</div>
+                </th>
+                <th className="border border-slate-700 px-2 py-1">
+                  <div style={verticalHeaderStyle}>જાતિ</div>
+                </th>
+                <th className="border border-slate-700 px-2 py-1">
+                  <div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div>
+                </th>
+                {leftDays.map((day) => renderDayHeader(day, false))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </PageShell>
+              <tr className="bg-orange-50">
+                {Array.from({ length: 6 + leftDays.length }, (_, i) => (
+                  <th key={`idx-left-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 1}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student, index) => renderGridRow(student, index, leftDays, true, false))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="w-[1123px] min-h-[794px] p-4">
+        <div className="border-2 border-blue-700">
+          {renderRegisterHeader()}
+          <table className="w-full border-collapse table-fixed text-[10px]">
+            <thead>
+              <tr>
+                {rightDays.map((day) => renderDayHeader(day, true))}
+                {summaryColumns.map((column, idx) => (
+                  <th
+                    key={`${column}-${idx}`}
+                    style={{ width: summaryColumnWidths[idx], minWidth: summaryColumnWidths[idx] }}
+                    className="border border-slate-700 px-0 py-0"
+                  >
+                    <div className="h-[126px] flex items-center justify-center">
+                      <div style={verticalHeaderStyle}>{column}</div>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+              <tr className="bg-orange-50">
+                {Array.from({ length: rightDays.length + summaryColumns.length }, (_, i) => (
+                  <th key={`idx-right-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 26}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student, index) => renderGridRow(student, index, rightDays, false, true))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   );
 };
