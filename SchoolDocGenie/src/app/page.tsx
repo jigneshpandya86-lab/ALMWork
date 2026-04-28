@@ -180,6 +180,12 @@ export default function HomePage() {
     setStudents((prev) => prev.filter((student) => student.id !== studentId));
   };
 
+  const handleBulkDeleteStudents = (studentIds: string[]) => {
+    if (studentIds.length === 0) return;
+    const deleting = new Set(studentIds);
+    setStudents((prev) => prev.filter((student) => !deleting.has(student.id)));
+  };
+
   const handleSelect = (docType: DocType, grade: string) => {
     setSelectedDocType(docType);
     setSelectedGrade(grade);
@@ -314,12 +320,13 @@ export default function HomePage() {
           {showStudentMaster && (
             <div className="mt-4 pt-4 border-t border-slate-200">
               {students.length > 0 ? (
-                <StudentTable
-                  students={students}
-                  selectedGrade={selectedGrade ?? undefined}
-                  onSaveStudent={handleSaveStudent}
-                  onDeleteStudent={handleDeleteStudent}
-                />
+              <StudentTable
+                students={students}
+                selectedGrade={selectedGrade ?? undefined}
+                onSaveStudent={handleSaveStudent}
+                onDeleteStudent={handleDeleteStudent}
+                onBulkDeleteStudents={handleBulkDeleteStudents}
+              />
               ) : (
                 <div className="flex flex-col items-center gap-3 py-10 text-slate-300 select-none">
                   <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">

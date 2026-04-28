@@ -3,7 +3,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { FileUploaderProps } from '@/types';
 import { parseJSON } from '@/lib/jsonParser';
-import { parseCSV, downloadSampleCSV } from '@/lib/csvParser';
+import { parseCSV, parseExcel, downloadSampleCSV } from '@/lib/csvParser';
 import { parseTextFormat } from '@/lib/textParser';
 
 export default function FileUploader({ onStudentsLoaded, onError }: FileUploaderProps) {
@@ -16,8 +16,8 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
 
   const processFile = useCallback(async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (!['json', 'csv'].includes(ext || '')) {
-      onError('Please upload JSON or CSV file');
+    if (!['json', 'csv', 'xls', 'xlsx'].includes(ext || '')) {
+      onError('Please upload JSON, CSV, or Excel file');
       return;
     }
 
@@ -30,6 +30,8 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
         students = await parseJSON(file);
       } else if (ext === 'csv') {
         students = await parseCSV(file);
+      } else if (ext === 'xls' || ext === 'xlsx') {
+        students = await parseExcel(file);
       } else {
         throw new Error('Unsupported file format');
       }
@@ -73,7 +75,7 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
       onStudentsLoaded(students);
       setPasteValue('');
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Failed to parse data. Use JSON, CSV, or tab-separated format.');
+      onError(err instanceof Error ? err.message : 'Failed to parse data. Use JSON, CSV/TSV, or Excel-compatible tab-separated format.');
     } finally { setIsLoading(false); }
   }, [pasteValue, onStudentsLoaded, onError]);
 
@@ -123,11 +125,11 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
       {activeTab === 'paste' && (
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-2">Paste student data (JSON array)</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-2">Paste student data (JSON, CSV, or TSV)</label>
             <textarea
               value={pasteValue}
               onChange={(e) => setPasteValue(e.target.value)}
-              placeholder='[{"name":"John","rollno":"001","grade":"6",...},...]'
+              placeholder={'[{"name":"John","rollno":"001","grade":"6",...},...]\nname\\trollno\\tgrade\\nJohn\\t001\\t6'}
               className="w-full h-40 p-3 rounded-xl text-xs font-mono resize-none outline-none transition-all"
               style={{
                 background:'rgba(255,255,255,0.9)',
@@ -160,7 +162,7 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
           <div className="px-3 py-2 rounded-lg text-xs text-slate-500" style={{ background:'rgba(241,245,249,0.8)' }}>
             <p className="font-semibold mb-1">Supported formats:</p>
             <p className="text-xs mb-1"><strong>JSON:</strong> <code className="bg-white px-1 py-0.5 rounded">[{"{...}"}]</code></p>
-            <p className="text-xs"><strong>Plain text:</strong> One student per line, tab/comma-separated or in any order</p>
+            <p className="text-xs"><strong>Plain text:</strong> Supports comma-separated (CSV) and tab-separated (TSV/Excel paste) formats</p>
           </div>
         </div>
       )}
@@ -186,7 +188,7 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
               transform: isDragging ? 'scale(1.01)' : 'scale(1)',
             }}
           >
-            <input ref={inputRef} type="file" accept=".json,.csv" className="hidden" onChange={handleChange} />
+            <input ref={inputRef} type="file" accept=".json,.csv,.xls,.xlsx" className="hidden" onChange={handleChange} />
 
             {isLoading ? (
               <div className="flex flex-col items-center gap-2">
@@ -220,7 +222,7 @@ export default function FileUploader({ onStudentsLoaded, onError }: FileUploader
                 </div>
                 <div>
                   <p className="font-bold text-slate-700 text-sm">Drop your file here</p>
-                  <p className="text-slate-400 text-xs mt-1">JSON or CSV</p>
+                  <p className="text-slate-400 text-xs mt-1">JSON, CSV, XLS, XLSX</p>
                 </div>
                 {isDragging && (
                   <div className="absolute inset-0 rounded-xl flex items-center justify-center"
