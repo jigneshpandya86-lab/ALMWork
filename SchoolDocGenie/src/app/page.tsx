@@ -29,48 +29,54 @@ function mergeStudents(existing: Student[], incoming: Student[]) {
 }
 
 function Step({
-  n, title, subtitle, active, done, children, id, icon,
+  n, title, subtitle, active, done, last = false, children, id,
 }: {
   n: number;
   title: string;
   subtitle: string;
   active: boolean;
   done: boolean;
+  last?: boolean;
   children: React.ReactNode;
   id?: string;
-  icon: React.ReactNode;
 }) {
   return (
-    <div
-      className={`glass step-card h-full flex flex-col transition-all duration-300 rounded-[24px] overflow-hidden
-      ${active ? 'ring-2 ring-indigo-300 ring-offset-2' : done ? 'ring-1 ring-emerald-200' : 'opacity-95'}`}
-      id={id}
-    >
-      <div className="px-3 sm:px-5 py-3 sm:py-4 border-b border-indigo-100/70">
-        <div className="flex items-start gap-2.5 sm:gap-3">
+    <div className="flex gap-5" id={id}>
+      <div className="flex flex-col items-center flex-shrink-0">
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-md transition-all duration-300
+          ${done ? 'text-white' : active ? 'text-white ring-4 ring-indigo-100' : 'bg-white text-slate-300 border border-slate-200'}`}
+          style={
+            done
+              ? { background: 'linear-gradient(135deg,#059669,#10b981)' }
+              : active
+                ? { background: 'linear-gradient(135deg,#4f46e5,#7c3aed)' }
+                : {}
+          }
+        >
+          {done ? (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            n
+          )}
+        </div>
+        {!last && (
           <div
-            className={`w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center text-sm font-bold shadow-sm transition-all duration-300 flex-shrink-0
-              ${done ? 'text-white' : active ? 'text-white' : 'bg-white text-slate-400 border border-slate-200'}`}
-            style={
-              done
-                ? { background: 'linear-gradient(135deg,#059669,#10b981)' }
-                : active
-                  ? { background: 'linear-gradient(135deg,#4f46e5,#7c3aed)' }
-                  : {}
-            }
-          >
-            {done ? (
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              icon
-            )}
-          </div>
+            className={`w-0.5 flex-1 mt-2 rounded-full transition-all duration-500 ${done ? 'bg-emerald-200' : 'bg-slate-200'}`}
+            style={{ minHeight: 24 }}
+          />
+        )}
+      </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-[11px] font-bold text-slate-400">Step {n}</span>
+      <div
+        className={`flex-1 mb-5 glass step-card transition-all duration-300
+        ${active ? 'ring-2 ring-indigo-300 ring-offset-2' : done ? 'ring-1 ring-emerald-200' : 'opacity-80'}`}
+        style={{ padding: '24px' }}
+      >
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-1">
             {done && (
               <span className="badge" style={{ background: 'rgba(16,185,129,0.12)', color: '#059669' }}>
                 Complete
@@ -81,16 +87,12 @@ function Step({
                 Active
               </span>
             )}
-            </div>
-            <h2 className={`font-bold text-sm sm:text-base leading-tight ${active ? 'text-slate-900' : done ? 'text-slate-700' : 'text-slate-500'}`}>
-              {title}
-            </h2>
-            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">{subtitle}</p>
           </div>
+          <h2 className={`font-bold text-lg leading-tight ${active ? 'text-slate-900' : done ? 'text-slate-700' : 'text-slate-400'}`}>
+            {title}
+          </h2>
+          <p className="text-sm text-slate-400 mt-0.5">{subtitle}</p>
         </div>
-      </div>
-
-      <div className="p-3 sm:p-4 flex-1 overflow-auto">
         {children}
       </div>
     </div>
@@ -276,7 +278,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="mt-4 fade-up delay-2 grid grid-cols-2 gap-3 sm:gap-4 h-[calc(100vh-220px)] min-h-[560px]">
+      <div className="mt-4 fade-up delay-2">
         <Step
           id="step-upload"
           n={1}
@@ -284,7 +286,6 @@ export default function HomePage() {
           subtitle="JSON file, paste JSON, or load the built-in sample dataset"
           active={!step1Done}
           done={step1Done}
-          icon={<span className="text-sm sm:text-base">⬆️</span>}
         >
           {step1Done ? (
             <div className="flex items-center gap-3 py-2">
@@ -314,15 +315,7 @@ export default function HomePage() {
           )}
         </Step>
 
-        <Step
-          id="step-preview"
-          n={2}
-          title="Student Master"
-          subtitle="Review, add, edit, update, and delete students"
-          active={step1Done && !step3Done}
-          done={step3Done}
-          icon={<span className="text-sm sm:text-base">👩‍🎓</span>}
-        >
+        <Step id="step-preview" n={2} title="Student Master" subtitle="Review, add, edit, update, and delete students" active={step1Done && !step3Done} done={step3Done}>
           {students.length > 0 ? (
             <StudentTable
               students={students}
@@ -346,27 +339,11 @@ export default function HomePage() {
           )}
         </Step>
 
-        <Step
-          id="step-select"
-          n={3}
-          title="Choose Document Type & Grade"
-          subtitle="Pick what to generate and for which grade"
-          active={step1Done && !step3Done}
-          done={step3Done}
-          icon={<span className="text-sm sm:text-base">📄</span>}
-        >
+        <Step id="step-select" n={3} title="Choose Document Type & Grade" subtitle="Pick what to generate and for which grade" active={step1Done && !step3Done} done={step3Done}>
           <TemplateSelector onSelect={handleSelect} selectedDocType={selectedDocType} selectedGrade={selectedGrade} />
         </Step>
 
-        <Step
-          id="step-generate"
-          n={4}
-          title="Generate & Download"
-          subtitle="Click to create PDFs for all students in the selected grade"
-          active={step3Done}
-          done={generatedPDFs.length > 0}
-          icon={<span className="text-sm sm:text-base">✨</span>}
-        >
+        <Step id="step-generate" n={4} title="Generate & Download" subtitle="Click to create PDFs for all students in the selected grade" active={step3Done} done={generatedPDFs.length > 0} last>
           <GenerateButton
             students={students}
             docType={selectedDocType}
