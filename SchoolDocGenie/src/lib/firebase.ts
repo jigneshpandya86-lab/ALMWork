@@ -21,6 +21,7 @@ export const api = {
   getStudents: httpsCallable(functions, 'getStudents'),
   createStudent: httpsCallable(functions, 'createStudent'),
   bulkCreateStudents: httpsCallable(functions, 'bulkCreateStudents'),
+  bulkDeleteStudents: httpsCallable(functions, 'bulkDeleteStudents'),
   updateStudent: httpsCallable(functions, 'updateStudent'),
   deleteStudent: httpsCallable(functions, 'deleteStudent'),
 };
