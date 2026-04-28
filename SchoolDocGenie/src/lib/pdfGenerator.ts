@@ -191,7 +191,6 @@ export async function generateMultiplePDFs(
 
   return results;
 }
-
 export function downloadPDF(blob: Blob, filename: string): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
