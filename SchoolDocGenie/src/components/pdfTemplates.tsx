@@ -192,42 +192,51 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     );
   };
 
+  const minimumRowsPerPage = 20;
+
   const renderGridRow = (
-    student: Student,
-    index: number,
+    student: Student | undefined,
+    rowIndex: number,
     dayRange: number[],
     includeStudentInfo: boolean,
     includeSummary: boolean
   ) => {
-    const info = attendanceData.get(student.id);
+    const info = student ? attendanceData.get(student.id) : undefined;
     return (
-      <tr key={`${student.id}-${includeStudentInfo ? 'left' : 'right'}`}>
+      <tr key={`${student?.id ?? `empty-${rowIndex}`}-${includeStudentInfo ? 'left' : 'right'}`}>
         {includeStudentInfo ? (
           <>
-            <td className="border border-slate-700 px-1 py-1 text-center">{index + 1}</td>
-            <td className="border border-slate-700 px-2 py-1 whitespace-nowrap text-[9px]">{student.nameGujarati || student.name}</td>
-            <td className="border border-slate-700 px-2 py-1 text-center">{formatDate(student.dateOfBirth)}</td>
-            <td className="border border-slate-700 px-2 py-1 text-center">{student.rollno}</td>
-            <td className="border border-slate-700 px-2 py-1 text-center">{student.caste}</td>
+            <td className="border border-slate-700 px-1 py-1 text-center">{rowIndex + 1}</td>
+            <td className="border border-slate-700 px-2 py-1 whitespace-nowrap text-[9px]">{student ? (student.nameGujarati || student.name) : ''}</td>
+            <td className="border border-slate-700 px-2 py-1 text-center">{student ? formatDate(student.dateOfBirth) : ''}</td>
+            <td className="border border-slate-700 px-2 py-1 text-center">{student?.rollno ?? ''}</td>
+            <td className="border border-slate-700 px-2 py-1 text-center">{student?.caste ?? ''}</td>
             <td className="border border-slate-700 px-2 py-1"></td>
           </>
         ) : null}
         {dayRange.map((day) => {
           const dayIndex = new Date(year, month, day).getDay();
           const isSunday = dayIndex === 0;
-          const present = info?.days[day - 1];
+          const present = info?.days[day - 1] ?? false;
           return (
-            <td key={`${student.id}-${day}`} className={`border border-slate-700 px-1 py-1 text-center ${isSunday ? 'bg-slate-200' : ''}`}>
+            <td key={`${student?.id ?? `empty-${rowIndex}`}-${day}`} className={`border border-slate-700 px-1 py-1 text-center ${isSunday ? 'bg-slate-200' : ''}`}>
               {!isSunday && present ? 'P' : ''}
             </td>
           );
         })}
         {includeSummary
           ? summaryColumns.map((column) => (
-              <td key={`${student.id}-${column}`} className="border border-slate-700 px-1 py-1 text-center"></td>
+              <td key={`${student?.id ?? `empty-${rowIndex}`}-${column}`} className="border border-slate-700 px-1 py-1 text-center"></td>
             ))
           : null}
       </tr>
+    );
+  };
+
+  const renderGridRows = (dayRange: number[], includeStudentInfo: boolean, includeSummary: boolean) => {
+    const rowCount = Math.max(students.length, minimumRowsPerPage);
+    return Array.from({ length: rowCount }, (_, rowIndex) =>
+      renderGridRow(students[rowIndex], rowIndex, dayRange, includeStudentInfo, includeSummary)
     );
   };
 
@@ -279,7 +288,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
               </tr>
             </thead>
             <tbody>
-              {students.map((student, index) => renderGridRow(student, index, leftDays, true, false))}
+              {renderGridRows(leftDays, true, false)}
             </tbody>
           </table>
         </div>
@@ -321,7 +330,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
               </tr>
             </thead>
             <tbody>
-              {students.map((student, index) => renderGridRow(student, index, rightDays, false, true))}
+              {renderGridRows(rightDays, false, true)}
             </tbody>
           </table>
         </div>
