@@ -145,28 +145,20 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
   const year = sample?.year ?? new Date().getFullYear();
   const monthLabel = new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  const weekdayLabels = [
-    { gu: 'રવિવાર', en: 'Ravivaar' },
-    { gu: 'સોમવાર', en: 'Somvaar' },
-    { gu: 'મંગળવાર', en: 'Mangalvaar' },
-    { gu: 'બુધવાર', en: 'Budhvaar' },
-    { gu: 'ગુરુવાર', en: 'Guruvaar' },
-    { gu: 'શુક્રવાર', en: 'Shukravaar' },
-    { gu: 'શનિવાર', en: 'Shanivaar' },
-  ] as const;
+  const weekdayLabels = ['રવિવાર', 'સોમવાર', 'મંગળવાર', 'બુધવાર', 'ગુરુવાર', 'શુક્રવાર', 'શનિવાર'] as const;
 
   const leftDays = Array.from({ length: Math.min(daysInMonth, 19) }, (_, idx) => idx + 1);
   const rightDays = Array.from({ length: Math.max(daysInMonth - 19, 0) }, (_, idx) => idx + 20);
   const summaryColumns = [
-    'રજાઓ',
+    'હાજર',
     'ગેરહાજર',
     'રજા',
     'રોગચાળો',
     'કુલ',
-    'એકંદર ગેરહાજર',
+    'માસના ગેરહાજર',
+    'રજા',
     'ગયા માસ સુધી એકંદર ગેરહાજર',
     'સળંગ ત્રણ દિવસ ગેરહાજર',
-    'સળંગ બે દિવસ ગેરહાજર',
   ];
   const verticalHeaderStyle: React.CSSProperties = {
     display: 'inline-block',
@@ -177,13 +169,14 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
   };
 
   const renderDayHeader = (day: number) => {
-    const weekday = weekdayLabels[new Date(year, month, day).getDay()];
+    const weekdayIndex = new Date(year, month, day).getDay();
+    const weekday = weekdayLabels[weekdayIndex];
+    const isSunday = weekdayIndex === 0;
     return (
-      <th key={`day-${day}`} className="border border-slate-700 px-0 py-0 align-bottom w-[32px] min-w-[32px]">
-        <div className="h-[136px] flex items-center justify-center">
+      <th key={`day-${day}`} className={`border border-slate-700 px-0 py-0 align-bottom w-[30px] min-w-[30px] ${isSunday ? 'bg-slate-200' : ''}`}>
+        <div className="h-[126px] flex items-center justify-center">
           <div style={verticalHeaderStyle} className="text-center">
-            <div className="font-semibold">{weekday.gu}</div>
-            <div className="text-[9px]">{weekday.en}</div>
+            <div className="font-semibold">{weekday}</div>
             <div>તા. {String(day).padStart(2, '0')}</div>
           </div>
         </div>
@@ -204,7 +197,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
         {includeStudentInfo ? (
           <>
             <td className="border border-slate-700 px-1 py-1 text-center">{index + 1}</td>
-            <td className="border border-slate-700 px-2 py-1">{student.nameGujarati || student.name}</td>
+            <td className="border border-slate-700 px-2 py-1 whitespace-nowrap text-[9px]">{student.nameGujarati || student.name}</td>
             <td className="border border-slate-700 px-2 py-1 text-center">{formatDate(student.dateOfBirth)}</td>
             <td className="border border-slate-700 px-2 py-1 text-center">{student.rollno}</td>
             <td className="border border-slate-700 px-2 py-1 text-center">{student.caste}</td>
@@ -212,10 +205,12 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
           </>
         ) : null}
         {dayRange.map((day) => {
+          const dayIndex = new Date(year, month, day).getDay();
+          const isSunday = dayIndex === 0;
           const present = info?.days[day - 1];
           return (
-            <td key={`${student.id}-${day}`} className="border border-slate-700 px-1 py-1 text-center">
-              {present ? 'P' : ''}
+            <td key={`${student.id}-${day}`} className={`border border-slate-700 px-1 py-1 text-center ${isSunday ? 'bg-slate-200' : ''}`}>
+              {!isSunday && present ? 'P' : ''}
             </td>
           );
         })}
@@ -243,7 +238,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
                 <th className="border border-slate-700 px-1 py-1">
                   <div style={verticalHeaderStyle}>અનુક્રમ નંબર</div>
                 </th>
-                <th className="border border-slate-700 px-2 py-1">વિદ્યાર્થીનું નામ</th>
+                <th className="border border-slate-700 px-2 py-1 whitespace-nowrap">વિદ્યાર્થીનું નામ</th>
                 <th className="border border-slate-700 px-2 py-1">
                   <div style={verticalHeaderStyle}>જન્મ તારીખ</div>
                 </th>
@@ -282,9 +277,9 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
             <thead>
               <tr>
                 {rightDays.map(renderDayHeader)}
-                {summaryColumns.map((column) => (
-                  <th key={column} className="border border-slate-700 px-0 py-0 w-[36px] min-w-[36px]">
-                    <div className="h-[136px] flex items-center justify-center">
+                {summaryColumns.map((column, idx) => (
+                  <th key={`${column}-${idx}`} className="border border-slate-700 px-0 py-0 w-[34px] min-w-[34px]">
+                    <div className="h-[126px] flex items-center justify-center">
                       <div style={verticalHeaderStyle}>{column}</div>
                     </div>
                   </th>
