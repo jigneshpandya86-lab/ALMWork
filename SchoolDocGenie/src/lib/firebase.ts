@@ -20,6 +20,7 @@ export const functions = getFunctions(app, "asia-south1");
 export const api = {
   getStudents: httpsCallable(functions, 'getStudents'),
   createStudent: httpsCallable(functions, 'createStudent'),
+  bulkCreateStudents: httpsCallable(functions, 'bulkCreateStudents'),
   updateStudent: httpsCallable(functions, 'updateStudent'),
   deleteStudent: httpsCallable(functions, 'deleteStudent'),
 };
