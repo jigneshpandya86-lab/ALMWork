@@ -25,7 +25,7 @@ export default function DownloadLinks({ pdfs }: DownloadLinksProps) {
       const blob = await zip.generateAsync({ type:'blob' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'SchoolDocGenie_PDFs.zip';
+      a.href = url; a.download = 'SmartTeacherMonaliPandya_PDFs.zip';
       document.body.appendChild(a); a.click();
       document.body.removeChild(a); URL.revokeObjectURL(url);
     } catch {
