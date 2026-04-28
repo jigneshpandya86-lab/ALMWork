@@ -31,7 +31,7 @@ export default function Header() {
             </svg>
           </div>
           <span className="font-bold text-slate-800 text-sm tracking-tight">
-            School<span className="grad-text">Doc</span>Genie
+            Smart Teacher---MonaliPandya
           </span>
         </div>
 
