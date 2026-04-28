@@ -124,6 +124,9 @@ export default function HomePage() {
   });
   const [generatedPDFs, setPDFs] = useState<GeneratedPDF[]>([]);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [showStudentMaster, setShowStudentMaster] = useState(false);
+  const [showDocTypeSelector, setShowDocTypeSelector] = useState(false);
+  const [showGeneratePanel, setShowGeneratePanel] = useState(false);
 
   useEffect(() => {
     async function fetchStudents() {
@@ -146,6 +149,19 @@ export default function HomePage() {
 
   const step1Done = students.length > 0;
   const step3Done = step1Done && Boolean(selectedDocType && selectedGrade);
+
+  useEffect(() => {
+    if (!step1Done) {
+      setShowStudentMaster(false);
+      setShowDocTypeSelector(false);
+      setShowGeneratePanel(false);
+      return;
+    }
+
+    if (!step3Done) {
+      setShowGeneratePanel(false);
+    }
+  }, [step1Done, step3Done]);
 
   const handleStudentsLoaded = (newStudents: Student[]) => {
     setStudents((prev) => mergeStudents(prev, newStudents));
@@ -288,50 +304,83 @@ export default function HomePage() {
         </Step>
 
         <Step id="step-preview" n={2} title="Student Master" subtitle="Review, add, edit, update, and delete students" active={step1Done && !step3Done} done={step3Done}>
-          {students.length > 0 ? (
-            <StudentTable
-              students={students}
-              selectedGrade={selectedGrade ?? undefined}
-              onSaveStudent={handleSaveStudent}
-              onDeleteStudent={handleDeleteStudent}
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-3 py-10 text-slate-300 select-none">
-              <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+          <button
+            onClick={() => setShowStudentMaster((previous) => !previous)}
+            disabled={!step1Done}
+            className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {showStudentMaster ? 'Hide Student Master' : 'Open Student Master'}
+          </button>
+          {showStudentMaster && (
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              {students.length > 0 ? (
+                <StudentTable
+                  students={students}
+                  selectedGrade={selectedGrade ?? undefined}
+                  onSaveStudent={handleSaveStudent}
+                  onDeleteStudent={handleDeleteStudent}
                 />
-              </svg>
-              <p className="text-sm">Upload a file above to preview students here</p>
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-10 text-slate-300 select-none">
+                  <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  <p className="text-sm">Upload a file above to preview students here</p>
+                </div>
+              )}
             </div>
           )}
         </Step>
 
         <Step id="step-select" n={3} title="Choose Document Type & Grade" subtitle="Pick what to generate and for which grade" active={step1Done && !step3Done} done={step3Done}>
-          <TemplateSelector onSelect={handleSelect} selectedDocType={selectedDocType} selectedGrade={selectedGrade} />
+          <button
+            onClick={() => setShowDocTypeSelector((previous) => !previous)}
+            disabled={!step1Done}
+            className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {showDocTypeSelector ? 'Hide Document Type & Grade' : 'Open Document Type & Grade'}
+          </button>
+          {showDocTypeSelector && (
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <TemplateSelector onSelect={handleSelect} selectedDocType={selectedDocType} selectedGrade={selectedGrade} />
+            </div>
+          )}
         </Step>
 
         <Step id="step-generate" n={4} title="Generate & Download" subtitle="Click to create PDFs for all students in the selected grade" active={step3Done} done={generatedPDFs.length > 0} last>
-          <GenerateButton
-            students={students}
-            docType={selectedDocType}
-            grade={selectedGrade}
-            onGenerateStart={handleGenerateStart}
-            onProgress={handleProgress}
-            onGenerateComplete={handleComplete}
-            onError={handleError}
-          />
-          {progress.status !== 'idle' && (
-            <div className="mt-5 pt-5" style={{ borderTop: '1px solid rgba(199,210,254,0.4)' }}>
-              <ProgressBar current={progress.current} total={progress.total} currentStudentName={progress.currentStudentName} status={progress.status} />
-            </div>
-          )}
-          {generatedPDFs.length > 0 && (
-            <div className="mt-5 pt-5" style={{ borderTop: '1px solid rgba(199,210,254,0.4)' }}>
-              <DownloadLinks pdfs={generatedPDFs} />
+          <button
+            onClick={() => setShowGeneratePanel((previous) => !previous)}
+            disabled={!step3Done}
+            className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {showGeneratePanel ? 'Hide Generate & Download' : 'Open Generate & Download'}
+          </button>
+          {showGeneratePanel && (
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <GenerateButton
+                students={students}
+                docType={selectedDocType}
+                grade={selectedGrade}
+                onGenerateStart={handleGenerateStart}
+                onProgress={handleProgress}
+                onGenerateComplete={handleComplete}
+                onError={handleError}
+              />
+              {progress.status !== 'idle' && (
+                <div className="mt-5 pt-5" style={{ borderTop: '1px solid rgba(199,210,254,0.4)' }}>
+                  <ProgressBar current={progress.current} total={progress.total} currentStudentName={progress.currentStudentName} status={progress.status} />
+                </div>
+              )}
+              {generatedPDFs.length > 0 && (
+                <div className="mt-5 pt-5" style={{ borderTop: '1px solid rgba(199,210,254,0.4)' }}>
+                  <DownloadLinks pdfs={generatedPDFs} />
+                </div>
+              )}
             </div>
           )}
         </Step>
