@@ -454,7 +454,7 @@ export async function generateMultiplePDFs(
   docType: string,
   onProgress?: (current: number, total: number, name: string) => void,
   attendanceData?: Map<string, { month: number; year: number; days: boolean[] }>,
-  template?: DocumentTemplate,
+  template?: DocumentType,
   grade?: string
 ): Promise<GeneratedPDF[]> {
   const results: GeneratedPDF[] = [];
