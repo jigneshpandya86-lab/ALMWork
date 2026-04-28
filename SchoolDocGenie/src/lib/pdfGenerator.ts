@@ -479,7 +479,7 @@ export async function generateMultiplePDFs(
       }
 
       const text = documents.get(student.id) ?? '';
-      const blob = await generatePDF(student, text, docType, template);
+      const blob = await generatePDF(student, text, docType);
       const filename = generateFileName(student, docType);
 
       results.push({
