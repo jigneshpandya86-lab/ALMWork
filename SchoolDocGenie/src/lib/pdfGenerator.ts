@@ -288,7 +288,7 @@ async function generateAttendanceRegisterPDF(
   grade: string
 ): Promise<Blob> {
   const JsPDF = await getJsPDF();
-  const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+  const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
@@ -298,73 +298,128 @@ async function generateAttendanceRegisterPDF(
   if (!monthYearData) throw new Error('No attendance data provided');
 
   const daysInMonth = monthYearData.days.length;
-  const startX = 8;
-  const srNoColW = 10;
-  const nameColW = 48;
+  const startX = 10;
+  const srNoColW = 14;
+  const nameColW = 52;
   const dayColW = (pageW - (startX * 2) - srNoColW - nameColW) / daysInMonth;
-  const rowH = 6;
+  const rowH = 6.6;
 
-  const drawPageHeader = () => {
+  const containsGujarati = (text: string) => /[\u0A80-\u0AFF]/.test(text);
+  const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  const canvasCtx = canvas?.getContext('2d') ?? null;
+
+  const drawCanvasText = async (
+    text: string,
+    x: number,
+    y: number,
+    options: { align?: 'left' | 'center' | 'right'; fontSize?: number; bold?: boolean } = {}
+  ) => {
+    if (!canvas || !canvasCtx) {
+      doc.text(text, x, y, { align: options.align ?? 'left' });
+      return;
+    }
+
+    const fontSize = options.fontSize ?? 8;
+    const align = options.align ?? 'left';
+    const fontName = options.bold ? '700' : '400';
+    canvasCtx.font = `${fontName} ${Math.round(fontSize * 4)}px "Noto Sans Gujarati", sans-serif`;
+    const metrics = canvasCtx.measureText(text);
+    const width = Math.max(2, Math.ceil(metrics.width + 8));
+    const height = Math.max(2, Math.ceil(fontSize * 7));
+
+    canvas.width = width;
+    canvas.height = height;
+    canvasCtx.clearRect(0, 0, width, height);
+    canvasCtx.font = `${fontName} ${Math.round(fontSize * 4)}px "Noto Sans Gujarati", sans-serif`;
+    canvasCtx.fillStyle = '#111111';
+    canvasCtx.textBaseline = 'middle';
+    canvasCtx.fillText(text, 2, height / 2);
+
+    const mmPerPx = 0.264583;
+    const imageWmm = width * mmPerPx * 0.85;
+    const imageHmm = height * mmPerPx * 0.85;
+    let imageX = x;
+    if (align === 'center') imageX = x - imageWmm / 2;
+    if (align === 'right') imageX = x - imageWmm;
+
+    doc.addImage(canvas.toDataURL('image/png'), 'PNG', imageX, y - imageHmm + 1, imageWmm, imageHmm);
+  };
+
+  const drawSmartText = async (
+    text: string,
+    x: number,
+    y: number,
+    options: { align?: 'left' | 'center' | 'right'; fontSize?: number; bold?: boolean } = {}
+  ) => {
+    if (containsGujarati(text)) {
+      await drawCanvasText(text, x, y, options);
+      return;
+    }
+    doc.setFontSize(options.fontSize ?? 8);
+    doc.setFont('helvetica', options.bold ? 'bold' : 'normal');
+    doc.text(text, x, y, { align: options.align ?? 'left' });
+  };
+
+  const drawPageHeader = async () => {
     let y = 12;
-    doc.setTextColor(25, 82, 163);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.text('ATTENDANCE REGISTER', pageW / 2, y, { align: 'center' });
-    y += 5;
+    doc.setTextColor(20, 20, 20);
+    await drawSmartText(`જિલ્લા શિક્ષણ સમિતિ સંચાલિત શાળા  ${SCHOOL.academicYear}`, pageW / 2, y, { align: 'center', fontSize: 10, bold: true });
+    y += 7;
+    await drawSmartText(`માસિક હાજરી પત્રક  •  ધોરણ: ${grade}`, pageW / 2, y, { align: 'center', fontSize: 11, bold: true });
+    y += 6;
+    await drawSmartText(`${MONTHS_GJ[monthYearData.month]} - ${monthYearData.year}`, pageW / 2, y, { align: 'center', fontSize: 9, bold: true });
+    y += 6;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(50, 50, 50);
-    doc.text(`${MONTHS_GJ[monthYearData.month]} ${monthYearData.year}  |  ધોરણ: ${grade}`, pageW / 2, y, { align: 'center' });
-    y += 4;
-
     doc.setFontSize(8);
-    doc.text(`(${MONTHS_EN[monthYearData.month]} ${monthYearData.year}) - Standard ${grade}`, pageW / 2, y, { align: 'center' });
-    y += 6;
+    doc.text(`${MONTHS_EN[monthYearData.month]} ${monthYearData.year}`, pageW / 2, y, { align: 'center' });
+    y += 4;
 
     doc.setDrawColor(90, 90, 90);
     doc.setFillColor(236, 236, 236);
     doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
 
-    doc.rect(startX, y, srNoColW, rowH, 'FD');
-    doc.text('No', startX + srNoColW / 2, y + 4.1, { align: 'center' });
-
-    doc.rect(startX + srNoColW, y, nameColW, rowH, 'FD');
-    doc.text('Student Name', startX + srNoColW + 1.5, y + 4.1);
+    doc.rect(startX, y, srNoColW, rowH * 2, 'FD');
+    doc.rect(startX + srNoColW, y, nameColW, rowH * 2, 'FD');
+    await drawSmartText('ક્રમ', startX + srNoColW / 2, y + (rowH * 1.2), { align: 'center', fontSize: 7.2, bold: true });
+    await drawSmartText('વિદ્યાર્થીનું નામ', startX + srNoColW + nameColW / 2, y + (rowH * 1.2), { align: 'center', fontSize: 7.2, bold: true });
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dayX = startX + srNoColW + nameColW + (day - 1) * dayColW;
+      const date = new Date(monthYearData.year, monthYearData.month, day);
+      const dayAbbr = date.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 2);
       doc.rect(dayX, y, dayColW, rowH, 'FD');
-      doc.text(String(day), dayX + dayColW / 2, y + 4.1, { align: 'center' });
+      doc.rect(dayX, y + rowH, dayColW, rowH, 'FD');
+      doc.text(dayAbbr, dayX + dayColW / 2, y + 4.2, { align: 'center' });
+      doc.text(String(day), dayX + dayColW / 2, y + rowH + 4.2, { align: 'center' });
     }
 
-    return y + rowH;
+    return y + (rowH * 2);
   };
 
   const isSunday = (day: number) => new Date(monthYearData.year, monthYearData.month, day).getDay() === 0;
 
-  let y = drawPageHeader();
+  let y = await drawPageHeader();
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(6.8);
 
-  students.forEach((student, idx) => {
+  for (const [idx, student] of students.entries()) {
     if (y + rowH > pageH - 12) {
       doc.addPage();
-      y = drawPageHeader();
+      y = await drawPageHeader();
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
+      doc.setFontSize(6.8);
     }
 
     doc.setDrawColor(130, 130, 130);
     doc.setTextColor(0, 0, 0);
 
     doc.rect(startX, y, srNoColW, rowH);
-    doc.text(String(idx + 1), startX + srNoColW / 2, y + 4, { align: 'center' });
+    doc.text(String(idx + 1), startX + srNoColW / 2, y + 4.2, { align: 'center' });
 
     doc.rect(startX + srNoColW, y, nameColW, rowH);
-    doc.text(student.name, startX + srNoColW + 1.5, y + 4);
+    await drawSmartText(student.name, startX + srNoColW + 1.3, y + 4.2, { fontSize: 7 });
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dayX = startX + srNoColW + nameColW + (day - 1) * dayColW;
@@ -378,13 +433,13 @@ async function generateAttendanceRegisterPDF(
       doc.rect(dayX, y, dayColW, rowH);
       if (sunday) {
         doc.setFont('helvetica', 'bold');
-        doc.text('S', dayX + dayColW / 2, y + 4, { align: 'center' });
+        doc.text('S', dayX + dayColW / 2, y + 4.2, { align: 'center' });
         doc.setFont('helvetica', 'normal');
       }
     }
 
     y += rowH;
-  });
+  }
 
   drawFooter(doc, pageW);
   return doc.output('blob');
