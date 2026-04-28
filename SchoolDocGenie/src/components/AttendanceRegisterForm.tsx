@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Student } from '@/types';
 
 interface AttendanceRegisterFormProps {
@@ -19,28 +19,32 @@ const MONTHS_GJ = ['જાન્યુઆરી', 'ફેબ્રુઆરી',
 export default function AttendanceRegisterForm({ students, grade, onGenerate, onClose }: AttendanceRegisterFormProps) {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedStudent, setSelectedStudent] = useState(students[0]?.id || '');
-  const [attendance, setAttendance] = useState<Map<string, boolean[]>>(new Map());
 
   const gradeStudents = students.filter(s => s.grade === grade);
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-  const studentAttendance = attendance.get(selectedStudent) || Array(daysInMonth).fill(false);
 
-  const toggleDay = (day: number, present: boolean) => {
-    const updated = [...studentAttendance];
-    updated[day] = present;
-    const newAttendance = new Map(attendance);
-    newAttendance.set(selectedStudent, updated);
-    setAttendance(newAttendance);
-  };
+  const sundayDays = useMemo(() => {
+    const values: number[] = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayOfWeek = new Date(selectedYear, selectedMonth, day).getDay();
+      if (dayOfWeek === 0) values.push(day);
+    }
+    return values;
+  }, [daysInMonth, selectedMonth, selectedYear]);
 
   const handleGenerate = () => {
     const result = new Map<string, { month: number; year: number; days: boolean[] }>();
+    const days = Array.from({ length: daysInMonth }, (_, dayIndex) => {
+      const dayNumber = dayIndex + 1;
+      const dayOfWeek = new Date(selectedYear, selectedMonth, dayNumber).getDay();
+      return dayOfWeek === 0;
+    });
+
     gradeStudents.forEach(s => {
       result.set(s.id, {
         month: selectedMonth,
         year: selectedYear,
-        days: attendance.get(s.id) || Array(daysInMonth).fill(false),
+        days,
       });
     });
     onGenerate(result);
@@ -52,11 +56,10 @@ export default function AttendanceRegisterForm({ students, grade, onGenerate, on
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto max-w-3xl w-full">
-        {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-emerald-50 to-teal-50 border-b px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-800">Attendance Register</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Select month, year, and student to mark attendance</p>
+            <p className="text-xs text-slate-500 mt-0.5">Select standard, month and year for monthly attendance print</p>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-white/50 rounded-lg transition">
             <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,28 +69,19 @@ export default function AttendanceRegisterForm({ students, grade, onGenerate, on
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Controls */}
           <div className="grid grid-cols-3 gap-4">
-            {/* Student select */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">Student</label>
-              <select
-                value={selectedStudent}
-                onChange={e => setSelectedStudent(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-              >
-                {gradeStudents.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
+              <label className="block text-xs font-semibold text-slate-700 mb-2">Standard</label>
+              <div className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm bg-slate-50 text-slate-700">
+                {grade}
+              </div>
             </div>
 
-            {/* Month select */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-2">Month</label>
               <select
                 value={selectedMonth}
-                onChange={e => setSelectedMonth(parseInt(e.target.value))}
+                onChange={e => setSelectedMonth(parseInt(e.target.value, 10))}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               >
                 {MONTHS_EN.map((m, i) => (
@@ -96,12 +90,11 @@ export default function AttendanceRegisterForm({ students, grade, onGenerate, on
               </select>
             </div>
 
-            {/* Year select */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-2">Year</label>
               <select
                 value={selectedYear}
-                onChange={e => setSelectedYear(parseInt(e.target.value))}
+                onChange={e => setSelectedYear(parseInt(e.target.value, 10))}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               >
                 {years.map(y => (
@@ -111,7 +104,6 @@ export default function AttendanceRegisterForm({ students, grade, onGenerate, on
             </div>
           </div>
 
-          {/* Calendar title */}
           <div className="text-center">
             <p className="text-lg font-bold text-slate-800" style={{ fontFamily: '"Noto Sans Gujarati", sans-serif' }}>
               {MONTHS_GJ[selectedMonth]} {selectedYear}
@@ -119,49 +111,19 @@ export default function AttendanceRegisterForm({ students, grade, onGenerate, on
             <p className="text-sm text-slate-500 mt-1">{MONTHS_EN[selectedMonth]} {selectedYear}</p>
           </div>
 
-          {/* Calendar grid */}
-          <div>
-            <p className="text-xs font-semibold text-slate-600 mb-3">Mark attendance: <span className="text-emerald-600 font-bold">Green = Present</span>, <span className="text-slate-400">Gray = Absent/Leave</span></p>
-            <div className="grid grid-cols-6 gap-2">
-              {Array.from({ length: daysInMonth }).map((_, day) => {
-                const isPresent = studentAttendance[day] || false;
-                return (
-                  <button
-                    key={day}
-                    onClick={() => toggleDay(day, !isPresent)}
-                    className="aspect-square rounded-lg text-sm font-bold transition-all border-2"
-                    style={{
-                      background: isPresent ? '#d1fae5' : '#f3f4f6',
-                      color: isPresent ? '#059669' : '#9ca3af',
-                      borderColor: isPresent ? '#10b981' : '#e5e7eb',
-                    }}
-                  >
-                    {day + 1}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Summary */}
           <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-slate-600">Present days marked for <strong>{gradeStudents.find(s => s.id === selectedStudent)?.name}</strong></p>
-                <p className="text-2xl font-bold text-emerald-600 mt-1">
-                  {studentAttendance.filter(d => d).length} / {daysInMonth} days
-                </p>
+                <p className="text-sm text-slate-600">Students in selected standard</p>
+                <p className="text-2xl font-bold text-slate-800 mt-1">{gradeStudents.length}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-slate-500 mb-1">Attendance %</p>
-                <p className="text-3xl font-black text-slate-800">
-                  {Math.round((studentAttendance.filter(d => d).length / daysInMonth) * 100)}%
-                </p>
+                <p className="text-sm text-slate-600">Sundays auto-marked</p>
+                <p className="text-lg font-bold text-emerald-700 mt-1">{sundayDays.join(', ') || 'None'}</p>
               </div>
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3 pt-4">
             <button
               onClick={onClose}
@@ -173,7 +135,7 @@ export default function AttendanceRegisterForm({ students, grade, onGenerate, on
               onClick={handleGenerate}
               className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium hover:shadow-lg transition"
             >
-              Generate PDFs for All Students
+              Generate Monthly Attendance PDF
             </button>
           </div>
         </div>
