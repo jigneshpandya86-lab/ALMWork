@@ -22,7 +22,16 @@ export default function GenerateButton({
   const handleGenerate = async () => {
     if (!canGenerate || !docType || !grade) return;
 
-    if (docType === 'attendanceRegister') {
+    const attendanceVariantMap: Partial<Record<typeof docType, { grade: string; subject: string }>> = {
+      std6PaMathsAttendance: { grade: '6', subject: 'MATHS' },
+      std6PaSciAttendance: { grade: '6', subject: 'SCI' },
+      std7PaMathsAttendance: { grade: '7', subject: 'MATHS' },
+      std7PaSciAttendance: { grade: '7', subject: 'SCI' },
+      std8PaMathsAttendance: { grade: '8', subject: 'MATHS' },
+      std8PaSciAttendance: { grade: '8', subject: 'SCI' },
+    };
+
+    if (docType === 'attendanceRegister' || attendanceVariantMap[docType]) {
       setShowAttendanceForm(true);
       return;
     }
@@ -41,11 +50,21 @@ export default function GenerateButton({
 
   const handleAttendanceGenerate = async (attendanceData: Map<string, { month: number; year: number; days: boolean[] }>) => {
     if (!docType || !grade) return;
+    const attendanceVariantMap: Partial<Record<typeof docType, { grade: string; subject: string }>> = {
+      std6PaMathsAttendance: { grade: '6', subject: 'MATHS' },
+      std6PaSciAttendance: { grade: '6', subject: 'SCI' },
+      std7PaMathsAttendance: { grade: '7', subject: 'MATHS' },
+      std7PaSciAttendance: { grade: '7', subject: 'SCI' },
+      std8PaMathsAttendance: { grade: '8', subject: 'MATHS' },
+      std8PaSciAttendance: { grade: '8', subject: 'SCI' },
+    };
+    const variant = attendanceVariantMap[docType];
+    const targetGrade = variant?.grade ?? grade;
     setShowAttendanceForm(false);
     setIsGenerating(true);
     onGenerateStart();
     try {
-      const filtered = filterByGrade(students, grade);
+      const filtered = filterByGrade(students, targetGrade);
       const remarks = new Map<string, string>();
       filtered.forEach(s => {
         const data = attendanceData.get(s.id);
@@ -56,7 +75,7 @@ export default function GenerateButton({
         }
       });
 
-      const pdfs = await generateMultiplePDFs(filtered, remarks, docType, (c, t, n) => onProgress(c, t, n), attendanceData, undefined, grade);
+      const pdfs = await generateMultiplePDFs(filtered, remarks, 'attendanceRegister', (c, t, n) => onProgress(c, t, n), attendanceData, undefined, targetGrade, variant?.subject);
       onGenerateComplete(pdfs);
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Generation failed');
@@ -65,7 +84,7 @@ export default function GenerateButton({
 
   const docLabel = docType === 'marksheet' ? 'Marksheets'
     : docType === 'leavingCert' ? 'Leaving Certificates'
-    : docType === 'attendanceRegister' ? 'Attendance Registers'
+    : (docType === 'attendanceRegister' || String(docType).includes('Attendance')) ? 'Attendance Registers'
     : 'Evaluation Reports';
 
   return (
@@ -118,7 +137,7 @@ export default function GenerateButton({
       {showAttendanceForm && (
         <AttendanceRegisterForm
           students={students}
-          grade={grade!}
+          grade={(docType === 'std6PaMathsAttendance' || docType === 'std6PaSciAttendance') ? '6' : (docType === 'std7PaMathsAttendance' || docType === 'std7PaSciAttendance') ? '7' : (docType === 'std8PaMathsAttendance' || docType === 'std8PaSciAttendance') ? '8' : grade!}
           onGenerate={handleAttendanceGenerate}
           onClose={() => setShowAttendanceForm(false)}
         />

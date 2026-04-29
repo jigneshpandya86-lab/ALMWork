@@ -171,7 +171,8 @@ export async function generateMultiplePDFs(
   onProgress?: (current: number, total: number, name: string) => void,
   attendanceData?: Map<string, { month: number; year: number; days: boolean[] }>,
   template?: DocumentType,
-  grade?: string
+  grade?: string,
+  attendanceSubject?: string
 ): Promise<GeneratedPDF[]> {
   void template;
   const results: GeneratedPDF[] = [];
@@ -185,7 +186,7 @@ export async function generateMultiplePDFs(
     results.push({
       studentId: `Grade${grade}`,
       studentName: `Grade ${grade} Attendance Register`,
-      filename: `Attendance_Register_Grade${grade}_${fileMonth}_${fileYear}.pdf`,
+      filename: `Attendance_Register_Grade${grade}${attendanceSubject ? `_${attendanceSubject}` : ''}_${fileMonth}_${fileYear}.pdf`,
       blob,
       size: blob.size,
     });

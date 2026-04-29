@@ -45,7 +45,17 @@ export interface SchoolInfo {
   maxTotalMarks?: number;
 }
 
-export type DocType = 'marksheet' | 'leavingCert' | 'periodicEval' | 'attendanceRegister';
+export type DocType =
+  | 'marksheet'
+  | 'leavingCert'
+  | 'periodicEval'
+  | 'attendanceRegister'
+  | 'std6PaMathsAttendance'
+  | 'std6PaSciAttendance'
+  | 'std7PaMathsAttendance'
+  | 'std7PaSciAttendance'
+  | 'std8PaMathsAttendance'
+  | 'std8PaSciAttendance';
 
 export interface GeneratedPDF {
   studentId: string;
