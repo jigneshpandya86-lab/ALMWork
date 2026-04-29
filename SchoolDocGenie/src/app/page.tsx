@@ -321,7 +321,7 @@ export default function HomePage() {
       setBatchStatus('Parsing CSV...');
       setBatchPercent(2);
 
-      const response = await fetch('/data/templates/report_designs.json');
+      const response = await fetch('data/templates/report_designs.json');
       if (!response.ok) throw new Error('Unable to load report designs JSON.');
       const designData = (await response.json()) as ReportDesignFile;
       const blueprint = designData.reports.find((report) => report.id === batchTemplateKey);

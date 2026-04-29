@@ -14,7 +14,7 @@ export default function BatchTemplateSelector({ value, onChange }: BatchTemplate
 
   useEffect(() => {
     async function load() {
-      const response = await fetch('/data/templates/report_designs.json');
+      const response = await fetch('data/templates/report_designs.json');
       if (!response.ok) return;
       const json = (await response.json()) as DesignIndex;
       setOptions(json.reports ?? []);
