@@ -1,0 +1,89 @@
+{
+  "reports": [
+    {
+      "id": "subject-annexure-v1",
+      "name": "Subject Annexure",
+      "layout": "landscape",
+      "designBlocks": [
+        {
+          "id": "header-main",
+          "type": "header",
+          "header": {
+            "line1": "SchoolDocGenie Public School",
+            "line2": "Academic Performance Board",
+            "line3": "Subject Annexure Report",
+            "line4": "Session 2025-2026"
+          }
+        },
+        {
+          "id": "annexure-intro",
+          "type": "narrativeText",
+          "text": "This annexure contains subject-level marks and competency metrics imported directly from CSV.",
+          "className": "mb-2"
+        },
+        {
+          "id": "annexure-table",
+          "type": "table",
+          "title": "Subject Result Matrix",
+          "columns": [
+            { "label": "Roll No", "csvColumn": "rollno" },
+            { "label": "Student Name", "csvColumn": "name" },
+            { "label": "Grade", "csvColumn": "grade" },
+            { "label": "Hindi", "csvColumn": "hindi" },
+            { "label": "English", "csvColumn": "english" },
+            { "label": "Mathematics", "csvColumn": "mathematics" },
+            { "label": "Science", "csvColumn": "science" },
+            { "label": "Social Studies", "csvColumn": "socialStudies" },
+            { "label": "Attendance", "csvColumn": "attendance" },
+            { "label": "Conduct", "csvColumn": "conduct" }
+          ],
+          "rowSource": "allRows"
+        },
+        {
+          "id": "annexure-signatures",
+          "type": "signatures",
+          "labels": ["Class Teacher", "Exam Coordinator", "Principal"]
+        }
+      ]
+    },
+    {
+      "id": "leaving-certificate-v1",
+      "name": "Leaving Certificate",
+      "layout": "portrait",
+      "designBlocks": [
+        {
+          "id": "lc-header",
+          "type": "header",
+          "header": {
+            "line1": "SchoolDocGenie Public School",
+            "line2": "Official Leaving Certificate"
+          }
+        },
+        {
+          "id": "lc-narrative",
+          "type": "narrativeText",
+          "text": "This is to certify that the following student has completed formalities and is hereby issued this leaving certificate."
+        },
+        {
+          "id": "lc-meta",
+          "type": "studentMeta",
+          "title": "Student Information",
+          "fields": [
+            { "label": "Student Name", "csvKey": "name" },
+            { "label": "Date of Birth", "csvKey": "dateOfBirth" },
+            { "label": "Father Name", "csvKey": "fatherName" },
+            { "label": "Mother Name", "csvKey": "motherName" },
+            { "label": "Last Grade", "csvKey": "grade" },
+            { "label": "Conduct", "csvKey": "conduct" }
+          ],
+          "dataMode": "firstRow"
+        },
+        {
+          "id": "lc-signatures",
+          "type": "signatures",
+          "labels": ["Class Teacher", "Head Clerk", "Principal"]
+        }
+      ]
+    }
+  ]
+}
