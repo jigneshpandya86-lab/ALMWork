@@ -54,7 +54,7 @@ const DOCS: {
   {
     id: 'std6PaMathsAttendance',
     label: 'STD6 PA Maths',
-    desc: 'Attendance register for Std 6 PA Mathematics.',
+    desc: 'Periodic Assessment sheet for Std 6 Mathematics.',
     gradient: 'linear-gradient(135deg,#0ea5e9,#3b82f6)',
     lightBg: 'rgba(59,130,246,0.08)',
     textColor: '#2563eb',
@@ -63,7 +63,7 @@ const DOCS: {
   {
     id: 'std6PaSciAttendance',
     label: 'STD6 PA Science',
-    desc: 'Attendance register for Std 6 PA Science.',
+    desc: 'Periodic Assessment sheet for Std 6 Science.',
     gradient: 'linear-gradient(135deg,#0891b2,#06b6d4)',
     lightBg: 'rgba(6,182,212,0.08)',
     textColor: '#0e7490',
@@ -72,7 +72,7 @@ const DOCS: {
   {
     id: 'std7PaMathsAttendance',
     label: 'STD7 PA Maths',
-    desc: 'Attendance register for Std 7 PA Mathematics.',
+    desc: 'Periodic Assessment sheet for Std 7 Mathematics.',
     gradient: 'linear-gradient(135deg,#8b5cf6,#6366f1)',
     lightBg: 'rgba(139,92,246,0.08)',
     textColor: '#6d28d9',
@@ -81,7 +81,7 @@ const DOCS: {
   {
     id: 'std7PaSciAttendance',
     label: 'STD7 PA Science',
-    desc: 'Attendance register for Std 7 PA Science.',
+    desc: 'Periodic Assessment sheet for Std 7 Science.',
     gradient: 'linear-gradient(135deg,#7c3aed,#a855f7)',
     lightBg: 'rgba(168,85,247,0.08)',
     textColor: '#7e22ce',
@@ -90,7 +90,7 @@ const DOCS: {
   {
     id: 'std8PaMathsAttendance',
     label: 'STD8 PA Maths',
-    desc: 'Attendance register for Std 8 PA Mathematics.',
+    desc: 'Periodic Assessment sheet for Std 8 Mathematics.',
     gradient: 'linear-gradient(135deg,#f59e0b,#f97316)',
     lightBg: 'rgba(249,115,22,0.08)',
     textColor: '#ea580c',
@@ -99,7 +99,7 @@ const DOCS: {
   {
     id: 'std8PaSciAttendance',
     label: 'STD8 PA Science',
-    desc: 'Attendance register for Std 8 PA Science.',
+    desc: 'Periodic Assessment sheet for Std 8 Science.',
     gradient: 'linear-gradient(135deg,#ef4444,#f97316)',
     lightBg: 'rgba(239,68,68,0.08)',
     textColor: '#dc2626',
