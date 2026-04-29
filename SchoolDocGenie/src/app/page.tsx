@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Student, DocType, GeneratedPDF, GenerationProgress } from '@/types';
+import { createRoot } from 'react-dom/client';
+import JSZip from 'jszip';
+import { Student, DocType, GeneratedPDF, GenerationProgress, CsvRow, ReportBlueprint } from '@/types';
 import FileUploader from '@/components/FileUploader';
 import StudentTable from '@/components/StudentTable';
 import TemplateSelector from '@/components/TemplateSelector';
@@ -9,6 +11,66 @@ import GenerateButton from '@/components/GenerateButton';
 import ProgressBar from '@/components/ProgressBar';
 import DownloadLinks from '@/components/DownloadLinks';
 import { api } from '@/lib/firebase';
+import MasterReportTemplate from '@/components/MasterReportTemplate';
+import { parseCSVAndMap } from '@/lib/csvParser';
+import BatchTemplateSelector from '@/components/BatchTemplateSelector';
+import BatchCsvUploader from '@/components/BatchCsvUploader';
+import BatchProgressBar from '@/components/BatchProgressBar';
+
+
+
+type ReportDesignFile = {
+  reports: ReportBlueprint[];
+};
+
+async function renderBlueprintRowToPdfBlob(blueprint: ReportBlueprint, row: CsvRow): Promise<Blob> {
+  const [html2canvasModule, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')]);
+  const html2canvas = html2canvasModule.default;
+
+  const mount = document.createElement('div');
+  mount.style.position = 'fixed';
+  mount.style.left = '-99999px';
+  mount.style.top = '0';
+  mount.style.background = '#fff';
+  mount.style.width = blueprint.layout === 'landscape' ? '1123px' : '794px';
+  document.body.appendChild(mount);
+
+  const root = createRoot(mount);
+  try {
+    root.render(<MasterReportTemplate blueprint={blueprint} parsedCsvData={[row]} />);
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    const target = mount.firstElementChild as HTMLElement | null;
+    if (!target) throw new Error('Failed to render template for PDF generation.');
+
+    const canvas = await html2canvas(target, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: target.scrollWidth,
+      windowHeight: target.scrollHeight,
+    });
+
+    const orientation = blueprint.layout === 'landscape' ? 'landscape' : 'portrait';
+    const pdf = new jsPDF({ orientation, unit: 'mm', format: 'a4', compress: true });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imageData = canvas.toDataURL('image/png');
+    const renderedHeight = (canvas.height * pageWidth) / canvas.width;
+
+    pdf.addImage(imageData, 'PNG', 0, 0, pageWidth, renderedHeight, undefined, 'FAST');
+    return pdf.output('blob');
+  } finally {
+    root.unmount();
+    mount.remove();
+  }
+}
+
+function safeFilePart(value: unknown, fallback: string): string {
+  const raw = String(value ?? fallback).trim();
+  return raw.replace(/[^a-zA-Z0-9-_]+/g, '_').replace(/_+/g, '_') || fallback;
+}
 
 function mergeStudents(existing: Student[], incoming: Student[]) {
   const merged = new Map<string, Student>();
@@ -113,6 +175,11 @@ export default function HomePage() {
   });
   const [generatedPDFs, setPDFs] = useState<GeneratedPDF[]>([]);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [batchTemplateKey, setBatchTemplateKey] = useState('');
+  const [batchFile, setBatchFile] = useState<File | null>(null);
+  const [batchGenerating, setBatchGenerating] = useState(false);
+  const [batchStatus, setBatchStatus] = useState('Ready');
+  const [batchPercent, setBatchPercent] = useState(0);
 
   useEffect(() => {
     async function fetchStudents() {
@@ -242,6 +309,66 @@ export default function HomePage() {
     setProgress((previous) => ({ ...previous, status: 'error', error: message }));
   };
 
+
+  const handleBatchGenerate = async () => {
+    if (!batchTemplateKey || !batchFile) {
+      setError('Please select a batch template and upload a CSV file.');
+      return;
+    }
+
+    try {
+      setBatchGenerating(true);
+      setBatchStatus('Parsing CSV...');
+      setBatchPercent(2);
+
+      const response = await fetch('data/templates/report_designs.json');
+      if (!response.ok) throw new Error('Unable to load report designs JSON.');
+      const designData = (await response.json()) as ReportDesignFile;
+      const blueprint = designData.reports.find((report) => report.id === batchTemplateKey);
+      if (!blueprint) throw new Error('Selected batch template was not found.');
+
+      const { csvData, mappedBlueprint } = await parseCSVAndMap(batchFile, blueprint);
+      if (!csvData.length) throw new Error('CSV has no valid rows.');
+
+      const zip = new JSZip();
+      const totalRows = csvData.length;
+      let index = 0;
+      for (const row of csvData) {
+        setBatchStatus(`Generating ${index + 1} of ${totalRows}...`);
+        setBatchPercent(Math.round(((index + 1) / totalRows) * 92));
+
+        const blob = await renderBlueprintRowToPdfBlob(mappedBlueprint, row);
+        const rollNo = safeFilePart(row.roll_no ?? row.rollno, `row_${index + 1}`);
+        const name = safeFilePart(row.name, 'student');
+        zip.file(`${rollNo}_${name}.pdf`, blob);
+
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        index += 1;
+      }
+
+      setBatchStatus('Compressing Files...');
+      setBatchPercent(97);
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+      const url = URL.createObjectURL(zipBlob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'Batch_Reports.zip';
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+
+      setBatchStatus('Complete!');
+      setBatchPercent(100);
+    } catch (err: unknown) {
+      setBatchStatus('Failed.');
+      setError(err instanceof Error ? err.message : 'Batch generation failed.');
+    } finally {
+      setBatchGenerating(false);
+    }
+  };
+
   const filteredCount = useMemo(() => {
     if (!selectedGrade) {
       return students.length;
@@ -364,6 +491,31 @@ export default function HomePage() {
             </div>
           )}
         </Step>
+
+        <Step
+          id="step-batch"
+          n={5}
+          title="CSV Blueprint Batch (Add-on)"
+          subtitle="Generate JSON-blueprint PDFs from CSV and download as one ZIP"
+          active={Boolean(batchTemplateKey || batchFile)}
+          done={batchStatus === 'Complete!'}
+          last
+        >
+          <div className="space-y-4">
+            <BatchTemplateSelector value={batchTemplateKey} onChange={setBatchTemplateKey} />
+            <BatchCsvUploader file={batchFile} onChange={setBatchFile} />
+            <button
+              type="button"
+              onClick={handleBatchGenerate}
+              disabled={batchGenerating}
+              className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 font-medium disabled:opacity-60"
+            >
+              {batchGenerating ? 'Generating ZIP...' : 'Generate Blueprint ZIP'}
+            </button>
+            <BatchProgressBar status={batchStatus} percentage={batchPercent} />
+          </div>
+        </Step>
+
       </div>
     </div>
   );
