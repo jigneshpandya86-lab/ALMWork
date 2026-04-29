@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  CsvRow,
   DesignBlockConfig,
   NarrativeTextBlockConfig,
   ReportBlueprint,
@@ -14,10 +15,10 @@ import StudentMetaBlock from './report-blocks/StudentMetaBlock';
 
 type MasterReportTemplateProps = {
   blueprint: ReportBlueprint;
-  parsedCsvData: Record<string, unknown>[];
+  parsedCsvData: CsvRow[];
 };
 
-function resolveRows(block: TableBlockConfig, parsedCsvData: Record<string, unknown>[]): Record<string, unknown>[] {
+function resolveRows(block: TableBlockConfig, parsedCsvData: CsvRow[]): CsvRow[] {
   if (block.rowSource === 'firstRow') {
     return parsedCsvData[0] ? [parsedCsvData[0]] : [];
   }
@@ -25,10 +26,10 @@ function resolveRows(block: TableBlockConfig, parsedCsvData: Record<string, unkn
   return parsedCsvData;
 }
 
-function resolveMetaRow(block: StudentMetaBlockConfig, parsedCsvData: Record<string, unknown>[]): Record<string, unknown> {
+function resolveMetaRow(block: StudentMetaBlockConfig, parsedCsvData: CsvRow[]): CsvRow {
   if (block.dataMode === 'allRows') {
     return {
-      recordCount: parsedCsvData.length,
+      recordCount: String(parsedCsvData.length),
     };
   }
 
@@ -39,7 +40,7 @@ function renderNarrativeBlock(block: NarrativeTextBlockConfig): JSX.Element {
   return <p className="text-sm leading-relaxed whitespace-pre-wrap">{block.text}</p>;
 }
 
-function renderDesignBlock(block: DesignBlockConfig, parsedCsvData: Record<string, unknown>[]): JSX.Element | null {
+function renderDesignBlock(block: DesignBlockConfig, parsedCsvData: CsvRow[]): JSX.Element | null {
   switch (block.type) {
     case 'header':
       return <SchoolHeaderBlock config={block.header} />;

@@ -108,6 +108,9 @@ export interface DownloadLinksProps {
   pdfs: GeneratedPDF[];
 }
 
+export type CsvCellValue = string | number | null | undefined;
+export type CsvRow = Record<string, CsvCellValue>;
+
 export interface DocumentHeaderConfig {
   line1: string;
   line2?: string;

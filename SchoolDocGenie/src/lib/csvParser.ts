@@ -1,4 +1,6 @@
 import {
+  CsvCellValue,
+  CsvRow,
   ReportBlueprint,
   TableBlockConfig,
   TableColumnDef,
@@ -7,8 +9,8 @@ import {
 import { calculatePercentage, getGradePoint } from './utils';
 import * as XLSX from 'xlsx';
 
-type RowValue = string | number | null | undefined;
-type ParsedRow = Record<string, RowValue>;
+type RowValue = CsvCellValue;
+type ParsedRow = CsvRow;
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');

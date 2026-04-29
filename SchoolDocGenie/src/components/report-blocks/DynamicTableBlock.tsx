@@ -1,9 +1,9 @@
 import React from 'react';
-import { TableColumnDef } from '@/types';
+import { CsvRow, TableColumnDef } from '@/types';
 
 type DynamicTableBlockProps = {
   columns: TableColumnDef[];
-  rowData: Record<string, unknown>[];
+  rowData: CsvRow[];
   title?: string;
 };
 

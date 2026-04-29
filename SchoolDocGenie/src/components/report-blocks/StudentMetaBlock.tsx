@@ -1,9 +1,9 @@
 import React from 'react';
-import { StudentMetaFieldDef } from '@/types';
+import { CsvRow, StudentMetaFieldDef } from '@/types';
 
 type StudentMetaBlockProps = {
   fields: StudentMetaFieldDef[];
-  rowData?: Record<string, unknown>;
+  rowData?: CsvRow;
   title?: string;
 };
 
