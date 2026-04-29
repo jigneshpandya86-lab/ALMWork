@@ -107,3 +107,71 @@ export interface ProgressBarProps {
 export interface DownloadLinksProps {
   pdfs: GeneratedPDF[];
 }
+
+export interface DocumentHeaderConfig {
+  line1: string;
+  line2?: string;
+  line3?: string;
+  line4?: string;
+}
+
+export type BlockType = 'header' | 'studentMeta' | 'table' | 'signatures' | 'narrativeText';
+
+export interface BaseBlockConfig {
+  id: string;
+  type: BlockType;
+  className?: string;
+}
+
+export interface TableColumnDef {
+  label: string;
+  csvColumn: string;
+}
+
+export interface StudentMetaFieldDef {
+  label: string;
+  csvKey: string;
+}
+
+export interface HeaderBlockConfig extends BaseBlockConfig {
+  type: 'header';
+  header: DocumentHeaderConfig;
+}
+
+export interface StudentMetaBlockConfig extends BaseBlockConfig {
+  type: 'studentMeta';
+  fields: StudentMetaFieldDef[];
+  title?: string;
+  dataMode?: 'firstRow' | 'allRows';
+}
+
+export interface TableBlockConfig extends BaseBlockConfig {
+  type: 'table';
+  title?: string;
+  columns?: TableColumnDef[];
+  rowSource?: 'allRows' | 'firstRow';
+}
+
+export interface SignatureBlockConfig extends BaseBlockConfig {
+  type: 'signatures';
+  labels: string[];
+}
+
+export interface NarrativeTextBlockConfig extends BaseBlockConfig {
+  type: 'narrativeText';
+  text: string;
+}
+
+export type DesignBlockConfig =
+  | HeaderBlockConfig
+  | StudentMetaBlockConfig
+  | TableBlockConfig
+  | SignatureBlockConfig
+  | NarrativeTextBlockConfig;
+
+export interface ReportBlueprint {
+  id: string;
+  name: string;
+  layout: 'portrait' | 'landscape';
+  designBlocks: DesignBlockConfig[];
+}
