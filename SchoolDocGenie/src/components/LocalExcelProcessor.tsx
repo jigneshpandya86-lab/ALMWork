@@ -2,7 +2,7 @@
 
 import React, { ChangeEvent, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 
 type MappingField = {
@@ -13,8 +13,23 @@ type MappingField = {
   y: number;
 };
 
+type PickerAcceptType = {
+  description?: string;
+  accept: Record<string, string[]>;
+};
+
+type PickerOptions = {
+  types?: PickerAcceptType[];
+  excludeAcceptAllOption?: boolean;
+  multiple?: boolean;
+};
+
+type PickerHandle = {
+  getFile: () => Promise<File>;
+};
+
 type PickerWindow = Window & {
-  showOpenFilePicker?: (options?: OpenFilePickerOptions) => Promise<FileSystemFileHandle[]>;
+  showOpenFilePicker?: (options?: PickerOptions) => Promise<PickerHandle[]>;
 };
 
 const DEFAULT_FIELD = (): MappingField => ({
@@ -159,13 +174,20 @@ const LocalExcelProcessor: React.FC = () => {
       if (!sheet) throw new Error('Selected worksheet does not exist.');
 
       for (let rowNumber = startRow; rowNumber <= endRow; rowNumber += 1) {
-        const pdfDoc = await PDFDocument.load(pdfTemplateBytes);
-        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-        const page = pdfDoc.getPages()[0];
+        const templateBlob = new Blob([pdfTemplateBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+        const templateDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error('Failed to read PDF template.'));
+          reader.readAsDataURL(templateBlob);
+        });
 
-        if (!page) {
-          throw new Error('PDF template has no pages.');
-        }
+        const pdfDoc = new jsPDF();
+        pdfDoc.addPage();
+        pdfDoc.setPage(1);
+        pdfDoc.addImage(templateDataUrl, 'PDF', 0, 0, 210, 297);
+        pdfDoc.setFont('helvetica', 'normal');
+        pdfDoc.setFontSize(11);
 
         const valuesForRow: Record<string, string> = {};
 
@@ -180,18 +202,12 @@ const LocalExcelProcessor: React.FC = () => {
           }
 
           valuesForRow[field.fieldName] = value;
-          page.drawText(value || 'N/A', {
-            x: field.x,
-            y: field.y,
-            size: 11,
-            font,
-            color: rgb(0, 0, 0),
-          });
+          pdfDoc.text(value || 'N/A', field.x, field.y);
         }
 
         const primaryName = fields[0]?.fieldName ? valuesForRow[fields[0].fieldName] : '';
         const fileName = `${sanitizeFileName(primaryName || `Row_${rowNumber}`)}_Certificate.pdf`;
-        const pdfBytes = await pdfDoc.save();
+        const pdfBytes = pdfDoc.output('arraybuffer');
         zip.file(fileName, pdfBytes);
       }
 
