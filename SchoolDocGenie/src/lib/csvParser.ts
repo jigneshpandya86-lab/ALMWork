@@ -1,4 +1,9 @@
-import { Student } from '@/types';
+import {
+  ReportBlueprint,
+  TableBlockConfig,
+  TableColumnDef,
+  Student,
+} from '@/types';
 import { calculatePercentage, getGradePoint } from './utils';
 import * as XLSX from 'xlsx';
 
@@ -76,6 +81,47 @@ export async function parseExcel(file: File): Promise<Student[]> {
   } catch (error) {
     throw new Error(`Unable to parse Excel file: ${(error as Error).message}`);
   }
+}
+
+export function extractDynamicColumns(csvData: ParsedRow[]): TableColumnDef[] {
+  const firstRow = csvData[0];
+  if (!firstRow) {
+    return [];
+  }
+
+  return Object.keys(firstRow).map((key) => ({
+    label: key,
+    csvColumn: key,
+  }));
+}
+
+export async function parseCSVAndMap(file: File, reportBlueprint: ReportBlueprint): Promise<{
+  csvData: ParsedRow[];
+  mappedBlueprint: ReportBlueprint;
+}> {
+  const csvText = await file.text();
+  const csvData = parseCSVText(csvText);
+
+  const mappedBlueprint: ReportBlueprint = {
+    ...reportBlueprint,
+    designBlocks: reportBlueprint.designBlocks.map((block) => {
+      if (block.type !== 'table') {
+        return block;
+      }
+
+      if (block.columns && block.columns.length > 0) {
+        return block;
+      }
+
+      const resolvedColumns = extractDynamicColumns(csvData);
+      return {
+        ...(block as TableBlockConfig),
+        columns: resolvedColumns,
+      };
+    }),
+  };
+
+  return { csvData, mappedBlueprint };
 }
 
 function parseMarks(row: ParsedRow): { [subject: string]: number } {
@@ -156,7 +202,7 @@ export function generateSampleCSV(): string {
 
   const csvContent = [
     headers.join(','),
-    ...sampleData.map(row => row.map(cell => `"${cell}"`).join(',')),
+    ...sampleData.map((row) => row.map((cell) => `"${cell}"`).join(',')),
   ].join('\n');
 
   return csvContent;
