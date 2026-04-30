@@ -140,6 +140,7 @@ type PaSheetTemplateProps = {
 
 export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subject, standard }) => {
   const TOTAL_COLUMNS = 26;
+  const ROWS_PER_PAGE = 28;
   type MergedHeaderCell = {
     content: string;
     rowSpan?: number;
@@ -185,62 +186,75 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
     ],
   ];
 
+  const pages = students.length > 0
+    ? Array.from({ length: Math.ceil(students.length / ROWS_PER_PAGE) }, (_, pageIndex) =>
+        students.slice(pageIndex * ROWS_PER_PAGE, (pageIndex + 1) * ROWS_PER_PAGE)
+      )
+    : [[]];
+
   return (
-    <div className="w-[1400px] min-h-[900px] bg-white p-4" style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}>
-      <table className="w-full border-collapse text-[10px] table-fixed">
-        <colgroup>
-          <col style={{ width: '44px' }} />
-          <col style={{ width: '260px' }} />
-          {Array.from({ length: TOTAL_COLUMNS - 2 }, (_, i) => (
-            <col key={`pa-col-${i}`} />
-          ))}
-        </colgroup>
-        <thead>
-          <tr>
-            <th className="border border-slate-400 px-2 py-1 text-left" colSpan={TOTAL_COLUMNS}>
-              ધનતેજ પ્રાથમિક શાળા તા. સાવલી &nbsp;&nbsp;&nbsp; ૫ત્રક : A &nbsp;&nbsp;&nbsp; સને : 2025-26
-            </th>
-          </tr>
-          <tr>
-            <th className="border border-slate-400 px-2 py-1 text-left" colSpan={TOTAL_COLUMNS}>
-              રચાનાત્મક મુલ્યાંક્ન પત્રક &nbsp;&nbsp;&nbsp; વિષય- {subject} &nbsp;&nbsp;&nbsp; ધોરણ -{standard} &nbsp;&nbsp;&nbsp; (પ્રથમ સત્ર)
-            </th>
-          </tr>
-          {mergedTableHeaders.map((headerRow, rowIndex) => (
-            <tr key={`pa-head-${rowIndex}`}>
-              {headerRow.map((cell, cellIndex) => (
-                <th
-                  key={`pa-head-${rowIndex}-${cellIndex}`}
-                  rowSpan={cell.rowSpan}
-                  colSpan={cell.colSpan}
-                  className={`border border-slate-400 px-1 text-center align-middle ${
-                    rowIndex === 1 ? 'py-2 text-[9px] whitespace-normal break-words leading-tight min-w-[44px]' : 'py-1'
-                  }`}
-                >
-                  {cell.content}
+    <div className="w-[1400px] bg-white" style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}>
+      {pages.map((pageRows, pageIndex) => (
+        <section key={`pa-page-${pageIndex}`} data-pdf-page="true" className="w-[1400px] min-h-[900px] p-4">
+          <table className="w-full border-collapse text-[10px] table-fixed">
+            <colgroup>
+              <col style={{ width: '44px' }} />
+              <col style={{ width: '260px' }} />
+              {Array.from({ length: TOTAL_COLUMNS - 2 }, (_, i) => (
+                <col key={`pa-col-${pageIndex}-${i}`} />
+              ))}
+            </colgroup>
+            <thead>
+              <tr>
+                <th className="border border-slate-400 px-2 py-1 text-left" colSpan={TOTAL_COLUMNS}>
+                  ધનતેજ પ્રાથમિક શાળા તા. સાવલી &nbsp;&nbsp;&nbsp; ૫ત્રક : A &nbsp;&nbsp;&nbsp; સને : 2025-26
                 </th>
+              </tr>
+              <tr>
+                <th className="border border-slate-400 px-2 py-1 text-left" colSpan={TOTAL_COLUMNS}>
+                  રચાનાત્મક મુલ્યાંક્ન પત્રક &nbsp;&nbsp;&nbsp; વિષય- {subject} &nbsp;&nbsp;&nbsp; ધોરણ -{standard} &nbsp;&nbsp;&nbsp; (પ્રથમ સત્ર)
+                </th>
+              </tr>
+              {mergedTableHeaders.map((headerRow, rowIndex) => (
+                <tr key={`pa-head-${pageIndex}-${rowIndex}`}>
+                  {headerRow.map((cell, cellIndex) => (
+                    <th
+                      key={`pa-head-${pageIndex}-${rowIndex}-${cellIndex}`}
+                      rowSpan={cell.rowSpan}
+                      colSpan={cell.colSpan}
+                      className={`border border-slate-400 px-1 text-center align-middle ${
+                        rowIndex === 1 ? 'py-2 text-[9px] whitespace-normal break-words leading-tight min-w-[44px]' : 'py-1'
+                      }`}
+                    >
+                      {cell.content}
+                    </th>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {students.map((student, index) => (
-            <tr key={student.id}>
-              <td className="border border-slate-400 px-1 py-1 text-center">{index + 1}</td>
-              <td className="border border-slate-400 px-4 py-1 text-left whitespace-nowrap">
-                {student.nameGujarati || student.name}
-              </td>
-              {Array.from({ length: 20 }, (_, i) => (
-                <td key={`${student.id}-score-${i}`} className="border border-slate-400 px-1 py-1" />
-              ))}
-              <td className="border border-slate-400 px-1 py-1" />
-              <td className="border border-slate-400 px-1 py-1" />
-              <td className="border border-slate-400 px-1 py-1" />
-              <td className="border border-slate-400 px-1 py-1" />
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {pageRows.map((student, rowIndex) => {
+                const serialNumber = pageIndex * ROWS_PER_PAGE + rowIndex + 1;
+                return (
+                  <tr key={`${student.id}-${pageIndex}`}>
+                    <td className="border border-slate-400 px-1 py-1 text-center">{serialNumber}</td>
+                    <td className="border border-slate-400 px-4 py-1 text-left whitespace-nowrap">
+                      {student.nameGujarati || student.name}
+                    </td>
+                    {Array.from({ length: 20 }, (_, i) => (
+                      <td key={`${student.id}-score-${i}`} className="border border-slate-400 px-1 py-1" />
+                    ))}
+                    <td className="border border-slate-400 px-1 py-1" />
+                    <td className="border border-slate-400 px-1 py-1" />
+                    <td className="border border-slate-400 px-1 py-1" />
+                    <td className="border border-slate-400 px-1 py-1" />
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
+      ))}
     </div>
   );
 };
