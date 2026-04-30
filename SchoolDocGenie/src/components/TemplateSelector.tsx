@@ -122,6 +122,14 @@ const DOCS: {
 ];
 
 const GRADES = ['6', '7', '8'];
+const PA_GRADE_BY_DOC: Partial<Record<DocType, string>> = {
+  std6PaMathsAttendance: '6',
+  std6PaSciAttendance: '6',
+  std7PaMathsAttendance: '7',
+  std7PaSciAttendance: '7',
+  std8PaMathsAttendance: '8',
+  std8PaSciAttendance: '8',
+};
 
 export default function TemplateSelector({ onSelect, selectedDocType, selectedGrade }: TemplateSelectorProps) {
   return (
@@ -133,7 +141,7 @@ export default function TemplateSelector({ onSelect, selectedDocType, selectedGr
           {DOCS.map((d) => {
             const active = selectedDocType === d.id;
             return (
-              <button key={d.id} onClick={() => onSelect(d.id, selectedGrade ?? '6')}
+              <button key={d.id} onClick={() => onSelect(d.id, PA_GRADE_BY_DOC[d.id] ?? selectedGrade ?? '6')}
                 className="text-left rounded-xl px-3 py-2.5 transition-all duration-200 group"
                 style={{
                   border: active ? `2px solid ${d.textColor}` : '2px solid rgba(226,232,240,0.8)',
