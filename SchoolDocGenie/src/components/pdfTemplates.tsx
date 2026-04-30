@@ -195,7 +195,7 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
   return (
     <div className="w-[1400px] bg-white" style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}>
       {pages.map((pageRows, pageIndex) => (
-        <section key={`pa-page-${pageIndex}`} data-pdf-page="true" className="w-[1400px] min-h-[900px] p-4">
+        <section key={`pa-page-${pageIndex}`} data-pdf-page="true" className="w-[1400px] min-h-[900px] px-4 pt-8 pb-8">
           <table className="w-full border-collapse text-[10px] table-fixed">
             <colgroup>
               <col style={{ width: '44px' }} />
