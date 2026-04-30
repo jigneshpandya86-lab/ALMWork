@@ -27,14 +27,22 @@ export function formatDate(dateStr: string): string {
 
 export function generateFileName(student: Student, docType: string): string {
   const safeName = student.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-  const docLabel =
-    docType === 'marksheet'
+  const paFileLabelMap: Record<string, string> = {
+    std6PaMathsAttendance: 'Std6PAMaths',
+    std6PaSciAttendance: 'Std6PAScience',
+    std7PaMathsAttendance: 'Std7PAMaths',
+    std7PaSciAttendance: 'Std7PAScience',
+    std8PaMathsAttendance: 'Std8PAMaths',
+    std8PaSciAttendance: 'Std8PAScience',
+  };
+  const docLabel = paFileLabelMap[docType]
+    ?? (docType === 'marksheet'
       ? 'Marksheet'
       : docType === 'leavingCert'
       ? 'LeavingCert'
       : docType === 'attendanceRegister'
       ? 'Attendance'
-      : 'PeriodicEval';
+      : 'PeriodicEval');
   return `${safeName}_Grade${student.grade}_${docLabel}.pdf`;
 }
 
