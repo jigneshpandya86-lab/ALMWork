@@ -133,12 +133,12 @@ export const PeriodicEvalTemplate: React.FC<BaseTemplateProps> = ({ student, rem
 
 
 type PaSheetTemplateProps = {
-  student: Student;
+  students: Student[];
   subject: 'ગણિત' | 'વિજ્ઞાન';
   standard: '૬' | '૭' | '૮';
 };
 
-export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ student, subject, standard }) => {
+export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subject, standard }) => {
   const TOTAL_COLUMNS = 26;
   type MergedHeaderCell = {
     content: string;
@@ -186,7 +186,7 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ student, subje
   ];
 
   return (
-    <div className="w-[1123px] min-h-[794px] bg-white p-4" style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}>
+    <div className="w-[1400px] min-h-[900px] bg-white p-4" style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}>
       <table className="w-full border-collapse text-[10px] table-fixed">
         <thead>
           <tr>
@@ -213,6 +213,23 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ student, subje
                   {cell.content}
                 </th>
               ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {students.map((student, index) => (
+            <tr key={student.id}>
+              <td className="border border-slate-400 px-1 py-1 text-center">{index + 1}</td>
+              <td className="border border-slate-400 px-3 py-1 text-left whitespace-nowrap min-w-[220px]">
+                {student.nameGujarati || student.name}
+              </td>
+              {Array.from({ length: 20 }, (_, i) => (
+                <td key={`${student.id}-score-${i}`} className="border border-slate-400 px-1 py-1" />
+              ))}
+              <td className="border border-slate-400 px-1 py-1" />
+              <td className="border border-slate-400 px-1 py-1" />
+              <td className="border border-slate-400 px-1 py-1" />
+              <td className="border border-slate-400 px-1 py-1" />
             </tr>
           ))}
         </thead>

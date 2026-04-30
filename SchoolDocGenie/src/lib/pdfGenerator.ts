@@ -22,7 +22,11 @@ const SCHOOL = {
 
 type DocumentType = unknown;
 
-async function renderElementToPDFBlob(element: React.ReactElement, orientation: 'portrait' | 'landscape' = 'portrait'): Promise<Blob> {
+async function renderElementToPDFBlob(
+  element: React.ReactElement,
+  orientation: 'portrait' | 'landscape' = 'portrait',
+  format: 'a4' | 'a3' = 'a4'
+): Promise<Blob> {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     throw new Error('PDF generation requires a browser environment.');
   }
@@ -36,7 +40,7 @@ async function renderElementToPDFBlob(element: React.ReactElement, orientation: 
   container.style.top = '0';
   container.style.zIndex = '-1';
   container.style.background = '#fff';
-  container.style.width = orientation === 'portrait' ? '794px' : '1123px';
+  container.style.width = orientation === 'portrait' ? '794px' : format === 'a3' ? '1587px' : '1123px';
 
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -54,7 +58,7 @@ async function renderElementToPDFBlob(element: React.ReactElement, orientation: 
     const pdf = new jsPDF({
       orientation,
       unit: 'mm',
-      format: 'a4',
+      format,
       compress: true,
     });
 
@@ -127,7 +131,7 @@ async function generatePeriodicEvalPDF(student: Student, remarks: string): Promi
 
 
 
-async function generatePASheetPDF(student: Student, docType: string): Promise<Blob> {
+async function generatePASheetPDF(students: Student[], docType: string): Promise<Blob> {
   const config: Record<string, { subject: 'ગણિત' | 'વિજ્ઞાન'; standard: '૬' | '૭' | '૮' }> = {
     std6PaMathsAttendance: { subject: 'ગણિત', standard: '૬' },
     std6PaSciAttendance: { subject: 'વિજ્ઞાન', standard: '૬' },
@@ -137,7 +141,7 @@ async function generatePASheetPDF(student: Student, docType: string): Promise<Bl
     std8PaSciAttendance: { subject: 'વિજ્ઞાન', standard: '૮' },
   };
   const selected = config[docType] ?? config.std6PaMathsAttendance;
-  return renderElementToPDFBlob(React.createElement(PASheetTemplate, { student, ...selected }), 'landscape');
+  return renderElementToPDFBlob(React.createElement(PASheetTemplate, { students, ...selected }), 'landscape', 'a3');
 }
 
 async function generateSingleStudentAttendancePDF(student: Student, attendance: string): Promise<Blob> {
@@ -184,7 +188,7 @@ export async function generatePDF(student: Student, remarks: string, docType: st
     'std7PaSciAttendance',
     'std8PaMathsAttendance',
     'std8PaSciAttendance',
-  ].includes(docType)) return generatePASheetPDF(student, docType);
+  ].includes(docType)) return generatePASheetPDF([student], docType);
   return generatePeriodicEvalPDF(student, remarks);
 }
 
@@ -215,6 +219,26 @@ export async function generateMultiplePDFs(
       size: blob.size,
     });
 
+    return results;
+  }
+  if ([
+    'std6PaMathsAttendance',
+    'std6PaSciAttendance',
+    'std7PaMathsAttendance',
+    'std7PaSciAttendance',
+    'std8PaMathsAttendance',
+    'std8PaSciAttendance',
+  ].includes(docType)) {
+    onProgress?.(1, 1, `Grade ${grade ?? students[0]?.grade ?? ''} PA Sheet`);
+    const blob = await generatePASheetPDF(students, docType);
+    const gradeValue = grade ?? students[0]?.grade ?? 'NA';
+    results.push({
+      studentId: `Grade${gradeValue}`,
+      studentName: `Grade ${gradeValue} PA Sheet`,
+      filename: `Grade${gradeValue}_${docType}.pdf`,
+      blob,
+      size: blob.size,
+    });
     return results;
   }
 
