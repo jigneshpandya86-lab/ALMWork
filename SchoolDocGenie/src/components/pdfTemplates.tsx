@@ -133,11 +133,12 @@ export const PeriodicEvalTemplate: React.FC<BaseTemplateProps> = ({ student, rem
 
 
 type PaSheetTemplateProps = {
+  student: Student;
   subject: 'ગણિત' | 'વિજ્ઞાન';
   standard: '૬' | '૭' | '૮';
 };
 
-export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ subject, standard }) => {
+export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ student, subject, standard }) => {
   const TOTAL_COLUMNS = 26;
   type MergedHeaderCell = {
     content: string;
@@ -215,7 +216,19 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ subject, stand
             </tr>
           ))}
         </thead>
-        <tbody />
+        <tbody>
+          <tr>
+            <td className="border border-slate-400 px-1 py-1 text-center">1</td>
+            <td className="border border-slate-400 px-2 py-1 text-left whitespace-nowrap">{student.nameGujarati || student.name}</td>
+            {Array.from({ length: 20 }, (_, i) => (
+              <td key={`score-${i}`} className="border border-slate-400 px-1 py-1" />
+            ))}
+            <td className="border border-slate-400 px-1 py-1" />
+            <td className="border border-slate-400 px-1 py-1" />
+            <td className="border border-slate-400 px-1 py-1" />
+            <td className="border border-slate-400 px-1 py-1" />
+          </tr>
+        </tbody>
       </table>
     </div>
   );
