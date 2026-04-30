@@ -65,7 +65,7 @@ export function injectRandomMarksForPrint(
   blockCount: number = 20
 ): Array<Student & { assessmentMarks: Record<string, '✓' | '×'> }> {
   return students.map((student) => {
-    const successRate = Math.random() * (0.9 - 0.7) + 0.7;
+    const successRate = Math.min(1, Math.random() * (1.0 - 0.8) + 0.8);
     const assessmentMarks: Record<string, '✓' | '×'> = {};
 
     for (let block = 1; block <= blockCount; block += 1) {
