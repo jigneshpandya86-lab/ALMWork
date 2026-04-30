@@ -7,6 +7,7 @@ import {
   LeavingCertTemplate,
   MarksheetTemplate,
   PeriodicEvalTemplate,
+  PASheetTemplate,
 } from '@/components/pdfTemplates';
 
 const SCHOOL = {
@@ -124,6 +125,21 @@ async function generatePeriodicEvalPDF(student: Student, remarks: string): Promi
   return renderElementToPDFBlob(React.createElement(PeriodicEvalTemplate, { student, remarks, school: SCHOOL }));
 }
 
+
+
+async function generatePASheetPDF(docType: string): Promise<Blob> {
+  const config: Record<string, { subject: 'ગણિત' | 'વિજ્ઞાન'; standard: '૬' | '૭' | '૮' }> = {
+    std6PaMathsAttendance: { subject: 'ગણિત', standard: '૬' },
+    std6PaSciAttendance: { subject: 'વિજ્ઞાન', standard: '૬' },
+    std7PaMathsAttendance: { subject: 'ગણિત', standard: '૭' },
+    std7PaSciAttendance: { subject: 'વિજ્ઞાન', standard: '૭' },
+    std8PaMathsAttendance: { subject: 'ગણિત', standard: '૮' },
+    std8PaSciAttendance: { subject: 'વિજ્ઞાન', standard: '૮' },
+  };
+  const selected = config[docType] ?? config.std6PaMathsAttendance;
+  return renderElementToPDFBlob(React.createElement(PASheetTemplate, selected), 'landscape');
+}
+
 async function generateSingleStudentAttendancePDF(student: Student, attendance: string): Promise<Blob> {
   const days = Array.from({ length: 30 }, () => true);
   const attendanceMap = new Map<string, { month: number; year: number; days: boolean[] }>([
@@ -161,6 +177,14 @@ export async function generatePDF(student: Student, remarks: string, docType: st
   if (docType === 'marksheet') return generateMarksheetPDF(student, remarks);
   if (docType === 'leavingCert') return generateLeavingCertPDF(student, remarks);
   if (docType === 'attendanceRegister') return generateSingleStudentAttendancePDF(student, remarks);
+  if ([
+    'std6PaMathsAttendance',
+    'std6PaSciAttendance',
+    'std7PaMathsAttendance',
+    'std7PaSciAttendance',
+    'std8PaMathsAttendance',
+    'std8PaSciAttendance',
+  ].includes(docType)) return generatePASheetPDF(docType);
   return generatePeriodicEvalPDF(student, remarks);
 }
 
