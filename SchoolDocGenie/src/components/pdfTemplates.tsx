@@ -140,7 +140,7 @@ type PaSheetTemplateProps = {
 
 export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subject, standard }) => {
   const TOTAL_COLUMNS = 26;
-  const ROWS_PER_PAGE = 28;
+  const ROWS_PER_PAGE = 27;
   type MergedHeaderCell = {
     content: string;
     rowSpan?: number;
