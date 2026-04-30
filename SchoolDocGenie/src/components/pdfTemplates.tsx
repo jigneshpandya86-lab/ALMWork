@@ -232,6 +232,19 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
               <td className="border border-slate-400 px-1 py-1" />
             </tr>
           ))}
+        </thead>
+        <tbody>
+          <tr>
+            <td className="border border-slate-400 px-1 py-1 text-center">1</td>
+            <td className="border border-slate-400 px-2 py-1 text-left whitespace-nowrap">{student.nameGujarati || student.name}</td>
+            {Array.from({ length: 20 }, (_, i) => (
+              <td key={`score-${i}`} className="border border-slate-400 px-1 py-1" />
+            ))}
+            <td className="border border-slate-400 px-1 py-1" />
+            <td className="border border-slate-400 px-1 py-1" />
+            <td className="border border-slate-400 px-1 py-1" />
+            <td className="border border-slate-400 px-1 py-1" />
+          </tr>
         </tbody>
       </table>
     </div>
