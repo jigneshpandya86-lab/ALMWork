@@ -139,7 +139,12 @@ type PaSheetTemplateProps = {
 
 export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ subject, standard }) => {
   const TOTAL_COLUMNS = 26;
-  const mergedTableHeaders = [
+  type MergedHeaderCell = {
+    content: string;
+    rowSpan?: number;
+    colSpan?: number;
+  };
+  const mergedTableHeaders: MergedHeaderCell[][] = [
     [
       { content: 'અ.નં.', rowSpan: 3 },
       { content: 'વિદ્યાર્થીનું નામ', rowSpan: 3 },
