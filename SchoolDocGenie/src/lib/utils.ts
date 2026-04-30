@@ -59,3 +59,22 @@ export function subjectLabel(key: string): string {
   };
   return map[key] ?? key.charAt(0).toUpperCase() + key.slice(1);
 }
+
+export function injectRandomMarksForPrint(
+  students: Student[],
+  blockCount: number = 20
+): Array<Student & { assessmentMarks: Record<string, '✓' | '×'> }> {
+  return students.map((student) => {
+    const successRate = Math.min(1, Math.random() * (1.0 - 0.8) + 0.8);
+    const assessmentMarks: Record<string, '✓' | '×'> = {};
+
+    for (let block = 1; block <= blockCount; block += 1) {
+      assessmentMarks[`block${block}`] = Math.random() < successRate ? '✓' : '×';
+    }
+
+    return {
+      ...student,
+      assessmentMarks,
+    };
+  });
+}
