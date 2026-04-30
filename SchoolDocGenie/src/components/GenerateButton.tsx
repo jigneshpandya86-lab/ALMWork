@@ -67,6 +67,12 @@ export default function GenerateButton({
   const docLabel = docType === 'marksheet' ? 'Marksheets'
     : docType === 'leavingCert' ? 'Leaving Certificates'
     : docType === 'attendanceRegister' ? 'Attendance Registers'
+    : docType === 'std6PaMathsAttendance' ? 'STD6 PA Maths Sheets'
+    : docType === 'std6PaSciAttendance' ? 'STD6 PA Science Sheets'
+    : docType === 'std7PaMathsAttendance' ? 'STD7 PA Maths Sheets'
+    : docType === 'std7PaSciAttendance' ? 'STD7 PA Science Sheets'
+    : docType === 'std8PaMathsAttendance' ? 'STD8 PA Maths Sheets'
+    : docType === 'std8PaSciAttendance' ? 'STD8 PA Science Sheets'
     : 'Evaluation Reports';
 
   return (
