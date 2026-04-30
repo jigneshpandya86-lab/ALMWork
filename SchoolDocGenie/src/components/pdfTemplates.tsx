@@ -408,19 +408,26 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
             <tbody>
               {pageRows.map((student, rowIndex) => {
                 const serialNumber = pageIndex * ROWS_PER_PAGE + rowIndex + 1;
+                const marks = student.assessmentMarks ?? {};
+                const allMarks = Array.from({ length: 20 }, (_, i) => marks[`block${i + 1}`] ?? '×');
+                const totalChecks = allMarks.filter((mark) => mark === '✓').length;
+                const totalCrosses = allMarks.length - totalChecks;
+                const scoreOutOf40 = Math.round((totalChecks / allMarks.length) * 40);
                 return (
                   <tr key={`${student.id}-${pageIndex}`}>
                     <td className="border border-slate-400 px-1 py-1 text-center">{serialNumber}</td>
                     <td className="border border-slate-400 px-4 py-1 text-left whitespace-nowrap">
                       {student.nameGujarati || student.name}
                     </td>
-                    {Array.from({ length: 20 }, (_, i) => (
-                      <td key={`${student.id}-score-${i}`} className="border border-slate-400 px-1 py-1" />
+                    {allMarks.map((mark, i) => (
+                      <td key={`${student.id}-score-${i}`} className="border border-slate-400 px-1 py-1 text-center">
+                        {mark}
+                      </td>
                     ))}
-                    <td className="border border-slate-400 px-1 py-1" />
-                    <td className="border border-slate-400 px-1 py-1" />
-                    <td className="border border-slate-400 px-1 py-1" />
-                    <td className="border border-slate-400 px-1 py-1" />
+                    <td className="border border-slate-400 px-1 py-1 text-center">{totalChecks}</td>
+                    <td className="border border-slate-400 px-1 py-1 text-center">0</td>
+                    <td className="border border-slate-400 px-1 py-1 text-center">{totalCrosses}</td>
+                    <td className="border border-slate-400 px-1 py-1 text-center">{scoreOutOf40}</td>
                   </tr>
                 );
               })}

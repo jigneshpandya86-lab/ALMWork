@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Student, GeneratedPDF } from '@/types';
-import { generateFileName } from './utils';
+import { generateFileName, injectRandomMarksForPrint } from './utils';
 import {
   AttendanceTemplate,
   LeavingCertTemplate,
@@ -141,7 +141,12 @@ async function generatePASheetPDF(students: Student[], docType: string): Promise
     std8PaSciAttendance: { subject: 'વિજ્ઞાન', standard: '૮' },
   };
   const selected = config[docType] ?? config.std6PaMathsAttendance;
-  return renderElementToPDFBlob(React.createElement(PASheetTemplate, { students, ...selected }), 'landscape', 'a3');
+  const printableStudents = injectRandomMarksForPrint(students);
+  return renderElementToPDFBlob(
+    React.createElement(PASheetTemplate, { students: printableStudents, ...selected }),
+    'landscape',
+    'a3'
+  );
 }
 
 async function generateSingleStudentAttendancePDF(student: Student, attendance: string): Promise<Blob> {
