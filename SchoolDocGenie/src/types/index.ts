@@ -20,6 +20,7 @@ export interface Student {
   conduct: string;
   attendance: number;
   remarks?: string;
+  assessmentMarks?: Record<string, '✓' | '×'>;
 }
 
 export interface DocumentTemplate {
