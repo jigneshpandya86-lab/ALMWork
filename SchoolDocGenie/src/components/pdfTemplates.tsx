@@ -265,10 +265,52 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
       { content: '√' }, { content: '?' }, { content: '×' },
     ],
   ];
+  const grade8MathsHeader: MergedHeaderCell[][] = [
+    [
+      { content: 'અ.નં.', rowSpan: 3 },
+      { content: 'વિદ્યાર્થીનું નામ', rowSpan: 3 },
+      { content: 'સંમેય સંખ્યાઓ', colSpan: 3 },
+      { content: 'એક ચલ સુરેખ સમીકરણ', colSpan: 3 },
+      { content: 'ચતુષ્કોણની સમજ', colSpan: 3 },
+      { content: 'માહિતીનું નિયમન', colSpan: 4 },
+      { content: 'વર્ગ અને વર્ગમૂળ', colSpan: 4 },
+      { content: 'ઘન અને ઘનમૂળ', colSpan: 3 },
+      { content: 'સત્રાંતે વિદ્યાર્થીઓએ મેળવેલ જેતે નિશાનીઓની કુલ સંખ્યા', colSpan: 3, rowSpan: 2 },
+      { content: '૪૦ માંથી મેળવેલ ગુણ', rowSpan: 3 },
+    ],
+    [
+      { content: 'પેટર્ન / ઉદાહરણ દ્વારા સંમેય સંખ્યાઓના સ., બા., ગુ., ભાગાકાર વિશેના ગુણધર્મોનું સામાન્યીકરણ કરે છે.' },
+      { content: 'આપેલ સંખ્યાઓની વચ્ચે આવેલ શક્ય એટલી સંમેય સંખ્યાઓ શોધે છે' },
+      { content: 'સંમેય સંખ્યાનું સંખ્યારેખા પર નિરૂપણ કરે છે.' },
+      { content: 'એક બાજુ સુરેખ પદાવલી અને બીજી બાજુ સંખ્યા હોય તેવા સમીકરણનો ઉકેલ મેળવે છે.' },
+      { content: 'બંને બાજુ ચલ હોય તેવા સમીકરણનો ઉકેલ મેળવે છે' },
+      { content: 'સમીકરણનો સરળ સ્વરૂપમાં રૂપાંતર કરી ઉકેલ મેળવે છે' },
+      { content: 'બહુકોણને ઓળખે છે.' },
+      { content: 'બહુકોણના વિકર્ણ ની સંખ્યા જણાવે છે' },
+      { content: 'બહુકોણના ખૂણાના સરવાળા નો ગુણધર્મ નો ઉપયોગ કરે છે' },
+      { content: 'આપેલ માહિતીના આધારે આવૃત્તિ વિતરણ કોષ્ટક તૈયાર કરે છે' },
+      { content: 'આપેલ માહિતી પરથી આલેખ દોરે છે' },
+      { content: 'આપેલ સ્તંભ આલેખ નું વાંચન કરી અર્થઘટન કરે છે' },
+      { content: 'આપેલ માહિતી પરથી વર્તુળ આલેખ દોરે છે' },
+      { content: 'વર્ગસંખ્યા અને તેની વિવિધ લાક્ષણિકતાઓ જણાવે છે.' },
+      { content: 'અવિભાજ્ય અવયવીકરણ ની મદદથી વર્ગમૂળ શોધે છે' },
+      { content: 'ભાગાકાર ની રીતે વર્ગમૂળ શોધે છે' },
+      { content: 'સંખ્યાના વર્ગમૂળનું અનુમાન કરે છે.' },
+      { content: 'ઘન સંખ્યા અને તેની વિવિધ લાક્ષણિકતાઓ જણાવે છે.' },
+      { content: 'અવિભાજ્ય અવયવીકરણની મદદથી ઘનમૂળ શોધી શકે છે.' },
+      { content: 'અનુમાન ની રીતે ઘનમૂળ શોધે છે' },
+    ],
+    [
+      ...Array.from({ length: 20 }, (_, i) => ({ content: String(i + 1) })),
+      { content: '√' }, { content: '?' }, { content: '×' },
+    ],
+  ];
   const activeHeaders = standard === '૭' && subject === 'ગણિત'
     ? grade7MathsHeader
     : standard === '૭' && subject === 'વિજ્ઞાન'
       ? grade7ScienceHeader
+      : standard === '૮' && subject === 'ગણિત'
+        ? grade8MathsHeader
       : mergedTableHeaders;
 
   const pages = students.length > 0
