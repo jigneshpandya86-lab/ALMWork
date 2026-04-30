@@ -127,7 +127,7 @@ async function generatePeriodicEvalPDF(student: Student, remarks: string): Promi
 
 
 
-async function generatePASheetPDF(docType: string): Promise<Blob> {
+async function generatePASheetPDF(student: Student, docType: string): Promise<Blob> {
   const config: Record<string, { subject: 'ગણિત' | 'વિજ્ઞાન'; standard: '૬' | '૭' | '૮' }> = {
     std6PaMathsAttendance: { subject: 'ગણિત', standard: '૬' },
     std6PaSciAttendance: { subject: 'વિજ્ઞાન', standard: '૬' },
@@ -137,7 +137,7 @@ async function generatePASheetPDF(docType: string): Promise<Blob> {
     std8PaSciAttendance: { subject: 'વિજ્ઞાન', standard: '૮' },
   };
   const selected = config[docType] ?? config.std6PaMathsAttendance;
-  return renderElementToPDFBlob(React.createElement(PASheetTemplate, selected), 'landscape');
+  return renderElementToPDFBlob(React.createElement(PASheetTemplate, { student, ...selected }), 'landscape');
 }
 
 async function generateSingleStudentAttendancePDF(student: Student, attendance: string): Promise<Blob> {
@@ -184,7 +184,7 @@ export async function generatePDF(student: Student, remarks: string, docType: st
     'std7PaSciAttendance',
     'std8PaMathsAttendance',
     'std8PaSciAttendance',
-  ].includes(docType)) return generatePASheetPDF(docType);
+  ].includes(docType)) return generatePASheetPDF(student, docType);
   return generatePeriodicEvalPDF(student, remarks);
 }
 
