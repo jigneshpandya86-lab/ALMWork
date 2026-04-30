@@ -133,54 +133,110 @@ export const PeriodicEvalTemplate: React.FC<BaseTemplateProps> = ({ student, rem
 
 
 type PaSheetTemplateProps = {
+  students: Student[];
   subject: 'ગણિત' | 'વિજ્ઞાન';
   standard: '૬' | '૭' | '૮';
 };
 
-export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ subject, standard }) => {
-  const row1 = ['ધનતેજ પ્રાથમિક શાળા             તા. સાવલી                      ૫ત્રક : A', ...Array(19).fill(''), 'સને :', '', '', '2025-26', '', ''];
-  const row2 = [`રચાનાત્મક મુલ્યાંક્ન પત્રક                        વિષય- ${subject}               ધોરણ -${standard}         (પ્રથમ સત્ર)             `, ...Array(25).fill('')];
-  const row3 = ['અ.નં.', 'વિધાર્થીનું નામ', 'સંખ્યા પરિચય', '', '', '', 'પૂર્ણ સંખ્યાઓ', '', '', '', 'સંખ્યા સાથે રમત અને ભૂમિતિના પાયાના ખ્યાલો', '', '', '', 'પાયાના આકારોની સમજૂતિ', '', '', '', 'પૂર્ણાંક સંખ્યાઓ', '', '', '', 'સત્રાંતે વિદ્યાર્થીઓએ મેળવેલ જેતે નિશાનીઓની કુલ સંખ્યા ', '', '', '૪૦ માંથી મેળવેલ ગુણ'];
-  const row4 = [
-    '', '',
-    'યોગ્ય પ્રક્રિયાના ( ભા.ગુ.સ.બા.) ઉપયોગ દ્વારા મોટી સંખ્યાના દાખલા ઉકેલે છે.',
-    'આપેલ અંકો પરથી સંખ્યા બનાવે છે ',
-    '100000  સુધીની સંખ્યાઓ સમજે છે  તેમજ અંકોમાં અને સબ્દોમાં લખે છે',
-    'આસન્ન મુલ્ય દ્વારા નજીકના દસકનો સોનો હજારનો અંદાજ કાઢે છે',
-    'પૂર્ણ સંખ્યા સાથે કામ કરે છે.',
-    'આપેલ પૂર્ણસંખ્યાની પહેલાની સંખ્યા અને પછીની સંખ્યા લખે છે',
-    'સંખ્યારેખા પર સંખ્યાનું નિરૂપણ તેમજ  સંખ્યાઓના સરવાળા , બાદબાકી અને ગુણાકાર કરે છે',
-    'પૂર્ણ સંખ્યા વિશેના સરવાળા અને ગુણાકાર ના ગુણધર્મો જણાવે છે તેમજ ગુણધર્મ નો ઉપયોગ કરી ગણતરી કરે છે ',
-    'પેટર્ન દ્વારા એકી, બેકી, વિભાજ્ય, અવિભાજ્ય અને સહ અવિભાજ્ય સંખ્યાઓને ઓળખે છે.',
-    'આપેલ સંખ્યા અવિભાજ્ય છે કે વિભાજ્ય તે કહે છે.',
-    '2,3,4,5,6,8,9,10 અને  11 ની વિભાજ્યતાની ચાવી નો ઉપયોગ કરી  વિભાજ્યતા ચકાસે છે ',
-    'વિભાજ્યતાના નિયમનો ઉપયોગ કરે છે',
-    'ત્રિકોણને તેના ખુણા/બાજુઓના આધારે વિવિધ જૂથ/પ્રકારોમાં વર્ગીકૃત કરે છે.',
-    'બાજુઓના માપના આધારે ત્રિકોણ ના પ્રકાર જણાવે છે',
-    'ખૂણાઓના માપના આધારે ત્રિકોણ ના પ્રકાર જણાવે છે',
-    'ચતુષ્કોણને તેના ખુણા/બાજુઓના આધારે વિવિધ જૂથ/પ્રકારોમાં વહેંચે છે ',
-    'પૂર્ણાંક સંખ્યાઓને લગતા સરવાળા બાદબાકીના દાખલા ગણે છે. ',
-    'પૂર્ણાંક સંખ્યાઓ વિશે જણાવે છે.',
-    'સંખ્યારેખાની મદદથી પૂર્ણાંક સંખ્યાઓના સરવાળા કરે છે.',
-    'સંખ્યારેખાની મદદથી પૂર્ણાંક સંખ્યાઓના સરવાળા કરે છે.',
-    '', '', '', ''
+export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subject, standard }) => {
+  const TOTAL_COLUMNS = 26;
+  type MergedHeaderCell = {
+    content: string;
+    rowSpan?: number;
+    colSpan?: number;
+  };
+  const mergedTableHeaders: MergedHeaderCell[][] = [
+    [
+      { content: 'અ.નં.', rowSpan: 3 },
+      { content: 'વિદ્યાર્થીનું નામ', rowSpan: 3 },
+      { content: 'સંખ્યા પરિચય', colSpan: 4 },
+      { content: 'પૂર્ણ સંખ્યાઓ', colSpan: 4 },
+      { content: 'સંખ્યા સાથે રમત અને ભૂમિતિના પાયાના ખ્યાલો', colSpan: 4 },
+      { content: 'પાયાના આકારોની સમજૂતિ', colSpan: 4 },
+      { content: 'પૂર્ણાંક સંખ્યાઓ', colSpan: 4 },
+      { content: 'સત્રાંતે વિદ્યાર્થીઓએ મેળવેલ જેતે નિશાનીઓની કુલ સંખ્યા', colSpan: 3, rowSpan: 2 },
+      { content: '૪૦ માંથી મેળવેલ ગુણ', rowSpan: 3 },
+    ],
+    [
+      { content: 'યોગ્ય પ્રક્રિયાના ( ભા.ગુ.સ.બા.) ઉપયોગ દ્વારા મોટી સંખ્યાના દાખલા ઉકેલે છે.' },
+      { content: 'આપેલ અંકો પરથી સંખ્યા બનાવે છે' },
+      { content: '100000 સુધીની સંખ્યાઓ સમજે છે તેમજ અંકોમાં અને સબ્દોમાં લખે છે' },
+      { content: 'આસન્ન મુલ્ય દ્વારા નજીકના દસકનો સોનો હજારનો અંદાજ કાઢે છે' },
+      { content: 'પૂર્ણ સંખ્યા સાથે કામ કરે છે.' },
+      { content: 'આપેલ પૂર્ણસંખ્યાની પહેલાની સંખ્યા અને પછીની સંખ્યા લખે છે' },
+      { content: 'સંખ્યારેખા પર સંખ્યાનું નિરૂપણ તેમજ સંખ્યાઓના સરવાળા, બાદબાકી અને ગુણાકાર કરે છે' },
+      { content: 'પૂર્ણ સંખ્યા વિશેના સરવાળા અને ગુણાકાર ના ગુણધર્મો જણાવે છે તેમજ ગુણધર્મ નો ઉપયોગ કરી ગણતરી કરે છે' },
+      { content: 'પેટર્ન દ્વારા એકી, બેકી, વિભાજ્ય, અવિભાજ્ય અને સહ અવિભાજ્ય સંખ્યાઓને ઓળખે છે.' },
+      { content: 'આપેલ સંખ્યા અવિભાજ્ય છે કે વિભાજ્ય તે કહે છે.' },
+      { content: '2,3,4,5,6,8,9,10 અને 11 ની વિભાજ્યતાની ચાવી નો ઉપયોગ કરી વિભાજ્યતા ચકાસે છે' },
+      { content: 'વિભાજ્યતાના નિયમનો ઉપયોગ કરે છે' },
+      { content: 'ત્રિકોણને તેના ખુણા/બાજુઓના આધારે વિવિધ જૂથ/પ્રકારોમાં વર્ગીકૃત કરે છે.' },
+      { content: 'બાજુઓના માપના આધારે ત્રિકોણ ના પ્રકાર જણાવે છે' },
+      { content: 'ખૂણાઓના માપના આધારે ત્રિકોણ ના પ્રકાર જણાવે છે' },
+      { content: 'ચતુષ્કોણને તેના ખુણા/બાજુઓના આધારે વિવિધ જૂથ/પ્રકારોમાં વહેંચે છે' },
+      { content: 'પૂર્ણાંક સંખ્યાઓને લગતા સરવાળા બાદબાકીના દાખલા ગણે છે.' },
+      { content: 'પૂર્ણાંક સંખ્યાઓ વિશે જણાવે છે.' },
+      { content: 'સંખ્યારેખાની મદદથી પૂર્ણાંક સંખ્યાઓના સરવાળા કરે છે.' },
+      { content: 'સંખ્યારેખાની મદદથી પૂર્ણાંક સંખ્યાઓના સરવાળા કરે છે.' },
+    ],
+    [
+      ...Array.from({ length: 20 }, (_, i) => ({ content: String(i + 1) })),
+      { content: '√' }, { content: '?' }, { content: '×' },
+    ],
   ];
-  const rows = [row1, row2, row3, row4];
 
   return (
-    <div className="w-[1123px] min-h-[794px] bg-white p-4" style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}>
+    <div className="w-[1400px] min-h-[900px] bg-white p-4" style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}>
       <table className="w-full border-collapse text-[10px] table-fixed">
-        <tbody>
-          {rows.map((r, ri) => (
-            <tr key={ri}>
-              {r.map((cell, ci) => (
-                <td
-                  key={`${ri}-${ci}`}
-                  className={`border border-slate-400 px-1 ${ri < 2 ? 'text-left align-middle' : 'text-center align-top'} ${ri === 3 ? 'whitespace-normal break-words h-28' : ''}`}
+        <colgroup>
+          <col style={{ width: '44px' }} />
+          <col style={{ width: '260px' }} />
+          {Array.from({ length: TOTAL_COLUMNS - 2 }, (_, i) => (
+            <col key={`pa-col-${i}`} />
+          ))}
+        </colgroup>
+        <thead>
+          <tr>
+            <th className="border border-slate-400 px-2 py-1 text-left" colSpan={TOTAL_COLUMNS}>
+              ધનતેજ પ્રાથમિક શાળા તા. સાવલી &nbsp;&nbsp;&nbsp; ૫ત્રક : A &nbsp;&nbsp;&nbsp; સને : 2025-26
+            </th>
+          </tr>
+          <tr>
+            <th className="border border-slate-400 px-2 py-1 text-left" colSpan={TOTAL_COLUMNS}>
+              રચાનાત્મક મુલ્યાંક્ન પત્રક &nbsp;&nbsp;&nbsp; વિષય- {subject} &nbsp;&nbsp;&nbsp; ધોરણ -{standard} &nbsp;&nbsp;&nbsp; (પ્રથમ સત્ર)
+            </th>
+          </tr>
+          {mergedTableHeaders.map((headerRow, rowIndex) => (
+            <tr key={`pa-head-${rowIndex}`}>
+              {headerRow.map((cell, cellIndex) => (
+                <th
+                  key={`pa-head-${rowIndex}-${cellIndex}`}
+                  rowSpan={cell.rowSpan}
+                  colSpan={cell.colSpan}
+                  className={`border border-slate-400 px-1 text-center align-middle ${
+                    rowIndex === 1 ? 'py-2 whitespace-normal break-words leading-tight min-w-[44px]' : 'py-1'
+                  }`}
                 >
-                  {cell}
-                </td>
+                  {cell.content}
+                </th>
               ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {students.map((student, index) => (
+            <tr key={student.id}>
+              <td className="border border-slate-400 px-1 py-1 text-center">{index + 1}</td>
+              <td className="border border-slate-400 px-3 py-1 text-left whitespace-nowrap">
+                {student.nameGujarati || student.name}
+              </td>
+              {Array.from({ length: 20 }, (_, i) => (
+                <td key={`${student.id}-score-${i}`} className="border border-slate-400 px-1 py-1" />
+              ))}
+              <td className="border border-slate-400 px-1 py-1" />
+              <td className="border border-slate-400 px-1 py-1" />
+              <td className="border border-slate-400 px-1 py-1" />
+              <td className="border border-slate-400 px-1 py-1" />
             </tr>
           ))}
         </tbody>
