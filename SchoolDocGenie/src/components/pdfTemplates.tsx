@@ -158,19 +158,19 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
       { content: '૪૦ માંથી મેળવેલ ગુણ', rowSpan: 3 },
     ],
     [
-      { content: 'યોગ્ય પ્રક્રિયાના ( ભા.ગુ.સ.બા.) ઉપયોગ દ્વારા મોટી સંખ્યાના દાખલા ઉકે' },
+      { content: 'યોગ્ય પ્રક્રિયાના ( ભા.ગુ.સ.બા.) ઉપયોગ દ્વારા મોટી સંખ્યાના દાખલા ઉકેલે છે.' },
       { content: 'આપેલ અંકો પરથી સંખ્યા બનાવે છે' },
       { content: '100000 સુધીની સંખ્યાઓ સમજે છે તેમજ અંકોમાં અને સબ્દોમાં લખે છે' },
       { content: 'આસન્ન મુલ્ય દ્વારા નજીકના દસકનો સોનો હજારનો અંદાજ કાઢે છે' },
       { content: 'પૂર્ણ સંખ્યા સાથે કામ કરે છે.' },
       { content: 'આપેલ પૂર્ણસંખ્યાની પહેલાની સંખ્યા અને પછીની સંખ્યા લખે છે' },
-      { content: 'સંખ્યારેખા પર સંખ્યાનું નિરૂપણ તેમજ સંખ્યાઓના સરવાળા, બાદબાકી અને' },
-      { content: 'પૂર્ણ સંખ્યા વિશેના સરવાળા અને ગુણાકાર ના ગુણધર્મો જણાવે છે તેમજ ગ' },
-      { content: 'પેટર્ન દ્વારા એકી, બેકી, વિભાજ્ય, અવિભાજ્ય અને સહ અવિભાજ્ય સંખ્યાઓન' },
+      { content: 'સંખ્યારેખા પર સંખ્યાનું નિરૂપણ તેમજ સંખ્યાઓના સરવાળા, બાદબાકી અને ગુણાકાર કરે છે' },
+      { content: 'પૂર્ણ સંખ્યા વિશેના સરવાળા અને ગુણાકાર ના ગુણધર્મો જણાવે છે તેમજ ગુણધર્મ નો ઉપયોગ કરી ગણતરી કરે છે' },
+      { content: 'પેટર્ન દ્વારા એકી, બેકી, વિભાજ્ય, અવિભાજ્ય અને સહ અવિભાજ્ય સંખ્યાઓને ઓળખે છે.' },
       { content: 'આપેલ સંખ્યા અવિભાજ્ય છે કે વિભાજ્ય તે કહે છે.' },
       { content: '2,3,4,5,6,8,9,10 અને 11 ની વિભાજ્યતાની ચાવી નો ઉપયોગ કરી વિભાજ્યતા ચકાસે છે' },
       { content: 'વિભાજ્યતાના નિયમનો ઉપયોગ કરે છે' },
-      { content: 'ત્રિકોણને તેના ખુણા/બાજુઓના આધારે વિવિધ જૂથ/પ્રકારોમાં વર્ગીકૃત ક' },
+      { content: 'ત્રિકોણને તેના ખુણા/બાજુઓના આધારે વિવિધ જૂથ/પ્રકારોમાં વર્ગીકૃત કરે છે.' },
       { content: 'બાજુઓના માપના આધારે ત્રિકોણ ના પ્રકાર જણાવે છે' },
       { content: 'ખૂણાઓના માપના આધારે ત્રિકોણ ના પ્રકાર જણાવે છે' },
       { content: 'ચતુષ્કોણને તેના ખુણા/બાજુઓના આધારે વિવિધ જૂથ/પ્રકારોમાં વહેંચે છે' },
@@ -188,6 +188,13 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
   return (
     <div className="w-[1400px] min-h-[900px] bg-white p-4" style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}>
       <table className="w-full border-collapse text-[10px] table-fixed">
+        <colgroup>
+          <col style={{ width: '44px' }} />
+          <col style={{ width: '260px' }} />
+          {Array.from({ length: TOTAL_COLUMNS - 2 }, (_, i) => (
+            <col key={`pa-col-${i}`} />
+          ))}
+        </colgroup>
         <thead>
           <tr>
             <th className="border border-slate-400 px-2 py-1 text-left" colSpan={TOTAL_COLUMNS}>
@@ -196,7 +203,7 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
           </tr>
           <tr>
             <th className="border border-slate-400 px-2 py-1 text-left" colSpan={TOTAL_COLUMNS}>
-              રચાનાત્મક મુલ્યાંક્ન પત્રક &nbsp;&nbsp;&nbsp; વિષય- {subject} &nbsp;&nbsp;&nbsp; ધોરણ -{standard} &nbsp;&nbsp;&nbsp;
+              રચાનાત્મક મુલ્યાંક્ન પત્રક &nbsp;&nbsp;&nbsp; વિષય- {subject} &nbsp;&nbsp;&nbsp; ધોરણ -{standard} &nbsp;&nbsp;&nbsp; (પ્રથમ સત્ર)
             </th>
           </tr>
           {mergedTableHeaders.map((headerRow, rowIndex) => (
@@ -220,7 +227,7 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
           {students.map((student, index) => (
             <tr key={student.id}>
               <td className="border border-slate-400 px-1 py-1 text-center">{index + 1}</td>
-              <td className="border border-slate-400 px-3 py-1 text-left whitespace-nowrap min-w-[220px]">
+              <td className="border border-slate-400 px-3 py-1 text-left whitespace-nowrap">
                 {student.nameGujarati || student.name}
               </td>
               {Array.from({ length: 20 }, (_, i) => (
