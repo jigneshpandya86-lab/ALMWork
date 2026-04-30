@@ -225,7 +225,51 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
       { content: '√' }, { content: '?' }, { content: '×' },
     ],
   ];
-  const activeHeaders = standard === '૭' && subject === 'ગણિત' ? grade7MathsHeader : mergedTableHeaders;
+  const grade7ScienceHeader: MergedHeaderCell[][] = [
+    [
+      { content: 'અ.નં.', rowSpan: 3 },
+      { content: 'વિદ્યાર્થીનું નામ', rowSpan: 3 },
+      { content: 'વનસ્પતિમાં પોષણ', colSpan: 3 },
+      { content: 'પ્રાણીઓમાં પોષણ', colSpan: 3 },
+      { content: 'ઉષ્મા', colSpan: 4 },
+      { content: 'એસિડ, બેઈઝ, ક્ષાર', colSpan: 4 },
+      { content: 'ભૌતિક અને રાસાયણિક ફેરફારો', colSpan: 3 },
+      { content: 'સજીવોમાં શ્વસન', colSpan: 3 },
+      { content: 'સત્રાંતે વિદ્યાર્થીઓએ મેળવેલ જેતે નિશાનીઓની કુલ સંખ્યા', colSpan: 3, rowSpan: 2 },
+      { content: '૪૦ માંથી મેળવેલ ગુણ', rowSpan: 3 },
+    ],
+    [
+      { content: 'પદાર્થો અને સજીવોને તેમના ગુણધર્મો / લાક્ષણિકતાના આધારે વર્ગીકૃત કરે છે.' },
+      { content: 'પ્રશ્નોના જવાબ મેળવવા માટે સરળ તપાસ હાથ ધરે છે.' },
+      { content: 'પ્રક્રિયા અને સજીવોની નામનિર્દેશન વાળી આકૃતિ / ફ્લોચાર્ટ દોરે છે.' },
+      { content: 'પદાર્થ અને સજીવોના દેખાવ, રચના, કાર્ય વગેરે જેવાં લક્ષણોના આધારે ઓળખે છે.' },
+      { content: 'વૈજ્ઞાનિક શોધ, વાર્તાઓની ચર્ચા અને કદર કરે છે.' },
+      { content: 'શીખેલા વૈજ્ઞાનિક ખ્યાલોને રોજિંદા જીવનમાં લાગુ કરે છે.' },
+      { content: 'પદાર્થ અને સજીવોને તેમના ગુણધર્મો રચના અને કાર્યના આધારે જુદા પાડે છે.' },
+      { content: 'પ્રક્રિયા અને ઘટનાઓને કારણો સાથે જોડે છે.' },
+      { content: 'પ્રક્રિયા અને ઘટનાઓને સમજાવે છે.' },
+      { content: 'માપન અને ગણન કરે છે.' },
+      { content: 'પદાર્થ અને સજીવોને તેમના ગુણધર્મો રચના અને કાર્યના આધારે જુદા પાડે છે.' },
+      { content: 'પ્રશ્નોના જવાબ મેળવવા માટે સરળ તપાસ હાથ ધરે છે.' },
+      { content: 'પ્રક્રિયા અને ઘટનાઓને કારણો સાથે જોડે છે.' },
+      { content: 'રાસાયણિક પ્રક્રિયા માટેના શબ્દ સમીકરણ લખે છે.' },
+      { content: 'પ્રક્રિયા અને ઘટનાઓને સમજાવે છે.' },
+      { content: 'રાસાયણિક પ્રક્રિયા માટેના શબ્દ સમીકરણ લખે છે.' },
+      { content: 'શીખેલા વૈજ્ઞાનિક ખ્યાલોને રોજિંદા જીવનમાં લાગુ કરે છે.' },
+      { content: 'પદાર્થ અને સજીવોને તેમના ગુણધર્મો રચના અને કાર્યના આધારે જુદા પાડે છે.' },
+      { content: 'પોતાની આસપાસમાંથી મળી આવતી વસ્તુની કાર્યપદ્ધતિ વર્ણવે છે.' },
+      { content: 'શીખેલા વૈજ્ઞાનિક ખ્યાલોને રોજિંદા જીવનમાં લાગુ કરે છે.' },
+    ],
+    [
+      ...Array.from({ length: 20 }, (_, i) => ({ content: String(i + 1) })),
+      { content: '√' }, { content: '?' }, { content: '×' },
+    ],
+  ];
+  const activeHeaders = standard === '૭' && subject === 'ગણિત'
+    ? grade7MathsHeader
+    : standard === '૭' && subject === 'વિજ્ઞાન'
+      ? grade7ScienceHeader
+      : mergedTableHeaders;
 
   const pages = students.length > 0
     ? Array.from({ length: Math.ceil(students.length / ROWS_PER_PAGE) }, (_, pageIndex) =>
