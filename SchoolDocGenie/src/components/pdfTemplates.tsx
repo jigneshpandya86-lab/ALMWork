@@ -214,7 +214,7 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
                   rowSpan={cell.rowSpan}
                   colSpan={cell.colSpan}
                   className={`border border-slate-400 px-1 text-center align-middle ${
-                    rowIndex === 1 ? 'py-2 whitespace-normal break-words leading-tight min-w-[44px]' : 'py-1'
+                    rowIndex === 1 ? 'py-2 text-[9px] whitespace-normal break-words leading-tight min-w-[44px]' : 'py-1'
                   }`}
                 >
                   {cell.content}
@@ -227,7 +227,7 @@ export const PASheetTemplate: React.FC<PaSheetTemplateProps> = ({ students, subj
           {students.map((student, index) => (
             <tr key={student.id}>
               <td className="border border-slate-400 px-1 py-1 text-center">{index + 1}</td>
-              <td className="border border-slate-400 px-3 py-1 text-left whitespace-nowrap">
+              <td className="border border-slate-400 px-4 py-1 text-left whitespace-nowrap">
                 {student.nameGujarati || student.name}
               </td>
               {Array.from({ length: 20 }, (_, i) => (
