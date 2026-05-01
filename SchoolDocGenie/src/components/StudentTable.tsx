@@ -35,6 +35,22 @@ type StudentDraft = {
   conduct: string;
 };
 
+
+const normalizeDateForInput = (raw: string): string => {
+  if (!raw) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const slashMatch = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (slashMatch) {
+    const [, day, month, year] = slashMatch;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+};
+
 const EMPTY_DRAFT: StudentDraft = {
   name: '',
   nameGujarati: '',
@@ -154,7 +170,7 @@ export default function StudentTable({
       grade: student.grade,
       gender: student.gender,
       caste: student.caste,
-      dateOfBirth: student.dateOfBirth,
+      dateOfBirth: normalizeDateForInput(student.dateOfBirth),
       fatherName: student.fatherName,
       fatherNameGujarati: student.fatherNameGujarati || '',
       motherName: student.motherName,
@@ -207,7 +223,7 @@ export default function StudentTable({
         grade: draft.grade,
         gender: draft.gender.trim(),
         caste: draft.caste.trim(),
-        dateOfBirth: draft.dateOfBirth,
+        dateOfBirth: normalizeDateForInput(draft.dateOfBirth),
         fatherName: draft.fatherName.trim(),
         fatherNameGujarati: draft.fatherNameGujarati.trim(),
         motherName: draft.motherName.trim(),
