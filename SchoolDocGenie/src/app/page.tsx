@@ -29,7 +29,7 @@ function mergeStudents(existing: Student[], incoming: Student[]) {
 }
 
 function Step({
-  n, title, subtitle, active, done, last = false, children, id, compact = false,
+  n, title, subtitle, active, done, last = false, children, id,
 }: {
   n: number;
   title: string;
@@ -39,7 +39,6 @@ function Step({
   last?: boolean;
   children: React.ReactNode;
   id?: string;
-  compact?: boolean;
 }) {
   return (
     <div className="flex gap-5" id={id}>
@@ -74,9 +73,9 @@ function Step({
       <div
         className={`flex-1 mb-5 glass step-card transition-all duration-300
         ${active ? 'ring-2 ring-indigo-300 ring-offset-2' : done ? 'ring-1 ring-emerald-200' : 'opacity-80'}`}
-        style={{ padding: compact ? '14px 18px' : '24px' }}
+        style={{ padding: '24px' }}
       >
-        <div className={compact ? "mb-2" : "mb-5"}>
+        <div className="mb-5">
           <div className="flex items-center gap-2 mb-1">
             {done && (
               <span className="badge" style={{ background: 'rgba(16,185,129,0.12)', color: '#059669' }}>
@@ -92,7 +91,7 @@ function Step({
           <h2 className={`font-bold text-lg leading-tight ${active ? 'text-slate-900' : done ? 'text-slate-700' : 'text-slate-400'}`}>
             {title}
           </h2>
-          {subtitle ? <p className="text-sm text-slate-400 mt-0.5">{subtitle}</p> : null}
+          <p className="text-sm text-slate-400 mt-0.5">{subtitle}</p>
         </div>
         {children}
       </div>
@@ -284,25 +283,24 @@ export default function HomePage() {
           id="step-upload"
           n={1}
           title="Upload Student Data"
-          subtitle=""
-          compact
+          subtitle="JSON file, paste JSON, or load the built-in sample dataset"
           active={!step1Done}
           done={step1Done}
         >
           {step1Done ? (
-            <div className="flex items-center gap-2 py-1.5 px-3 rounded-xl" style={{ background: "linear-gradient(90deg, rgba(16,185,129,0.14), rgba(59,130,246,0.12), rgba(168,85,247,0.12))", border: "1px solid rgba(99,102,241,0.25)" }}>
+            <div className="flex items-center gap-3 py-2">
               <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span className="text-slate-800 font-semibold">Upload Student Data • {students.length} loaded</span>
-              <button onClick={() => setShowUploadForm((previous) => !previous)} className="ml-auto px-3 py-1 text-sm text-white rounded-lg transition" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed,#ec4899)" }}>
+              <span className="text-green-700 font-medium">{students.length} students loaded</span>
+              <button onClick={() => setShowUploadForm((previous) => !previous)} className="ml-auto px-3 py-1 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
                 {showUploadForm ? 'Hide' : 'Add More'}
               </button>
             </div>
           ) : (
             <button
               onClick={() => setShowUploadForm((previous) => !previous)}
-              className="w-full px-4 py-2.5 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2" style={{ background: "linear-gradient(135deg,#0ea5e9,#6366f1 45%,#a855f7)", boxShadow: "0 8px 20px rgba(99,102,241,0.3)" }}
+              className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
