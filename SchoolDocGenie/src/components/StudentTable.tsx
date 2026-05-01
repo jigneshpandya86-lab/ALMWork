@@ -35,6 +35,22 @@ type StudentDraft = {
   conduct: string;
 };
 
+
+const normalizeDateForInput = (raw: string): string => {
+  if (!raw) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const slashMatch = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (slashMatch) {
+    const [, day, month, year] = slashMatch;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+};
+
 const EMPTY_DRAFT: StudentDraft = {
   name: '',
   nameGujarati: '',
@@ -68,16 +84,19 @@ export default function StudentTable({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
-    let list = selectedGrade ? students.filter(s => s.grade === selectedGrade) : students;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(s =>
-        s.name.toLowerCase().includes(q)
-        || s.rollno.toLowerCase().includes(q)
-        || s.gender.toLowerCase().includes(q)
-        || s.caste.toLowerCase().includes(q),
-      );
-    }
+    const query = search.trim().toLowerCase();
+    if (!query) return [];
+
+    let list = selectedGrade ? students.filter((s) => s.grade === selectedGrade) : students;
+    list = list.filter((s) =>
+      s.name.toLowerCase().includes(query)
+      || s.rollno.toLowerCase().includes(query)
+      || s.gender.toLowerCase().includes(query)
+      || s.caste.toLowerCase().includes(query)
+      || s.grade.toLowerCase().includes(query)
+      || `grade ${s.grade}`.includes(query),
+    );
+
     return list;
   }, [students, selectedGrade, search]);
 
@@ -151,7 +170,7 @@ export default function StudentTable({
       grade: student.grade,
       gender: student.gender,
       caste: student.caste,
-      dateOfBirth: student.dateOfBirth,
+      dateOfBirth: normalizeDateForInput(student.dateOfBirth),
       fatherName: student.fatherName,
       fatherNameGujarati: student.fatherNameGujarati || '',
       motherName: student.motherName,
@@ -204,7 +223,7 @@ export default function StudentTable({
         grade: draft.grade,
         gender: draft.gender.trim(),
         caste: draft.caste.trim(),
-        dateOfBirth: draft.dateOfBirth,
+        dateOfBirth: normalizeDateForInput(draft.dateOfBirth),
         fatherName: draft.fatherName.trim(),
         fatherNameGujarati: draft.fatherNameGujarati.trim(),
         motherName: draft.motherName.trim(),
@@ -242,7 +261,7 @@ export default function StudentTable({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <input
-              type="text" placeholder="Search name, roll, gender, caste…"
+              type="text" placeholder="Search grade, name, roll, gender, caste…"
               value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
               className="pl-9 pr-4 py-2 rounded-xl text-sm w-full sm:w-56 outline-none transition-all"
               style={{ background:'rgba(255,255,255,0.8)', border:'1.5px solid #e2e8f0' }}
@@ -290,7 +309,7 @@ export default function StudentTable({
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <tr><td colSpan={10} className="py-12 text-center text-slate-300 text-sm">No students found</td></tr>
+              <tr><td colSpan={10} className="py-12 text-center text-slate-300 text-sm">{search.trim() ? 'No students found' : 'Type in search to view students'}</td></tr>
             ) : rows.map((s, i) => {
               const gp = GP_STYLE[s.gradePoint] ?? { bg:'rgba(148,163,184,0.12)', color:'#475569' };
               return (
