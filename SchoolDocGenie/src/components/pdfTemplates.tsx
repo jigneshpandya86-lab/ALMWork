@@ -473,8 +473,10 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
     'ચાલુ માસ સાથે પરીક્ષા પછીના હાજર દિવસ',
   ];
   const summaryColumnWidths = ['4%', '4%', '4%', '4%', '4%', '4%', '9%', '9.5%', '9.5%'];
+  const leftMetaColumnWidths = ['5.5%', '12.5%', '6%', '7.5%', '6%', '9%'];
+  const leftDayColumnWidth = `${54 / Math.max(leftDays.length, 1)}%`;
   const studentRowHeightPx = 21;
-  const STUDENT_ROWS_PER_PAGE = 22;
+  const STUDENT_ROWS_PER_PAGE = 20;
   const studentPages = students.length > 0
     ? Array.from({ length: Math.ceil(students.length / STUDENT_ROWS_PER_PAGE) }, (_, pageIndex) =>
         students.slice(pageIndex * STUDENT_ROWS_PER_PAGE, (pageIndex + 1) * STUDENT_ROWS_PER_PAGE),
@@ -572,16 +574,16 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
         <section key={`left-${pageIdx}`} data-pdf-page="true" className="w-[1123px] h-[794px] p-8 overflow-hidden">
           <div className="border-2 border-blue-700 h-full overflow-hidden">
             {renderRegisterHeader()}
-            <table className="w-full border-collapse text-[10px]">
+            <table className="w-full border-collapse table-fixed text-[10px]">
               <thead>
                 <tr>
-                  <th className="border border-slate-700 px-1 py-1"><div style={verticalHeaderStyle}>અનુક્રમ નંબર</div></th>
-                  <th className="border border-slate-700 px-2 py-1 whitespace-nowrap">વિદ્યાર્થીનું નામ</th>
-                  <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જન્મ તારીખ</div></th>
-                  <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જ.રજીસ્ટર નંબર</div></th>
-                  <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જાતિ</div></th>
-                  <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div></th>
-                  {leftDays.map((day) => renderDayHeader(day, { width: '26px', minWidth: '26px' }))}
+                  <th style={{ width: leftMetaColumnWidths[0] }} className="border border-slate-700 px-1 py-1"><div style={verticalHeaderStyle}>અનુક્રમ નંબર</div></th>
+                  <th style={{ width: leftMetaColumnWidths[1] }} className="border border-slate-700 px-2 py-1 whitespace-nowrap">વિદ્યાર્થીનું નામ</th>
+                  <th style={{ width: leftMetaColumnWidths[2] }} className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જન્મ તારીખ</div></th>
+                  <th style={{ width: leftMetaColumnWidths[3] }} className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જ.રજીસ્ટર નંબર</div></th>
+                  <th style={{ width: leftMetaColumnWidths[4] }} className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જાતિ</div></th>
+                  <th style={{ width: leftMetaColumnWidths[5] }} className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div></th>
+                  {leftDays.map((day) => renderDayHeader(day, { width: leftDayColumnWidth, minWidth: leftDayColumnWidth }))}
                 </tr>
                 <tr className="bg-orange-50">
                   {Array.from({ length: 6 + leftDays.length }, (_, i) => (
