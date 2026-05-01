@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Student, StudentTableProps } from '@/types';
 
 const PAGE_SIZE = 50;
-const COMPACT_BODY_HEIGHT = 170;
 
 const GP_STYLE: Record<string, { bg: string; color: string }> = {
   'A+': { bg:'rgba(16,185,129,0.12)',  color:'#059669' },
@@ -282,7 +281,7 @@ export default function StudentTable({
             <button
               onClick={openAdd}
               className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
-              style={{ background:'linear-gradient(135deg,#0ea5e9,#6366f1 45%,#8b5cf6)', boxShadow:'0 6px 16px rgba(99,102,241,0.35)' }}
+              style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}
             >
               + Add Student
             </button>
@@ -290,10 +289,10 @@ export default function StudentTable({
         </div>
       </div>
 
-      <div className="rounded-2xl overflow-hidden" style={{ border:'1px solid rgba(99,102,241,0.45)', boxShadow:'0 8px 26px rgba(124,58,237,0.18)', background:'linear-gradient(180deg, rgba(238,242,255,0.45) 0%, rgba(255,255,255,0.95) 100%)' }}>
-        <table className="min-w-full text-sm table-fixed">
+      <div className="rounded-2xl overflow-hidden" style={{ border:'1px solid rgba(199,210,254,0.5)', boxShadow:'0 2px 12px rgba(79,70,229,0.06)' }}>
+        <table className="min-w-full text-sm">
           <thead>
-            <tr style={{ background:'linear-gradient(135deg,#2563eb,#7c3aed 45%,#ec4899)' }}>
+            <tr style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}>
               {['', '#', 'Name', 'Roll', 'Grade', 'Gender', 'Caste', '%', 'Attend.', 'Actions'].map((h, idx) => (
                 <th key={h} className="py-3.5 px-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider whitespace-nowrap">
                   {idx === 0 ? (
@@ -308,13 +307,13 @@ export default function StudentTable({
               ))}
             </tr>
           </thead>
-          <tbody style={{ display: "block", maxHeight: `${COMPACT_BODY_HEIGHT}px`, overflowY: "auto" }}>
+          <tbody>
             {rows.length === 0 ? (
-              <tr className="table w-full table-fixed"><td colSpan={10} className="py-8 text-center text-slate-400 text-sm font-medium">{search.trim() ? 'No students found' : 'Type in search to view students'}</td></tr>
+              <tr><td colSpan={10} className="py-12 text-center text-slate-300 text-sm">{search.trim() ? 'No students found' : 'Type in search to view students'}</td></tr>
             ) : rows.map((s, i) => {
               const gp = GP_STYLE[s.gradePoint] ?? { bg:'rgba(148,163,184,0.12)', color:'#475569' };
               return (
-                <tr key={s.id} className="table w-full table-fixed transition-colors"
+                <tr key={s.id} className="table-row transition-colors"
                   style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(248,250,252,0.8)' }}>
                   <td className="py-3 px-4">
                     <input
