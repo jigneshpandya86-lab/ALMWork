@@ -474,6 +474,13 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
   ];
   const summaryColumnWidths = ['4%', '4%', '4%', '4%', '4%', '4%', '9%', '9.5%', '9.5%'];
   const studentRowHeightPx = 21;
+  const STUDENT_ROWS_PER_PAGE = 24;
+  const studentPages = students.length > 0
+    ? Array.from({ length: Math.ceil(students.length / STUDENT_ROWS_PER_PAGE) }, (_, pageIndex) =>
+        students.slice(pageIndex * STUDENT_ROWS_PER_PAGE, (pageIndex + 1) * STUDENT_ROWS_PER_PAGE),
+      )
+    : [[]];
+
   const verticalHeaderStyle: React.CSSProperties = {
     display: 'inline-block',
     transform: 'rotate(-90deg)',
@@ -561,84 +568,59 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
 
   return (
     <div className="w-[1123px] bg-white text-slate-900" style={{ fontFamily: "'Noto Sans Gujarati', 'Inter', sans-serif" }}>
-      <section data-pdf-page="true" className="w-[1123px] h-[794px] p-4 overflow-hidden">
-        <div className="border-2 border-blue-700">
-          {renderRegisterHeader()}
-          <table className="w-full border-collapse text-[10px]">
-            <thead>
-              <tr>
-                <th className="border border-slate-700 px-1 py-1">
-                  <div style={verticalHeaderStyle}>અનુક્રમ નંબર</div>
-                </th>
-                <th className="border border-slate-700 px-2 py-1 whitespace-nowrap">વિદ્યાર્થીનું નામ</th>
-                <th className="border border-slate-700 px-2 py-1">
-                  <div style={verticalHeaderStyle}>જન્મ તારીખ</div>
-                </th>
-                <th className="border border-slate-700 px-2 py-1">
-                  <div style={verticalHeaderStyle}>જ.રજીસ્ટર નંબર</div>
-                </th>
-                <th className="border border-slate-700 px-2 py-1">
-                  <div style={verticalHeaderStyle}>જાતિ</div>
-                </th>
-                <th className="border border-slate-700 px-2 py-1">
-                  <div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div>
-                </th>
-                {leftDays.map((day) => renderDayHeader(day, { width: '30px', minWidth: '30px' }))}
-              </tr>
-              <tr className="bg-orange-50">
-                {Array.from({ length: 6 + leftDays.length }, (_, i) => (
-                  <th key={`idx-left-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 1}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {students.map((student, index) => renderGridRow(student, index, leftDays, true, false))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section data-pdf-page="true" className="w-[1123px] h-[794px] p-4 overflow-hidden">
-        <div className="border-2 border-blue-700">
-          {renderRegisterHeader()}
-          <table className="w-full border-collapse table-fixed text-[10px]">
-            <thead>
-              <tr>
-                {rightDays.map((day) => renderDayHeader(day, { width: '4%', minWidth: '4%' }))}
-                {summaryColumns.map((column, idx) => (
-                  <th
-                    key={`${column}-${idx}`}
-                    style={{ width: summaryColumnWidths[idx], minWidth: summaryColumnWidths[idx] }}
-                    className="border border-slate-700 px-0 py-0"
-                  >
-                    <div className="h-[126px] flex items-center justify-center">
-                      <div style={verticalHeaderStyle}>
-                        {idx >= summaryColumns.length - 2 ? (
-                          <>
-                            {column.split(' ').slice(0, Math.ceil(column.split(' ').length / 2)).join(' ')}
-                            <br />
-                            {column.split(' ').slice(Math.ceil(column.split(' ').length / 2)).join(' ')}
-                          </>
-                        ) : (
-                          column
-                        )}
+      {studentPages.flatMap((pageStudents, pageIdx) => [
+        <section key={`left-${pageIdx}`} data-pdf-page="true" className="w-[1123px] h-[794px] p-6 overflow-hidden">
+          <div className="border-2 border-blue-700 h-full">
+            {renderRegisterHeader()}
+            <table className="w-full border-collapse text-[10px]">
+              <thead>
+                <tr>
+                  <th className="border border-slate-700 px-1 py-1"><div style={verticalHeaderStyle}>અનુક્રમ નંબર</div></th>
+                  <th className="border border-slate-700 px-2 py-1 whitespace-nowrap">વિદ્યાર્થીનું નામ</th>
+                  <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જન્મ તારીખ</div></th>
+                  <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જ.રજીસ્ટર નંબર</div></th>
+                  <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જાતિ</div></th>
+                  <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div></th>
+                  {leftDays.map((day) => renderDayHeader(day, { width: '30px', minWidth: '30px' }))}
+                </tr>
+                <tr className="bg-orange-50">
+                  {Array.from({ length: 6 + leftDays.length }, (_, i) => (
+                    <th key={`idx-left-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 1}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>{pageStudents.map((student, index) => renderGridRow(student, pageIdx * STUDENT_ROWS_PER_PAGE + index, leftDays, true, false))}</tbody>
+            </table>
+          </div>
+        </section>,
+        <section key={`right-${pageIdx}`} data-pdf-page="true" className="w-[1123px] h-[794px] p-6 overflow-hidden">
+          <div className="border-2 border-blue-700 h-full">
+            {renderRegisterHeader()}
+            <table className="w-full border-collapse table-fixed text-[10px]">
+              <thead>
+                <tr>
+                  {rightDays.map((day) => renderDayHeader(day, { width: '4%', minWidth: '4%' }))}
+                  {summaryColumns.map((column, idx) => (
+                    <th key={`${column}-${idx}`} style={{ width: summaryColumnWidths[idx], minWidth: summaryColumnWidths[idx] }} className="border border-slate-700 px-0 py-0">
+                      <div className="h-[126px] flex items-center justify-center">
+                        <div style={verticalHeaderStyle}>
+                          {idx >= summaryColumns.length - 2 ? (<>{column.split(' ').slice(0, Math.ceil(column.split(' ').length / 2)).join(' ')}<br />{column.split(' ').slice(Math.ceil(column.split(' ').length / 2)).join(' ')}</>) : (column)}
+                        </div>
                       </div>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-              <tr className="bg-orange-50">
-                {Array.from({ length: rightDays.length + summaryColumns.length }, (_, i) => (
-                  <th key={`idx-right-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 26}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {students.map((student, index) => renderGridRow(student, index, rightDays, false, true))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                    </th>
+                  ))}
+                </tr>
+                <tr className="bg-orange-50">
+                  {Array.from({ length: rightDays.length + summaryColumns.length }, (_, i) => (
+                    <th key={`idx-right-${i}`} className="border border-slate-700 px-1 py-0.5 font-normal">{i + 26}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>{pageStudents.map((student, index) => renderGridRow(student, pageIdx * STUDENT_ROWS_PER_PAGE + index, rightDays, false, true))}</tbody>
+            </table>
+          </div>
+        </section>,
+      ])}
     </div>
   );
 };
