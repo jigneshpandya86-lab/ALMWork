@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Student, StudentTableProps } from '@/types';
 
 const PAGE_SIZE = 50;
+const COMPACT_BODY_HEIGHT = 170;
 
 const GP_STYLE: Record<string, { bg: string; color: string }> = {
   'A+': { bg:'rgba(16,185,129,0.12)',  color:'#059669' },
@@ -33,6 +34,22 @@ type StudentDraft = {
   addressGujarati: string;
   attendance: string;
   conduct: string;
+};
+
+
+const normalizeDateForInput = (raw: string): string => {
+  if (!raw) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const slashMatch = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (slashMatch) {
+    const [, day, month, year] = slashMatch;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
 };
 
 const EMPTY_DRAFT: StudentDraft = {
@@ -68,16 +85,19 @@ export default function StudentTable({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
-    let list = selectedGrade ? students.filter(s => s.grade === selectedGrade) : students;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(s =>
-        s.name.toLowerCase().includes(q)
-        || s.rollno.toLowerCase().includes(q)
-        || s.gender.toLowerCase().includes(q)
-        || s.caste.toLowerCase().includes(q),
-      );
-    }
+    const query = search.trim().toLowerCase();
+    if (!query) return [];
+
+    let list = selectedGrade ? students.filter((s) => s.grade === selectedGrade) : students;
+    list = list.filter((s) =>
+      s.name.toLowerCase().includes(query)
+      || s.rollno.toLowerCase().includes(query)
+      || s.gender.toLowerCase().includes(query)
+      || s.caste.toLowerCase().includes(query)
+      || s.grade.toLowerCase().includes(query)
+      || `grade ${s.grade}`.includes(query),
+    );
+
     return list;
   }, [students, selectedGrade, search]);
 
@@ -151,7 +171,7 @@ export default function StudentTable({
       grade: student.grade,
       gender: student.gender,
       caste: student.caste,
-      dateOfBirth: student.dateOfBirth,
+      dateOfBirth: normalizeDateForInput(student.dateOfBirth),
       fatherName: student.fatherName,
       fatherNameGujarati: student.fatherNameGujarati || '',
       motherName: student.motherName,
@@ -204,7 +224,7 @@ export default function StudentTable({
         grade: draft.grade,
         gender: draft.gender.trim(),
         caste: draft.caste.trim(),
-        dateOfBirth: draft.dateOfBirth,
+        dateOfBirth: normalizeDateForInput(draft.dateOfBirth),
         fatherName: draft.fatherName.trim(),
         fatherNameGujarati: draft.fatherNameGujarati.trim(),
         motherName: draft.motherName.trim(),
@@ -242,7 +262,7 @@ export default function StudentTable({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <input
-              type="text" placeholder="Search name, roll, gender, caste…"
+              type="text" placeholder="Search grade, name, roll, gender, caste…"
               value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
               className="pl-9 pr-4 py-2 rounded-xl text-sm w-full sm:w-56 outline-none transition-all"
               style={{ background:'rgba(255,255,255,0.8)', border:'1.5px solid #e2e8f0' }}
@@ -262,7 +282,7 @@ export default function StudentTable({
             <button
               onClick={openAdd}
               className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
-              style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}
+              style={{ background:'linear-gradient(135deg,#0ea5e9,#6366f1 45%,#8b5cf6)', boxShadow:'0 6px 16px rgba(99,102,241,0.35)' }}
             >
               + Add Student
             </button>
@@ -270,10 +290,10 @@ export default function StudentTable({
         </div>
       </div>
 
-      <div className="rounded-2xl overflow-hidden" style={{ border:'1px solid rgba(199,210,254,0.5)', boxShadow:'0 2px 12px rgba(79,70,229,0.06)' }}>
-        <table className="min-w-full text-sm">
+      <div className="rounded-2xl overflow-hidden" style={{ border:'1px solid rgba(99,102,241,0.45)', boxShadow:'0 8px 26px rgba(124,58,237,0.18)', background:'linear-gradient(180deg, rgba(238,242,255,0.45) 0%, rgba(255,255,255,0.95) 100%)' }}>
+        <table className="min-w-full text-sm table-fixed">
           <thead>
-            <tr style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed)' }}>
+            <tr style={{ background:'linear-gradient(135deg,#2563eb,#7c3aed 45%,#ec4899)' }}>
               {['', '#', 'Name', 'Roll', 'Grade', 'Gender', 'Caste', '%', 'Attend.', 'Actions'].map((h, idx) => (
                 <th key={h} className="py-3.5 px-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider whitespace-nowrap">
                   {idx === 0 ? (
@@ -288,13 +308,13 @@ export default function StudentTable({
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody style={{ display: "block", maxHeight: `${COMPACT_BODY_HEIGHT}px`, overflowY: "auto" }}>
             {rows.length === 0 ? (
-              <tr><td colSpan={10} className="py-12 text-center text-slate-300 text-sm">No students found</td></tr>
+              <tr className="table w-full table-fixed"><td colSpan={10} className="py-8 text-center text-slate-400 text-sm font-medium">{search.trim() ? 'No students found' : 'Type in search to view students'}</td></tr>
             ) : rows.map((s, i) => {
               const gp = GP_STYLE[s.gradePoint] ?? { bg:'rgba(148,163,184,0.12)', color:'#475569' };
               return (
-                <tr key={s.id} className="table-row transition-colors"
+                <tr key={s.id} className="table w-full table-fixed transition-colors"
                   style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(248,250,252,0.8)' }}>
                   <td className="py-3 px-4">
                     <input
