@@ -474,7 +474,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
   ];
   const summaryColumnWidths = ['4%', '4%', '4%', '4%', '4%', '4%', '9%', '9.5%', '9.5%'];
   const studentRowHeightPx = 21;
-  const STUDENT_ROWS_PER_PAGE = 24;
+  const STUDENT_ROWS_PER_PAGE = 22;
   const studentPages = students.length > 0
     ? Array.from({ length: Math.ceil(students.length / STUDENT_ROWS_PER_PAGE) }, (_, pageIndex) =>
         students.slice(pageIndex * STUDENT_ROWS_PER_PAGE, (pageIndex + 1) * STUDENT_ROWS_PER_PAGE),
@@ -569,8 +569,8 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
   return (
     <div className="w-[1123px] bg-white text-slate-900" style={{ fontFamily: "'Noto Sans Gujarati', 'Inter', sans-serif" }}>
       {studentPages.flatMap((pageStudents, pageIdx) => [
-        <section key={`left-${pageIdx}`} data-pdf-page="true" className="w-[1123px] h-[794px] p-6 overflow-hidden">
-          <div className="border-2 border-blue-700 h-full">
+        <section key={`left-${pageIdx}`} data-pdf-page="true" className="w-[1123px] h-[794px] p-8 overflow-hidden">
+          <div className="border-2 border-blue-700 h-full overflow-hidden">
             {renderRegisterHeader()}
             <table className="w-full border-collapse text-[10px]">
               <thead>
@@ -581,7 +581,7 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
                   <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જ.રજીસ્ટર નંબર</div></th>
                   <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>જાતિ</div></th>
                   <th className="border border-slate-700 px-2 py-1"><div style={verticalHeaderStyle}>ધોરણમાં દાખલ તારીખ</div></th>
-                  {leftDays.map((day) => renderDayHeader(day, { width: '30px', minWidth: '30px' }))}
+                  {leftDays.map((day) => renderDayHeader(day, { width: '26px', minWidth: '26px' }))}
                 </tr>
                 <tr className="bg-orange-50">
                   {Array.from({ length: 6 + leftDays.length }, (_, i) => (
@@ -593,8 +593,8 @@ export const AttendanceTemplate: React.FC<AttendanceTemplateProps> = ({ students
             </table>
           </div>
         </section>,
-        <section key={`right-${pageIdx}`} data-pdf-page="true" className="w-[1123px] h-[794px] p-6 overflow-hidden">
-          <div className="border-2 border-blue-700 h-full">
+        <section key={`right-${pageIdx}`} data-pdf-page="true" className="w-[1123px] h-[794px] p-8 overflow-hidden">
+          <div className="border-2 border-blue-700 h-full overflow-hidden">
             {renderRegisterHeader()}
             <table className="w-full border-collapse table-fixed text-[10px]">
               <thead>
